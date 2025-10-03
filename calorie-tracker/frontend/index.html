@@ -3,6 +3,7 @@
   <head>
     <title>Calorie Tracker - Add Meal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -237,7 +238,11 @@
           originalMealData.sugar = parseInt(document.getElementById('edit-sugar').value) || 0;
           originalMealData.sodium = parseInt(document.getElementById('edit-sodium').value) || 0;
           originalMealData.meal_type = document.getElementById('edit-meal-type').value;
-          originalMealData.consumed_at = document.getElementById('edit-consumed-at').value;
+          
+          // Convert local datetime to UTC for storage
+          const localDateTime = document.getElementById('edit-consumed-at').value;
+          originalMealData.consumed_at = localToUTC(new Date(localDateTime));
+          
           originalMealData.notes = document.getElementById('edit-notes').value;
           
           // Update the display

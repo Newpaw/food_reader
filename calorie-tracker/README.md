@@ -11,6 +11,8 @@ A simple yet powerful nutrition tracking application with AI-powered food image 
 - **Image Storage**: Photos are stored on disk with proper organization
 - **Calorie Summaries**: View daily calorie totals and meal counts
 - **Responsive UI**: Simple and clean interface for tracking meals
+- **Timezone Support**: All dates and times are displayed in the user's local timezone
+- **Docker Support**: Easy deployment with Docker and docker-compose
 
 ## Project Structure
 
@@ -60,6 +62,8 @@ calorie-tracker/
 
 ## Running the Application
 
+### Option 1: Running Locally
+
 1. Start the backend server:
    ```bash
    uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -72,10 +76,33 @@ calorie-tracker/
    ```
 
 3. Access the application:
-   - Open http://localhost:8080/frontend/login.html in your browser
+   - Open http://localhost:8080/calorie-tracker/frontend/login.html in your browser
    - Register a new user
    - Login with your credentials
    - Start tracking your meals!
+
+### Option 2: Running with Docker
+
+1. Set your OpenAI API key in an environment variable:
+   ```bash
+   export OPENAI_API_KEY=your_openai_api_key_here
+   ```
+
+2. Build and start the Docker containers:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. Access the application:
+   - Open http://localhost:8080/calorie-tracker/frontend/login.html in your browser
+   - Register a new user
+   - Login with your credentials
+   - Start tracking your meals!
+
+4. To stop the containers:
+   ```bash
+   docker-compose down
+   ```
 
 ## API Endpoints
 
@@ -148,17 +175,21 @@ calorie-tracker/
 - Enhance UI with CSS frameworks
 - Improve AI analysis accuracy with fine-tuning
 - Add nutritional information beyond just calories
+- Implement multi-user support with different roles
+- Add support for different measurement units
 
 ## Security Considerations
 
 For production deployment, consider:
-- Changing the JWT secret key
+- Changing the JWT secret key in the docker-compose.yml file
 - Securing the OpenAI API key using environment variables
 - Adding file upload size limits
 - Implementing MIME type validation
 - Setting up proper CORS configuration
 - Moving to a more robust database like PostgreSQL
 - Adding rate limiting
+- Using HTTPS for all communications
+- Implementing proper backup strategies for the database and uploaded images
 
 ## AI Food Analysis
 
@@ -176,3 +207,28 @@ The application uses OpenAI's Vision API to analyze food images and extract the 
 - Additional nutritional insights
 
 Users can still manually override any AI-detected values if needed. The AI analysis happens on the server-side when the image is uploaded, so no additional API calls are needed from the frontend.
+
+## Timezone Handling
+
+The application handles timezones in the following way:
+- All dates and times are stored in UTC format in the database
+- The frontend automatically converts UTC times to the user's local timezone for display
+- When filtering by date ranges, the application properly converts local dates to UTC for API requests
+- Date/time pickers in forms show times in the user's local timezone
+- All charts and visualizations display dates in the user's local timezone
+
+This ensures a consistent user experience regardless of the user's location or the server's timezone.
+
+## Docker Configuration
+
+The application includes Docker support for easy deployment:
+- `Dockerfile`: Defines the container image with both frontend and backend components
+- `docker-compose.yml`: Orchestrates the container and sets up the necessary environment variables
+
+The Docker setup includes:
+- Volume mapping for persistent storage of uploaded images
+- Environment variable configuration for sensitive data
+- Proper port mapping for both the backend API and frontend server
+- Automatic restart policy for improved reliability
+
+To customize the Docker configuration, edit the `docker-compose.yml` file to change environment variables, ports, or add additional services like a separate database container.

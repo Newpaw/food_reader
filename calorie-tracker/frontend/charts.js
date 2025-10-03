@@ -22,9 +22,9 @@ async function createDailyCalorieChart(containerId, data) {
   
   const ctx = document.getElementById(containerId).getContext('2d');
   
-  // Extract dates and calorie values
+  // Extract dates and calorie values (convert UTC to local)
   const labels = data.days.map(day => {
-    const date = new Date(day.date);
+    const date = utcToLocal(day.date);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
   
@@ -159,9 +159,9 @@ async function createMealFrequencyChart(containerId, data) {
   
   const ctx = document.getElementById(containerId).getContext('2d');
   
-  // Extract dates and meal counts
+  // Extract dates and meal counts (convert UTC to local)
   const labels = data.days.map(day => {
-    const date = new Date(day.date);
+    const date = utcToLocal(day.date);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
   
@@ -222,7 +222,8 @@ async function createNutrientIntakeChart(containerId, meals) {
   const mealsByDate = {};
   
   meals.forEach(meal => {
-    const date = new Date(meal.consumed_at).toLocaleDateString('en-US');
+    const localDate = utcToLocal(meal.consumed_at);
+    const date = localDate.toLocaleDateString('en-US');
     if (!mealsByDate[date]) {
       mealsByDate[date] = [];
     }
@@ -253,7 +254,7 @@ async function createNutrientIntakeChart(containerId, meals) {
     dailyFiber.push(fiber);
   });
   
-  // Format dates for display
+  // Format dates for display (already in local timezone)
   const formattedDates = dates.map(date => {
     const d = new Date(date);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

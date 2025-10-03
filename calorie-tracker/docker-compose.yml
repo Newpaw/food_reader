@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  calorie-tracker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"  # Backend API
+      - "8080:8080"  # Frontend server
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+    environment:
+      - JWT_SECRET=your_jwt_secret_key_here
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=sqlite:///./backend/app.db
+    restart: unless-stopped

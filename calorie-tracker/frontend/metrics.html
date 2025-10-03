@@ -3,6 +3,7 @@
   <head>
     <title>Calorie Tracker - Metrics Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -145,8 +146,10 @@
         }
         
         try {
-          // Load summary data
-          const summaryUrl = `${API.summary}?frm=${fromDate}T00:00:00&to=${toDate}T23:59:59`;
+          // Load summary data with proper timezone conversion
+          const fromUTC = new Date(`${fromDate}T00:00:00`).toISOString();
+          const toUTC = new Date(`${toDate}T23:59:59`).toISOString();
+          const summaryUrl = `${API.summary}?frm=${fromUTC}&to=${toUTC}`;
           const summaryResponse = await fetch(summaryUrl, {
             headers: authHeaders()
           });
@@ -162,7 +165,7 @@
           const summaryData = await summaryResponse.json();
           
           // Load meals data for the same period
-          const mealsUrl = `${API.meals}?frm=${fromDate}T00:00:00&to=${toDate}T23:59:59&limit=100`;
+          const mealsUrl = `${API.meals}?frm=${fromUTC}&to=${toUTC}&limit=100`;
           const mealsResponse = await fetch(mealsUrl, {
             headers: authHeaders()
           });

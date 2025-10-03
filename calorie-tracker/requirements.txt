@@ -8,3 +8,4 @@ PyJWT
 python-multipart
 email-validator
 openai>=1.0.0
+python-dotenv

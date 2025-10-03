@@ -59,38 +59,57 @@ async function fetchCurrentUser() {
   }
 }
 
-// Format date for display
+// Convert UTC date string to local date object
+function utcToLocal(dateString) {
+  const date = new Date(dateString);
+  return date;
+}
+
+// Convert local date to UTC for API
+function localToUTC(localDate) {
+  return new Date(localDate).toISOString();
+}
+
+// Format date for display in local timezone
 function formatDate(dateString) {
-  const options = { 
-    year: 'numeric', 
-    month: 'short', 
+  const options = {
+    year: 'numeric',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZoneName: 'short'
   };
-  return new Date(dateString).toLocaleDateString(undefined, options);
+  return utcToLocal(dateString).toLocaleDateString(undefined, options);
 }
 
-// Format date for input fields
+// Format date for input fields (in local timezone)
 function formatDateForInput(dateString) {
-  const date = new Date(dateString);
-  return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
+  const date = utcToLocal(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-// Get current date in ISO format
+// Get current date in ISO format (local date, start of day)
 function getCurrentDateISO() {
-  return new Date().toISOString().split('T')[0];
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-// Get date range for the past week
+// Get date range for the past week (in local timezone)
 function getLastWeekRange() {
   const today = new Date();
   const lastWeek = new Date(today);
   lastWeek.setDate(today.getDate() - 7);
   
   return {
-    from: lastWeek.toISOString().split('T')[0],
-    to: today.toISOString().split('T')[0]
+    from: `${lastWeek.getFullYear()}-${String(lastWeek.getMonth() + 1).padStart(2, '0')}-${String(lastWeek.getDate()).padStart(2, '0')}`,
+    to: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   };
 }
 

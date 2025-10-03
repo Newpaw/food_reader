@@ -3,6 +3,7 @@
   <head>
     <title>Calorie Tracker - Meal History</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -159,8 +160,15 @@
         const toDate = document.getElementById('toDate').value;
         
         let url = `${API.meals}?limit=50`;
-        if (fromDate) url += `&frm=${fromDate}T00:00:00`;
-        if (toDate) url += `&to=${toDate}T23:59:59`;
+        // Convert local dates to UTC for API
+        if (fromDate) {
+          const fromUTC = new Date(`${fromDate}T00:00:00`).toISOString();
+          url += `&frm=${fromUTC}`;
+        }
+        if (toDate) {
+          const toUTC = new Date(`${toDate}T23:59:59`).toISOString();
+          url += `&to=${toUTC}`;
+        }
         
         try {
           const response = await fetch(url, {
@@ -194,16 +202,17 @@
           return;
         }
         
-        // Group meals by date
+        // Group meals by date (in local timezone)
         const mealsByDate = {};
+        
         meals.forEach(meal => {
-          const date = new Date(meal.consumed_at).toLocaleDateString();
+          const localDate = utcToLocal(meal.consumed_at);
+          const date = localDate.toLocaleDateString();
           if (!mealsByDate[date]) {
             mealsByDate[date] = [];
           }
           mealsByDate[date].push(meal);
         });
-        
         // Sort dates in descending order
         const sortedDates = Object.keys(mealsByDate).sort((a, b) => 
           new Date(b) - new Date(a)
@@ -304,7 +313,7 @@
         const modal = document.getElementById('mealModal');
         const modalContent = document.getElementById('mealModalContent');
         
-        const consumedAt = new Date(meal.consumed_at);
+        const consumedAt = utcToLocal(meal.consumed_at);
         const formattedDate = consumedAt.toLocaleDateString('en-US', {
           weekday: 'long',
           year: 'numeric',
@@ -313,7 +322,8 @@
         });
         const formattedTime = consumedAt.toLocaleTimeString('en-US', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZoneName: 'short'
         });
         
         // Extract food name from notes if available
@@ -432,15 +442,8 @@
         document.getElementById('editSugar').value = meal.sugar || 0;
         document.getElementById('editSodium').value = meal.sodium || 0;
         
-        // Format datetime for the input
-        const consumedAt = new Date(meal.consumed_at);
-        const year = consumedAt.getFullYear();
-        const month = String(consumedAt.getMonth() + 1).padStart(2, '0');
-        const day = String(consumedAt.getDate()).padStart(2, '0');
-        const hours = String(consumedAt.getHours()).padStart(2, '0');
-        const minutes = String(consumedAt.getMinutes()).padStart(2, '0');
-        
-        document.getElementById('editConsumedAt').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        // Format datetime for the input (in local timezone)
+        document.getElementById('editConsumedAt').value = formatDateForInput(meal.consumed_at);
         
         // Set notes
         document.getElementById('editNotes').value = meal.notes || '';
@@ -484,6 +487,11 @@
       // Update meal
       async function updateMeal(mealId, mealData) {
         try {
+          // Convert local datetime to UTC for the API
+          if (mealData.consumed_at) {
+            mealData.consumed_at = localToUTC(new Date(mealData.consumed_at));
+          }
+          
           const response = await fetch(`${API.meals}/${mealId}`, {
             method: 'PUT',
             headers: {

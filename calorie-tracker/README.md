@@ -94,7 +94,7 @@ calorie-tracker/
    ```
 
 3. Access the application:
-   - Open http://localhost:8080/calorie-tracker/frontend/login.html in your browser
+   - Open http://localhost:8080/frontend/login.html in your browser
    - Register a new user
    - Login with your credentials
    - Start tracking your meals!

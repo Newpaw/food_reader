@@ -8,6 +8,39 @@ from ..settings import settings
 from .. import models, schemas
 from ..ai_analyzer import get_meal_data_from_image
 
+def parse_iso_datetime(iso_string: str) -> datetime:
+    """
+    Parse ISO 8601 datetime strings, handling the 'Z' timezone designator.
+    
+    Args:
+        iso_string: ISO 8601 datetime string, possibly with 'Z' timezone designator
+        
+    Returns:
+        datetime object
+    """
+    # Handle 'Z' timezone designator (replace with +00:00 which fromisoformat can handle)
+    if iso_string.endswith('Z'):
+        iso_string = iso_string[:-1] + '+00:00'
+    
+    # Handle milliseconds if present (Python < 3.11 can't handle .000 format in fromisoformat)
+    if '.' in iso_string and '+' in iso_string:
+        parts = iso_string.split('+')
+        datetime_part = parts[0]
+        timezone_part = '+' + parts[1]
+        
+        if '.' in datetime_part:
+            datetime_parts = datetime_part.split('.')
+            # Ensure milliseconds are exactly 6 digits (microseconds)
+            if len(datetime_parts[1]) < 6:
+                datetime_parts[1] = datetime_parts[1].ljust(6, '0')
+            elif len(datetime_parts[1]) > 6:
+                datetime_parts[1] = datetime_parts[1][:6]
+            datetime_part = '.'.join(datetime_parts)
+        
+        iso_string = datetime_part + timezone_part
+    
+    return datetime.fromisoformat(iso_string)
+
 router = APIRouter(prefix="/me", tags=["meals"])
 
 @router.post("/meals", response_model=schemas.MealOut)
@@ -107,8 +140,12 @@ def list_meals(
     offset: int = 0
 ):
     q = db.query(models.Meal).filter(models.Meal.user_id == user.id)
-    if frm: q = q.filter(models.Meal.consumed_at >= frm)
-    if to:  q = q.filter(models.Meal.consumed_at < to)
+    if frm:
+        print(f"DEBUG: list_meals frm parameter: '{frm}'")
+        q = q.filter(models.Meal.consumed_at >= frm)
+    if to:
+        print(f"DEBUG: list_meals to parameter: '{to}'")
+        q = q.filter(models.Meal.consumed_at < to)
     q = q.order_by(models.Meal.consumed_at.desc()).offset(offset).limit(limit)
     meals = q.all()
     return [
@@ -135,8 +172,12 @@ def summary(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user)
 ):
-    from_dt = datetime.fromisoformat(frm)
-    to_dt = datetime.fromisoformat(to)
+    try:
+        # Use our custom parser that handles 'Z' timezone designator
+        from_dt = parse_iso_datetime(frm)
+        to_dt = parse_iso_datetime(to)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
     from sqlalchemy import text
     
     rows = db.execute(
@@ -149,6 +190,11 @@ def summary(
         """), {"uid": user.id, "f": from_dt, "t": to_dt}
     ).fetchall()
 
+    # Debug the date string format in the SQL results
+    if rows:
+        print(f"DEBUG: First row date string: '{rows[0][0]}'")
+        print(f"DEBUG: Constructed date string: '{rows[0][0]}T00:00:00'")
+    
     days = [schemas.DailySummary(date=datetime.fromisoformat(r[0]+"T00:00:00"), total_calories=r[1], meals=r[2]) for r in rows]
     return schemas.SummaryOut(from_dt=from_dt, to_dt=to_dt, days=days)
 

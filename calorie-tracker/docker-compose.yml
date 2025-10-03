@@ -12,6 +12,6 @@ services:
       - ./backend/uploads:/app/backend/uploads
     environment:
       - JWT_SECRET=your_jwt_secret_key_here
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=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
       - DATABASE_URL=sqlite:///./backend/app.db
     restart: unless-stopped

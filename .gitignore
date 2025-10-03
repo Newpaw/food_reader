@@ -13,5 +13,6 @@ setting.py
 env
 
 *.png
+*.webp
 
 *.db

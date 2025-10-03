@@ -137,15 +137,84 @@ def summary(
 ):
     from_dt = datetime.fromisoformat(frm)
     to_dt = datetime.fromisoformat(to)
+    from sqlalchemy import text
+    
     rows = db.execute(
-        """
+        text("""
         SELECT date(consumed_at) as d, SUM(calories) as total, COUNT(*) as meals
         FROM meals
         WHERE user_id = :uid AND consumed_at >= :f AND consumed_at < :t
         GROUP BY date(consumed_at)
         ORDER BY d
-        """, {"uid": user.id, "f": from_dt, "t": to_dt}
+        """), {"uid": user.id, "f": from_dt, "t": to_dt}
     ).fetchall()
 
     days = [schemas.DailySummary(date=datetime.fromisoformat(r[0]+"T00:00:00"), total_calories=r[1], meals=r[2]) for r in rows]
     return schemas.SummaryOut(from_dt=from_dt, to_dt=to_dt, days=days)
+
+@router.delete("/meals/{meal_id}", status_code=204)
+def delete_meal(
+    meal_id: int,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user)
+):
+    """Delete a specific meal by ID"""
+    meal = db.query(models.Meal).filter(
+        models.Meal.id == meal_id,
+        models.Meal.user_id == user.id
+    ).first()
+    
+    if not meal:
+        raise HTTPException(status_code=404, detail="Meal not found")
+    
+    db.delete(meal)
+    db.commit()
+    
+    # Try to delete the image file if it exists
+    try:
+        if meal.image_path and os.path.exists(meal.image_path):
+            os.remove(meal.image_path)
+    except Exception as e:
+        # Log error but don't fail the request if image deletion fails
+        print(f"Error deleting image file: {str(e)}")
+    
+    return None  # 204 No Content response
+
+@router.put("/meals/{meal_id}", response_model=schemas.MealOut)
+def update_meal(
+    meal_id: int,
+    meal_update: schemas.MealUpdate,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user)
+):
+    """Update a specific meal by ID"""
+    meal = db.query(models.Meal).filter(
+        models.Meal.id == meal_id,
+        models.Meal.user_id == user.id
+    ).first()
+    
+    if not meal:
+        raise HTTPException(status_code=404, detail="Meal not found")
+    
+    # Update meal attributes if provided in the request
+    update_data = meal_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(meal, key, value)
+    
+    db.commit()
+    db.refresh(meal)
+    
+    return schemas.MealOut(
+        id=meal.id,
+        calories=meal.calories,
+        protein=meal.protein,
+        fat=meal.fat,
+        carbs=meal.carbs,
+        fiber=meal.fiber,
+        sugar=meal.sugar,
+        sodium=meal.sodium,
+        meal_type=meal.meal_type,
+        consumed_at=meal.consumed_at,
+        notes=meal.notes,
+        image_url=f"/uploads/{user.id}/{os.path.basename(meal.image_path)}"
+    )

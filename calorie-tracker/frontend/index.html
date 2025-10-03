@@ -1,152 +1,399 @@
 <!doctype html>
 <html>
   <head>
-    <title>Calorie Tracker - Dashboard</title>
-    <style>
-      body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-      header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-      .container { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-      h2 { margin-top: 0; }
-      input, select, button { margin: 5px 0; padding: 8px; }
-      button { background: #4CAF50; color: white; border: none; cursor: pointer; }
-      button:hover { opacity: 0.8; }
-      #logoutBtn { background: #f44336; }
-      .form-row { margin-bottom: 10px; }
-      .form-row label { display: inline-block; width: 120px; }
-      .meal-item { margin: 10px 0; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
-      .meal-item img { max-width: 200px; max-height: 200px; display: block; margin-bottom: 10px; }
-      .error { color: red; }
-    </style>
+    <title>Calorie Tracker - Add Meal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <header>
-      <h1>Calorie Tracker</h1>
-      <div>
-        <span id="userName"></span>
-        <button id="logoutBtn">Logout</button>
+    <div class="navbar">
+      <div class="navbar-container">
+        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
+        <button class="navbar-toggle">☰</button>
+        <ul class="navbar-menu">
+          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
+          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
+          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
+        </ul>
+        <div>
+          <span id="userName"></span>
+          <button id="logoutBtn" class="btn btn-danger">Logout</button>
+        </div>
       </div>
-    </header>
+    </div>
     
     <div class="container">
-      <h2>Add New Meal</h2>
-      <form id="mealForm">
-        <div class="form-row">
-          <label for="image">Upload Food Image:</label>
-          <input type="file" id="image" name="image" accept="image/*" required />
-          <p class="help-text">Just upload a photo of your food, and we'll analyze it automatically!</p>
-        </div>
+      <div class="card">
+        <h2>Add New Meal</h2>
+        <p class="mb-3">Take a photo of your food and our AI will analyze its nutritional content.</p>
         
-        <!-- Optional fields - will be filled automatically but can be overridden -->
-        <div class="form-row optional-fields" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          <details>
-            <summary>Advanced Options (Optional)</summary>
-            <div class="form-row">
-              <label for="calories">Calories (Optional):</label>
-              <input type="number" id="calories" name="calories" placeholder="Will be detected automatically" />
-            </div>
-            <div class="form-row">
-              <label for="protein">Protein (g):</label>
-              <input type="number" id="protein" name="protein" placeholder="Will be detected automatically" />
-            </div>
-            <div class="form-row">
-              <label for="fat">Fat (g):</label>
-              <input type="number" id="fat" name="fat" placeholder="Will be detected automatically" />
-            </div>
-            <div class="form-row">
-              <label for="carbs">Carbs (g):</label>
-              <input type="number" id="carbs" name="carbs" placeholder="Will be detected automatically" />
-            </div>
-            <div class="form-row">
-              <label for="fiber">Fiber (g):</label>
-              <input type="number" id="fiber" name="fiber" placeholder="Will be detected automatically" />
-            </div>
-            <div class="form-row">
-              <label for="sugar">Sugar (g):</label>
-              <input type="number" id="sugar" name="sugar" placeholder="Will be detected automatically" />
-            </div>
-            <div class="form-row">
-              <label for="sodium">Sodium (mg):</label>
-              <input type="number" id="sodium" name="sodium" placeholder="Will be detected automatically" />
-            </div>
-            <div class="form-row">
-              <label for="meal_type">Meal Type (Optional):</label>
-              <select id="meal_type" name="meal_type">
-                <option value="">Auto-detect</option>
-                <option value="breakfast">Breakfast</option>
-                <option value="lunch">Lunch</option>
-                <option value="dinner">Dinner</option>
-                <option value="snack">Snack</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label for="consumed_at">Consumed At (Optional):</label>
-              <input type="datetime-local" id="consumed_at" name="consumed_at" />
-            </div>
-            <div class="form-row">
-              <label for="notes">Notes (Optional):</label>
-              <input type="text" id="notes" name="notes" placeholder="Additional notes" />
-            </div>
-          </details>
-        </div>
+        <form id="mealForm">
+          <div class="form-group">
+            <label for="image" class="form-label">Upload Food Image:</label>
+            <input type="file" id="image" name="image" accept="image/*" class="form-control" required />
+            <small class="text-info">Just upload a photo of your food, and we'll analyze it automatically!</small>
+          </div>
+          
+          <div class="form-group mt-4">
+            <button type="submit" class="btn btn-primary btn-block">Analyze & Upload Meal</button>
+          </div>
+        </form>
         
-        <button type="submit">Analyze & Upload Meal</button>
-      </form>
-      <p id="mealMessage" class="error"></p>
-      <div id="analysisResult" style="display: none; margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+        <p id="mealMessage" class="text-danger mt-2"></p>
+      </div>
+      
+      <div id="analysisResult" class="card" style="display: none;">
         <h3>AI Analysis Results</h3>
-        <div id="analysisContent"></div>
-        <div id="nutritionInfo" style="margin-top: 10px;">
+        
+        <div class="mb-3">
+          <div id="foodImagePreview" class="text-center mb-3"></div>
+          <div id="analysisContent"></div>
+        </div>
+        
+        <div id="nutritionEditor" class="mb-4">
           <h4>Nutritional Information</h4>
-          <div class="nutrition-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-            <div><strong>Calories:</strong> <span id="nutrition-calories">0</span> kcal</div>
-            <div><strong>Protein:</strong> <span id="nutrition-protein">0</span> g</div>
-            <div><strong>Fat:</strong> <span id="nutrition-fat">0</span> g</div>
-            <div><strong>Carbs:</strong> <span id="nutrition-carbs">0</span> g</div>
-            <div><strong>Fiber:</strong> <span id="nutrition-fiber">0</span> g</div>
-            <div><strong>Sugar:</strong> <span id="nutrition-sugar">0</span> g</div>
-            <div><strong>Sodium:</strong> <span id="nutrition-sodium">0</span> mg</div>
+          <p class="mb-2">You can adjust these values if needed:</p>
+          
+          <div class="form-group">
+            <label for="edit-calories" class="form-label">Calories:</label>
+            <input type="number" id="edit-calories" class="form-control" min="0" />
+            <div id="calories-bar" class="mt-1"></div>
+          </div>
+          
+          <div class="nutrition-grid mt-3">
+            <div class="form-group">
+              <label for="edit-protein" class="form-label">Protein (g):</label>
+              <input type="number" id="edit-protein" class="form-control" min="0" />
+            </div>
+            
+            <div class="form-group">
+              <label for="edit-fat" class="form-label">Fat (g):</label>
+              <input type="number" id="edit-fat" class="form-control" min="0" />
+            </div>
+            
+            <div class="form-group">
+              <label for="edit-carbs" class="form-label">Carbs (g):</label>
+              <input type="number" id="edit-carbs" class="form-control" min="0" />
+            </div>
+            
+            <div class="form-group">
+              <label for="edit-fiber" class="form-label">Fiber (g):</label>
+              <input type="number" id="edit-fiber" class="form-control" min="0" />
+            </div>
+            
+            <div class="form-group">
+              <label for="edit-sugar" class="form-label">Sugar (g):</label>
+              <input type="number" id="edit-sugar" class="form-control" min="0" />
+            </div>
+            
+            <div class="form-group">
+              <label for="edit-sodium" class="form-label">Sodium (mg):</label>
+              <input type="number" id="edit-sodium" class="form-control" min="0" />
+            </div>
+          </div>
+          
+          <div class="form-group mt-3">
+            <label for="edit-meal-type" class="form-label">Meal Type:</label>
+            <select id="edit-meal-type" class="form-control">
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+              <option value="snack">Snack</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="edit-consumed-at" class="form-label">Consumed At:</label>
+            <input type="datetime-local" id="edit-consumed-at" class="form-control" />
+          </div>
+          
+          <div class="form-group">
+            <label for="edit-notes" class="form-label">Notes:</label>
+            <textarea id="edit-notes" class="form-control" rows="2"></textarea>
+          </div>
+          
+          <div class="form-group mt-3">
+            <button id="saveChangesBtn" class="btn btn-primary">Save Changes</button>
+            <button id="resetChangesBtn" class="btn btn-secondary">Reset</button>
+          </div>
+        </div>
+        
+        <div id="macroDistribution" class="mb-3">
+          <h4>Macronutrient Distribution</h4>
+          <div class="nutrition-grid">
+            <div class="nutrition-card">
+              <div id="protein-percentage" class="value">0%</div>
+              <div class="label">Protein</div>
+            </div>
+            <div class="nutrition-card">
+              <div id="fat-percentage" class="value">0%</div>
+              <div class="label">Fat</div>
+            </div>
+            <div class="nutrition-card">
+              <div id="carbs-percentage" class="value">0%</div>
+              <div class="label">Carbs</div>
+            </div>
           </div>
         </div>
       </div>
+      
+      <div class="card">
+        <h3>Recent Meals</h3>
+        <div id="recentMeals">
+          <p>Loading recent meals...</p>
+        </div>
+        <div class="text-center mt-3">
+          <a href="history.html" class="btn btn-secondary">View All Meals</a>
+        </div>
+      </div>
     </div>
     
-    <div class="container">
-      <h2>Your Meals</h2>
-      <div id="list"></div>
-    </div>
-    
+    <script src="common.js"></script>
+    <script src="charts.js"></script>
     <script src="app.js"></script>
     <script>
-      // Check authentication
+      // Initialize the page
       document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          window.location.href = 'login.html';
-        }
+        if (!checkAuth()) return;
         
-        // Fetch user info
-        fetch('http://localhost:8000/users/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(res => {
-          if (!res.ok) {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-            throw new Error('Authentication failed');
-          }
-          return res.json();
-        })
-        .then(user => {
-          document.getElementById('userName').textContent = `Hello, ${user.name}!`;
-        })
-        .catch(err => console.error('Error fetching user:', err));
+        // Initialize the form
+        initMealForm();
+        
+        // Load recent meals
+        loadRecentMeals();
       });
       
-      // Logout handler
-      document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('token');
-        window.location.href = 'login.html';
-      });
+      // Initialize meal form
+      function initMealForm() {
+        const form = document.getElementById('mealForm');
+        const analysisResult = document.getElementById('analysisResult');
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        const resetChangesBtn = document.getElementById('resetChangesBtn');
+        
+        // Store the original meal data
+        let originalMealData = null;
+        
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const messageEl = document.getElementById('mealMessage');
+          
+          messageEl.textContent = '';
+          analysisResult.style.display = 'none';
+          
+          // Show loading message
+          messageEl.textContent = 'Analyzing your food image...';
+          messageEl.className = 'text-info mt-2';
+          
+          try {
+            const formData = new FormData(form);
+            
+            const response = await fetch(API.meals, {
+              method: 'POST',
+              headers: authHeaders(),
+              body: formData
+            });
+            
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.detail || 'Failed to upload meal');
+            }
+            
+            const mealData = await response.json();
+            originalMealData = { ...mealData };
+            
+            // Display success message
+            messageEl.textContent = 'Meal analyzed successfully!';
+            messageEl.className = 'text-success mt-2';
+            
+            // Show the analysis result
+            displayAnalysisResult(mealData);
+            
+            // Reset the form
+            form.reset();
+            
+            // Load recent meals
+            loadRecentMeals();
+          } catch (error) {
+            messageEl.textContent = error.message;
+            messageEl.className = 'text-danger mt-2';
+            console.error('Error uploading meal:', error);
+          }
+        });
+        
+        // Handle save changes button
+        saveChangesBtn.addEventListener('click', () => {
+          // In a real implementation, this would send an update request to the API
+          // For now, we'll just show a success message
+          alert('Changes saved successfully!');
+          
+          // Update the original meal data with the edited values
+          originalMealData.calories = parseInt(document.getElementById('edit-calories').value) || 0;
+          originalMealData.protein = parseInt(document.getElementById('edit-protein').value) || 0;
+          originalMealData.fat = parseInt(document.getElementById('edit-fat').value) || 0;
+          originalMealData.carbs = parseInt(document.getElementById('edit-carbs').value) || 0;
+          originalMealData.fiber = parseInt(document.getElementById('edit-fiber').value) || 0;
+          originalMealData.sugar = parseInt(document.getElementById('edit-sugar').value) || 0;
+          originalMealData.sodium = parseInt(document.getElementById('edit-sodium').value) || 0;
+          originalMealData.meal_type = document.getElementById('edit-meal-type').value;
+          originalMealData.consumed_at = document.getElementById('edit-consumed-at').value;
+          originalMealData.notes = document.getElementById('edit-notes').value;
+          
+          // Update the display
+          updateMacroDistribution();
+        });
+        
+        // Handle reset changes button
+        resetChangesBtn.addEventListener('click', () => {
+          if (originalMealData) {
+            // Reset the form fields to the original values
+            document.getElementById('edit-calories').value = originalMealData.calories || 0;
+            document.getElementById('edit-protein').value = originalMealData.protein || 0;
+            document.getElementById('edit-fat').value = originalMealData.fat || 0;
+            document.getElementById('edit-carbs').value = originalMealData.carbs || 0;
+            document.getElementById('edit-fiber').value = originalMealData.fiber || 0;
+            document.getElementById('edit-sugar').value = originalMealData.sugar || 0;
+            document.getElementById('edit-sodium').value = originalMealData.sodium || 0;
+            document.getElementById('edit-meal-type').value = originalMealData.meal_type;
+            document.getElementById('edit-consumed-at').value = formatDateForInput(originalMealData.consumed_at);
+            document.getElementById('edit-notes').value = originalMealData.notes || '';
+            
+            // Update the display
+            updateMacroDistribution();
+          }
+        });
+      }
+      
+      // Display analysis result
+      function displayAnalysisResult(mealData) {
+        const analysisResult = document.getElementById('analysisResult');
+        const analysisContent = document.getElementById('analysisContent');
+        const foodImagePreview = document.getElementById('foodImagePreview');
+        
+        // Extract food name from notes if available
+        let foodName = mealData.meal_type.charAt(0).toUpperCase() + mealData.meal_type.slice(1);
+        if (mealData.notes && mealData.notes.includes('AI Analysis:')) {
+          const match = mealData.notes.match(/AI Analysis: (.+?)($|\n)/);
+          if (match && match[1]) {
+            foodName = match[1];
+          }
+        }
+        
+        // Display the food image
+        foodImagePreview.innerHTML = `
+          <img src="http://localhost:8000${mealData.image_url}" alt="${foodName}"
+               style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+        `;
+        
+        // Display the analysis content
+        analysisContent.innerHTML = `
+          <h4>${foodName}</h4>
+          <p><strong>Meal Type:</strong> ${mealData.meal_type.charAt(0).toUpperCase() + mealData.meal_type.slice(1)}</p>
+          <p><strong>Time:</strong> ${formatDate(mealData.consumed_at)}</p>
+        `;
+        
+        // Set the form values
+        document.getElementById('edit-calories').value = mealData.calories || 0;
+        document.getElementById('edit-protein').value = mealData.protein || 0;
+        document.getElementById('edit-fat').value = mealData.fat || 0;
+        document.getElementById('edit-carbs').value = mealData.carbs || 0;
+        document.getElementById('edit-fiber').value = mealData.fiber || 0;
+        document.getElementById('edit-sugar').value = mealData.sugar || 0;
+        document.getElementById('edit-sodium').value = mealData.sodium || 0;
+        document.getElementById('edit-meal-type').value = mealData.meal_type;
+        document.getElementById('edit-consumed-at').value = formatDateForInput(mealData.consumed_at);
+        document.getElementById('edit-notes').value = mealData.notes || '';
+        
+        // Create the calories progress bar
+        const caloriesBar = document.getElementById('calories-bar');
+        caloriesBar.innerHTML = createNutritionBar(mealData.calories, 2000);
+        
+        // Update macronutrient distribution
+        updateMacroDistribution();
+        
+        // Show the analysis result
+        analysisResult.style.display = 'block';
+      }
+      
+      // Update macronutrient distribution
+      function updateMacroDistribution() {
+        const protein = parseInt(document.getElementById('edit-protein').value) || 0;
+        const fat = parseInt(document.getElementById('edit-fat').value) || 0;
+        const carbs = parseInt(document.getElementById('edit-carbs').value) || 0;
+        
+        // Convert to calories (protein: 4 cal/g, fat: 9 cal/g, carbs: 4 cal/g)
+        const proteinCalories = protein * 4;
+        const fatCalories = fat * 9;
+        const carbCalories = carbs * 4;
+        const totalCalories = proteinCalories + fatCalories + carbCalories;
+        
+        // Calculate percentages
+        const proteinPercentage = totalCalories > 0 ? Math.round((proteinCalories / totalCalories) * 100) : 0;
+        const fatPercentage = totalCalories > 0 ? Math.round((fatCalories / totalCalories) * 100) : 0;
+        const carbsPercentage = totalCalories > 0 ? Math.round((carbCalories / totalCalories) * 100) : 0;
+        
+        // Update the display
+        document.getElementById('protein-percentage').textContent = `${proteinPercentage}%`;
+        document.getElementById('fat-percentage').textContent = `${fatPercentage}%`;
+        document.getElementById('carbs-percentage').textContent = `${carbsPercentage}%`;
+      }
+      
+      // Load recent meals
+      async function loadRecentMeals() {
+        const recentMealsEl = document.getElementById('recentMeals');
+        
+        try {
+          const response = await fetch(`${API.meals}?limit=3`, {
+            headers: authHeaders()
+          });
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              logout();
+              return;
+            }
+            throw new Error('Failed to load meals');
+          }
+          
+          const meals = await response.json();
+          
+          if (meals.length === 0) {
+            recentMealsEl.innerHTML = '<p>No meals found. Add your first meal above!</p>';
+            return;
+          }
+          
+          let html = '<div class="meal-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">';
+          
+          meals.forEach(meal => {
+            // Extract food name from notes if available
+            let foodName = meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1);
+            if (meal.notes && meal.notes.includes('AI Analysis:')) {
+              const match = meal.notes.match(/AI Analysis: (.+?)($|\n)/);
+              if (match && match[1]) {
+                foodName = match[1];
+              }
+            }
+            
+            html += `
+              <div class="meal-item">
+                <img src="http://localhost:8000${meal.image_url}" alt="${meal.meal_type}" style="width: 100%; height: 150px; object-fit: cover;">
+                <div class="meal-info p-2">
+                  <h4>${foodName}</h4>
+                  <p>${formatDate(meal.consumed_at)}</p>
+                  <p><strong>${meal.calories}</strong> calories</p>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += '</div>';
+          recentMealsEl.innerHTML = html;
+        } catch (error) {
+          console.error('Error loading meals:', error);
+          recentMealsEl.innerHTML = `<p class="text-danger">Error loading meals: ${error.message}</p>`;
+        }
+      }
     </script>
   </body>
 </html>

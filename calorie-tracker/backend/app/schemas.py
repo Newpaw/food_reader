@@ -29,6 +29,18 @@ class MealCreate(BaseModel):
     consumed_at: datetime
     notes: Optional[str] = None
 
+class MealUpdate(BaseModel):
+    calories: Optional[int] = None
+    protein: Optional[int] = None
+    fat: Optional[int] = None
+    carbs: Optional[int] = None
+    fiber: Optional[int] = None
+    sugar: Optional[int] = None
+    sodium: Optional[int] = None
+    meal_type: Optional[str] = None
+    consumed_at: Optional[datetime] = None
+    notes: Optional[str] = None
+
 class MealOut(BaseModel):
     id: int
     calories: int

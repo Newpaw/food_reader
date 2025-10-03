@@ -1,0 +1,289 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Calorie Tracker - Metrics Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="navbar-container">
+        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
+        <button class="navbar-toggle">☰</button>
+        <ul class="navbar-menu">
+          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
+          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
+          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
+        </ul>
+        <div>
+          <span id="userName"></span>
+          <button id="logoutBtn" class="btn btn-danger">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="card">
+        <h2>Nutrition Metrics</h2>
+        
+        <div class="form-group">
+          <label for="dateRange" class="form-label">Date Range:</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="date" id="fromDate" class="form-control" style="flex: 1;">
+            <span>to</span>
+            <input type="date" id="toDate" class="form-control" style="flex: 1;">
+            <button id="updateBtn" class="btn btn-primary">Update</button>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Quick Select:</label>
+          <div style="display: flex; gap: 10px;">
+            <button id="lastWeekBtn" class="btn btn-secondary">Last 7 Days</button>
+            <button id="lastMonthBtn" class="btn btn-secondary">Last 30 Days</button>
+            <button id="thisMonthBtn" class="btn btn-secondary">This Month</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>Daily Calorie Intake</h3>
+        <div class="chart-container">
+          <canvas id="calorieChart"></canvas>
+        </div>
+        
+        <div class="nutrition-summary mt-3">
+          <div class="nutrition-grid">
+            <div class="nutrition-card">
+              <div id="avgCalories" class="value">0</div>
+              <div class="label">Avg. Daily Calories</div>
+            </div>
+            <div class="nutrition-card">
+              <div id="totalCalories" class="value">0</div>
+              <div class="label">Total Calories</div>
+            </div>
+            <div class="nutrition-card">
+              <div id="maxCalories" class="value">0</div>
+              <div class="label">Max Daily Calories</div>
+            </div>
+            <div class="nutrition-card">
+              <div id="totalMeals" class="value">0</div>
+              <div class="label">Total Meals</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>Macronutrient Distribution</h3>
+        <div class="chart-container" style="height: 350px;">
+          <canvas id="macroChart"></canvas>
+        </div>
+        
+        <div class="nutrition-summary mt-3">
+          <div class="nutrition-grid">
+            <div class="nutrition-card">
+              <div id="totalProtein" class="value">0</div>
+              <div class="label">Total Protein (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div id="totalFat" class="value">0</div>
+              <div class="label">Total Fat (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div id="totalCarbs" class="value">0</div>
+              <div class="label">Total Carbs (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div id="proteinPercentage" class="value">0%</div>
+              <div class="label">Protein %</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>Nutrient Intake Over Time</h3>
+        <div class="chart-container">
+          <canvas id="nutrientChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>Meals per Day</h3>
+        <div class="chart-container">
+          <canvas id="mealsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="charts.js"></script>
+    <script>
+      // Initialize date range with last 7 days
+      document.addEventListener('DOMContentLoaded', () => {
+        if (!checkAuth()) return;
+        
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 7);
+        
+        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMetrics();
+      });
+      
+      // Load metrics data
+      async function loadMetrics() {
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+        
+        if (!fromDate || !toDate) {
+          alert('Please select a valid date range');
+          return;
+        }
+        
+        try {
+          // Load summary data
+          const summaryUrl = `${API.summary}?frm=${fromDate}T00:00:00&to=${toDate}T23:59:59`;
+          const summaryResponse = await fetch(summaryUrl, {
+            headers: authHeaders()
+          });
+          
+          if (!summaryResponse.ok) {
+            if (summaryResponse.status === 401) {
+              logout();
+              return;
+            }
+            throw new Error('Failed to load summary data');
+          }
+          
+          const summaryData = await summaryResponse.json();
+          
+          // Load meals data for the same period
+          const mealsUrl = `${API.meals}?frm=${fromDate}T00:00:00&to=${toDate}T23:59:59&limit=100`;
+          const mealsResponse = await fetch(mealsUrl, {
+            headers: authHeaders()
+          });
+          
+          if (!mealsResponse.ok) {
+            throw new Error('Failed to load meals data');
+          }
+          
+          const mealsData = await mealsResponse.json();
+          
+          // Update charts and metrics
+          updateMetrics(summaryData, mealsData);
+        } catch (error) {
+          console.error('Error loading metrics:', error);
+          alert(`Error loading metrics: ${error.message}`);
+        }
+      }
+      
+      // Update all charts and metrics
+      async function updateMetrics(summaryData, mealsData) {
+        // Calculate summary statistics
+        let totalCalories = 0;
+        let maxCalories = 0;
+        let totalMeals = 0;
+        
+        summaryData.days.forEach(day => {
+          totalCalories += day.total_calories;
+          maxCalories = Math.max(maxCalories, day.total_calories);
+          totalMeals += day.meals;
+        });
+        
+        const avgCalories = summaryData.days.length > 0 
+          ? Math.round(totalCalories / summaryData.days.length) 
+          : 0;
+        
+        // Update summary cards
+        document.getElementById('avgCalories').textContent = avgCalories;
+        document.getElementById('totalCalories').textContent = totalCalories;
+        document.getElementById('maxCalories').textContent = maxCalories;
+        document.getElementById('totalMeals').textContent = totalMeals;
+        
+        // Calculate macronutrient totals
+        let totalProtein = 0;
+        let totalFat = 0;
+        let totalCarbs = 0;
+        
+        mealsData.forEach(meal => {
+          totalProtein += meal.protein || 0;
+          totalFat += meal.fat || 0;
+          totalCarbs += meal.carbs || 0;
+        });
+        
+        // Calculate macronutrient percentages (by calories)
+        const proteinCalories = totalProtein * 4;
+        const fatCalories = totalFat * 9;
+        const carbCalories = totalCarbs * 4;
+        const totalMacroCalories = proteinCalories + fatCalories + carbCalories;
+        
+        const proteinPercentage = totalMacroCalories > 0 
+          ? Math.round((proteinCalories / totalMacroCalories) * 100) 
+          : 0;
+        
+        // Update macronutrient cards
+        document.getElementById('totalProtein').textContent = Math.round(totalProtein);
+        document.getElementById('totalFat').textContent = Math.round(totalFat);
+        document.getElementById('totalCarbs').textContent = Math.round(totalCarbs);
+        document.getElementById('proteinPercentage').textContent = `${proteinPercentage}%`;
+        
+        // Create charts
+        try {
+          // Daily calorie chart
+          await createDailyCalorieChart('calorieChart', summaryData);
+          
+          // Macronutrient distribution chart
+          await createMacronutrientChart('macroChart', mealsData);
+          
+          // Nutrient intake over time chart
+          await createNutrientIntakeChart('nutrientChart', mealsData);
+          
+          // Meals per day chart
+          await createMealFrequencyChart('mealsChart', summaryData);
+        } catch (error) {
+          console.error('Error creating charts:', error);
+        }
+      }
+      
+      // Date range quick select buttons
+      document.getElementById('lastWeekBtn').addEventListener('click', () => {
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 7);
+        
+        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMetrics();
+      });
+      
+      document.getElementById('lastMonthBtn').addEventListener('click', () => {
+        const today = new Date();
+        const lastMonth = new Date(today);
+        lastMonth.setDate(today.getDate() - 30);
+        
+        document.getElementById('fromDate').value = lastMonth.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMetrics();
+      });
+      
+      document.getElementById('thisMonthBtn').addEventListener('click', () => {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMetrics();
+      });
+      
+      // Update button click handler
+      document.getElementById('updateBtn').addEventListener('click', loadMetrics);
+    </script>
+  </body>
+</html>

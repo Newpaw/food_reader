@@ -1,0 +1,601 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Calorie Tracker - Meal History</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="navbar-container">
+        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
+        <button class="navbar-toggle">☰</button>
+        <ul class="navbar-menu">
+          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
+          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
+          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
+        </ul>
+        <div>
+          <span id="userName"></span>
+          <button id="logoutBtn" class="btn btn-danger">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="card">
+        <h2>Meal History</h2>
+        
+        <div class="form-group">
+          <label for="dateFilter" class="form-label">Filter by date range:</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="date" id="fromDate" class="form-control" style="flex: 1;">
+            <span>to</span>
+            <input type="date" id="toDate" class="form-control" style="flex: 1;">
+            <button id="filterBtn" class="btn btn-primary">Filter</button>
+            <button id="resetFilterBtn" class="btn btn-secondary">Reset</button>
+          </div>
+        </div>
+        
+        <div id="mealsList" class="mt-3">
+          <p>Loading meals...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meal Detail Modal -->
+    <div id="mealModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
+      <div style="background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; max-width: 600px; position: relative;">
+        <button id="closeModal" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        <div id="mealModalContent"></div>
+      </div>
+    </div>
+
+    <!-- Edit Meal Modal -->
+    <div id="editMealModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
+      <div style="background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; max-width: 600px; position: relative;">
+        <button id="closeEditModal" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        <h3>Edit Meal</h3>
+        <form id="editMealForm">
+          <input type="hidden" id="editMealId">
+          
+          <div class="form-group">
+            <label for="editMealType" class="form-label">Meal Type</label>
+            <select id="editMealType" class="form-control" required>
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+              <option value="snack">Snack</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="editCalories" class="form-label">Calories</label>
+            <input type="number" id="editCalories" class="form-control" required min="0">
+          </div>
+          
+          <div class="form-group">
+            <label for="editConsumedAt" class="form-label">Consumed At</label>
+            <input type="datetime-local" id="editConsumedAt" class="form-control" required>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="editProtein" class="form-label">Protein (g)</label>
+              <input type="number" id="editProtein" class="form-control" min="0">
+            </div>
+            <div class="form-group col-md-4">
+              <label for="editFat" class="form-label">Fat (g)</label>
+              <input type="number" id="editFat" class="form-control" min="0">
+            </div>
+            <div class="form-group col-md-4">
+              <label for="editCarbs" class="form-label">Carbs (g)</label>
+              <input type="number" id="editCarbs" class="form-control" min="0">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="editFiber" class="form-label">Fiber (g)</label>
+              <input type="number" id="editFiber" class="form-control" min="0">
+            </div>
+            <div class="form-group col-md-4">
+              <label for="editSugar" class="form-label">Sugar (g)</label>
+              <input type="number" id="editSugar" class="form-control" min="0">
+            </div>
+            <div class="form-group col-md-4">
+              <label for="editSodium" class="form-label">Sodium (mg)</label>
+              <input type="number" id="editSodium" class="form-control" min="0">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="editNotes" class="form-label">Notes</label>
+            <textarea id="editNotes" class="form-control" rows="3"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" id="cancelEdit" class="btn btn-secondary">Cancel</button>
+          </div>
+          
+          <div id="editMealMessage" class="mt-3"></div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
+      <div style="background-color: white; margin: 15% auto; padding: 20px; border-radius: 8px; max-width: 400px; text-align: center;">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete this meal? This action cannot be undone.</p>
+        <input type="hidden" id="deleteMealId">
+        <div class="mt-3">
+          <button id="confirmDelete" class="btn btn-danger">Delete</button>
+          <button id="cancelDelete" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+      // Initialize date filters with last 7 days
+      document.addEventListener('DOMContentLoaded', () => {
+        if (!checkAuth()) return;
+        
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 7);
+        
+        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMeals();
+      });
+      
+      // Load meals with optional date filtering
+      async function loadMeals() {
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+        
+        let url = `${API.meals}?limit=50`;
+        if (fromDate) url += `&frm=${fromDate}T00:00:00`;
+        if (toDate) url += `&to=${toDate}T23:59:59`;
+        
+        try {
+          const response = await fetch(url, {
+            headers: authHeaders()
+          });
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              logout();
+              return;
+            }
+            throw new Error('Failed to load meals');
+          }
+          
+          const meals = await response.json();
+          displayMeals(meals);
+        } catch (error) {
+          console.error('Error loading meals:', error);
+          document.getElementById('mealsList').innerHTML = `
+            <p class="text-danger">Error loading meals: ${error.message}</p>
+          `;
+        }
+      }
+      
+      // Display meals in a grid layout
+      function displayMeals(meals) {
+        const mealsListEl = document.getElementById('mealsList');
+        
+        if (meals.length === 0) {
+          mealsListEl.innerHTML = '<p>No meals found for the selected period.</p>';
+          return;
+        }
+        
+        // Group meals by date
+        const mealsByDate = {};
+        meals.forEach(meal => {
+          const date = new Date(meal.consumed_at).toLocaleDateString();
+          if (!mealsByDate[date]) {
+            mealsByDate[date] = [];
+          }
+          mealsByDate[date].push(meal);
+        });
+        
+        // Sort dates in descending order
+        const sortedDates = Object.keys(mealsByDate).sort((a, b) => 
+          new Date(b) - new Date(a)
+        );
+        
+        let html = '';
+        
+        sortedDates.forEach(date => {
+          const formattedDate = new Date(date).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          
+          html += `
+            <div class="date-group mb-4">
+              <h3 class="mb-2">${formattedDate}</h3>
+              <div class="meal-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+          `;
+          
+          mealsByDate[date].forEach(meal => {
+            const mealTime = new Date(meal.consumed_at).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            
+            html += `
+              <div class="meal-item" data-meal-id="${meal.id}">
+                <div class="meal-image-container" style="position: relative;">
+                  <img src="http://localhost:8000${meal.image_url}" alt="${meal.meal_type}" style="width: 100%; height: 150px; object-fit: cover; cursor: pointer;" class="view-meal-details">
+                  <div class="meal-actions" style="position: absolute; top: 5px; right: 5px; display: flex; gap: 5px;">
+                    <button class="edit-meal-btn btn-icon" data-meal-id="${meal.id}" style="background-color: var(--primary-color); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <span style="font-size: 14px;">✏️</span>
+                    </button>
+                    <button class="delete-meal-btn btn-icon" data-meal-id="${meal.id}" style="background-color: var(--danger-color); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <span style="font-size: 14px;">🗑️</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="meal-info p-2">
+                  <h4>${meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1)}</h4>
+                  <p>${mealTime} - ${meal.calories} calories</p>
+                  <div class="nutrition-bar-container" style="width: 100%; background-color: #eee; border-radius: 10px; height: 10px; overflow: hidden; margin-top: 5px;">
+                    <div class="nutrition-bar" style="width: ${Math.min(100, meal.calories / 20)}%; height: 100%; background-color: var(--primary-color);"></div>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += `
+              </div>
+            </div>
+          `;
+        });
+        
+        mealsListEl.innerHTML = html;
+        
+        // Add click event listeners to meal items
+        document.querySelectorAll('.view-meal-details').forEach(item => {
+          item.addEventListener('click', () => {
+            const mealId = item.closest('.meal-item').getAttribute('data-meal-id');
+            const meal = meals.find(m => m.id == mealId);
+            if (meal) {
+              showMealDetails(meal);
+            }
+          });
+        });
+        
+        // Add click event listeners to edit buttons
+        document.querySelectorAll('.edit-meal-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering the meal item click
+            const mealId = btn.getAttribute('data-meal-id');
+            const meal = meals.find(m => m.id == mealId);
+            if (meal) {
+              showEditMealForm(meal);
+            }
+          });
+        });
+        
+        // Add click event listeners to delete buttons
+        document.querySelectorAll('.delete-meal-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering the meal item click
+            const mealId = btn.getAttribute('data-meal-id');
+            const meal = meals.find(m => m.id == mealId);
+            if (meal) {
+              showDeleteConfirmation(meal);
+            }
+          });
+        });
+      }
+      
+      // Show meal details in modal
+      function showMealDetails(meal) {
+        const modal = document.getElementById('mealModal');
+        const modalContent = document.getElementById('mealModalContent');
+        
+        const consumedAt = new Date(meal.consumed_at);
+        const formattedDate = consumedAt.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        const formattedTime = consumedAt.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        // Extract food name from notes if available
+        let foodName = meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1);
+        if (meal.notes && meal.notes.includes('AI Analysis:')) {
+          const match = meal.notes.match(/AI Analysis: (.+?)($|\n)/);
+          if (match && match[1]) {
+            foodName = match[1];
+          }
+        }
+        
+        modalContent.innerHTML = `
+          <h3>${foodName}</h3>
+          <p><strong>Date:</strong> ${formattedDate} at ${formattedTime}</p>
+          <div class="text-center mb-3">
+            <img src="http://localhost:8000${meal.image_url}" alt="${meal.meal_type}" style="max-width: 100%; max-height: 300px; object-fit: contain;">
+          </div>
+          
+          <h4>Nutritional Information</h4>
+          <div class="nutrition-grid mb-3">
+            <div class="nutrition-card">
+              <div class="value">${meal.calories}</div>
+              <div class="label">Calories</div>
+            </div>
+            <div class="nutrition-card">
+              <div class="value">${meal.protein || 0}</div>
+              <div class="label">Protein (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div class="value">${meal.fat || 0}</div>
+              <div class="label">Fat (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div class="value">${meal.carbs || 0}</div>
+              <div class="label">Carbs (g)</div>
+            </div>
+          </div>
+          
+          <div class="nutrition-grid mb-3">
+            <div class="nutrition-card">
+              <div class="value">${meal.fiber || 0}</div>
+              <div class="label">Fiber (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div class="value">${meal.sugar || 0}</div>
+              <div class="label">Sugar (g)</div>
+            </div>
+            <div class="nutrition-card">
+              <div class="value">${meal.sodium || 0}</div>
+              <div class="label">Sodium (mg)</div>
+            </div>
+          </div>
+          
+          ${meal.notes ? `
+            <h4>Notes</h4>
+            <p>${meal.notes.replace('AI Analysis: ', '')}</p>
+          ` : ''}
+          
+          <div class="mt-4 text-center">
+            <button class="btn btn-primary edit-meal-modal-btn" data-meal-id="${meal.id}">Edit Meal</button>
+            <button class="btn btn-danger delete-meal-modal-btn" data-meal-id="${meal.id}">Delete Meal</button>
+          </div>
+        `;
+        
+        modal.style.display = 'block';
+        
+        // Add event listeners to the modal buttons
+        document.querySelector('.edit-meal-modal-btn').addEventListener('click', () => {
+          document.getElementById('mealModal').style.display = 'none';
+          showEditMealForm(meal);
+        });
+        
+        document.querySelector('.delete-meal-modal-btn').addEventListener('click', () => {
+          document.getElementById('mealModal').style.display = 'none';
+          showDeleteConfirmation(meal);
+        });
+      }
+      
+      // Close modal when clicking the close button
+      document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('mealModal').style.display = 'none';
+      });
+      
+      // Close modal when clicking outside the content
+      document.getElementById('mealModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('mealModal')) {
+          document.getElementById('mealModal').style.display = 'none';
+        }
+      });
+      
+      // Filter button click handler
+      document.getElementById('filterBtn').addEventListener('click', loadMeals);
+      
+      // Reset filter button click handler
+      document.getElementById('resetFilterBtn').addEventListener('click', () => {
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 7);
+        
+        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMeals();
+      });
+      
+      // Show edit meal form
+      function showEditMealForm(meal) {
+        // Populate form with meal data
+        document.getElementById('editMealId').value = meal.id;
+        document.getElementById('editMealType').value = meal.meal_type;
+        document.getElementById('editCalories').value = meal.calories;
+        document.getElementById('editProtein').value = meal.protein || 0;
+        document.getElementById('editFat').value = meal.fat || 0;
+        document.getElementById('editCarbs').value = meal.carbs || 0;
+        document.getElementById('editFiber').value = meal.fiber || 0;
+        document.getElementById('editSugar').value = meal.sugar || 0;
+        document.getElementById('editSodium').value = meal.sodium || 0;
+        
+        // Format datetime for the input
+        const consumedAt = new Date(meal.consumed_at);
+        const year = consumedAt.getFullYear();
+        const month = String(consumedAt.getMonth() + 1).padStart(2, '0');
+        const day = String(consumedAt.getDate()).padStart(2, '0');
+        const hours = String(consumedAt.getHours()).padStart(2, '0');
+        const minutes = String(consumedAt.getMinutes()).padStart(2, '0');
+        
+        document.getElementById('editConsumedAt').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        
+        // Set notes
+        document.getElementById('editNotes').value = meal.notes || '';
+        
+        // Clear any previous messages
+        document.getElementById('editMealMessage').textContent = '';
+        
+        // Show the modal
+        document.getElementById('editMealModal').style.display = 'block';
+      }
+      
+      // Show delete confirmation
+      function showDeleteConfirmation(meal) {
+        document.getElementById('deleteMealId').value = meal.id;
+        document.getElementById('deleteConfirmModal').style.display = 'block';
+      }
+      
+      // Delete meal
+      async function deleteMeal(mealId) {
+        try {
+          const response = await fetch(`${API.meals}/${mealId}`, {
+            method: 'DELETE',
+            headers: authHeaders()
+          });
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              logout();
+              return false;
+            }
+            throw new Error(`Failed to delete meal: ${response.status}`);
+          }
+          
+          return true;
+        } catch (error) {
+          console.error('Error deleting meal:', error);
+          return false;
+        }
+      }
+      
+      // Update meal
+      async function updateMeal(mealId, mealData) {
+        try {
+          const response = await fetch(`${API.meals}/${mealId}`, {
+            method: 'PUT',
+            headers: {
+              ...authHeaders(),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(mealData)
+          });
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              logout();
+              return null;
+            }
+            throw new Error(`Failed to update meal: ${response.status}`);
+          }
+          
+          return await response.json();
+        } catch (error) {
+          console.error('Error updating meal:', error);
+          return null;
+        }
+      }
+      
+      // Event listeners for edit meal form
+      document.getElementById('editMealForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const mealId = document.getElementById('editMealId').value;
+        const mealData = {
+          meal_type: document.getElementById('editMealType').value,
+          calories: parseInt(document.getElementById('editCalories').value),
+          protein: parseInt(document.getElementById('editProtein').value),
+          fat: parseInt(document.getElementById('editFat').value),
+          carbs: parseInt(document.getElementById('editCarbs').value),
+          fiber: parseInt(document.getElementById('editFiber').value),
+          sugar: parseInt(document.getElementById('editSugar').value),
+          sodium: parseInt(document.getElementById('editSodium').value),
+          consumed_at: document.getElementById('editConsumedAt').value,
+          notes: document.getElementById('editNotes').value
+        };
+        
+        const messageEl = document.getElementById('editMealMessage');
+        messageEl.textContent = 'Updating meal...';
+        
+        const updatedMeal = await updateMeal(mealId, mealData);
+        
+        if (updatedMeal) {
+          messageEl.textContent = 'Meal updated successfully!';
+          messageEl.style.color = 'var(--success-color)';
+          
+          // Reload meals after a short delay
+          setTimeout(() => {
+            document.getElementById('editMealModal').style.display = 'none';
+            loadMeals();
+          }, 1500);
+        } else {
+          messageEl.textContent = 'Failed to update meal. Please try again.';
+          messageEl.style.color = 'var(--danger-color)';
+        }
+      });
+      
+      // Cancel edit button
+      document.getElementById('cancelEdit').addEventListener('click', () => {
+        document.getElementById('editMealModal').style.display = 'none';
+      });
+      
+      // Close edit modal when clicking the close button
+      document.getElementById('closeEditModal').addEventListener('click', () => {
+        document.getElementById('editMealModal').style.display = 'none';
+      });
+      
+      // Close edit modal when clicking outside the content
+      document.getElementById('editMealModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('editMealModal')) {
+          document.getElementById('editMealModal').style.display = 'none';
+        }
+      });
+      
+      // Confirm delete button
+      document.getElementById('confirmDelete').addEventListener('click', async () => {
+        const mealId = document.getElementById('deleteMealId').value;
+        const success = await deleteMeal(mealId);
+        
+        if (success) {
+          document.getElementById('deleteConfirmModal').style.display = 'none';
+          
+          // Show a temporary success message
+          const mealsListEl = document.getElementById('mealsList');
+          const originalContent = mealsListEl.innerHTML;
+          mealsListEl.innerHTML = '<p class="text-success">Meal deleted successfully!</p>';
+          
+          // Reload meals after a short delay
+          setTimeout(() => {
+            loadMeals();
+          }, 1500);
+        } else {
+          alert('Failed to delete meal. Please try again.');
+        }
+      });
+      
+      // Cancel delete button
+      document.getElementById('cancelDelete').addEventListener('click', () => {
+        document.getElementById('deleteConfirmModal').style.display = 'none';
+      });
+      
+      // Close delete modal when clicking outside the content
+      document.getElementById('deleteConfirmModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('deleteConfirmModal')) {
+          document.getElementById('deleteConfirmModal').style.display = 'none';
+        }
+      });
+    </script>
+  </body>
+</html>

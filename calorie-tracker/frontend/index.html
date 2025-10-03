@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Calorie Tracker - Dashboard</title>
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+      header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+      .container { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+      h2 { margin-top: 0; }
+      input, select, button { margin: 5px 0; padding: 8px; }
+      button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+      button:hover { opacity: 0.8; }
+      #logoutBtn { background: #f44336; }
+      .form-row { margin-bottom: 10px; }
+      .form-row label { display: inline-block; width: 120px; }
+      .meal-item { margin: 10px 0; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
+      .meal-item img { max-width: 200px; max-height: 200px; display: block; margin-bottom: 10px; }
+      .error { color: red; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Calorie Tracker</h1>
+      <div>
+        <span id="userName"></span>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </header>
+    
+    <div class="container">
+      <h2>Add New Meal</h2>
+      <form id="mealForm">
+        <div class="form-row">
+          <label for="image">Upload Food Image:</label>
+          <input type="file" id="image" name="image" accept="image/*" required />
+          <p class="help-text">Just upload a photo of your food, and we'll analyze it automatically!</p>
+        </div>
+        
+        <!-- Optional fields - will be filled automatically but can be overridden -->
+        <div class="form-row optional-fields" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+          <details>
+            <summary>Advanced Options (Optional)</summary>
+            <div class="form-row">
+              <label for="calories">Calories (Optional):</label>
+              <input type="number" id="calories" name="calories" placeholder="Will be detected automatically" />
+            </div>
+            <div class="form-row">
+              <label for="protein">Protein (g):</label>
+              <input type="number" id="protein" name="protein" placeholder="Will be detected automatically" />
+            </div>
+            <div class="form-row">
+              <label for="fat">Fat (g):</label>
+              <input type="number" id="fat" name="fat" placeholder="Will be detected automatically" />
+            </div>
+            <div class="form-row">
+              <label for="carbs">Carbs (g):</label>
+              <input type="number" id="carbs" name="carbs" placeholder="Will be detected automatically" />
+            </div>
+            <div class="form-row">
+              <label for="fiber">Fiber (g):</label>
+              <input type="number" id="fiber" name="fiber" placeholder="Will be detected automatically" />
+            </div>
+            <div class="form-row">
+              <label for="sugar">Sugar (g):</label>
+              <input type="number" id="sugar" name="sugar" placeholder="Will be detected automatically" />
+            </div>
+            <div class="form-row">
+              <label for="sodium">Sodium (mg):</label>
+              <input type="number" id="sodium" name="sodium" placeholder="Will be detected automatically" />
+            </div>
+            <div class="form-row">
+              <label for="meal_type">Meal Type (Optional):</label>
+              <select id="meal_type" name="meal_type">
+                <option value="">Auto-detect</option>
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+                <option value="snack">Snack</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="consumed_at">Consumed At (Optional):</label>
+              <input type="datetime-local" id="consumed_at" name="consumed_at" />
+            </div>
+            <div class="form-row">
+              <label for="notes">Notes (Optional):</label>
+              <input type="text" id="notes" name="notes" placeholder="Additional notes" />
+            </div>
+          </details>
+        </div>
+        
+        <button type="submit">Analyze & Upload Meal</button>
+      </form>
+      <p id="mealMessage" class="error"></p>
+      <div id="analysisResult" style="display: none; margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+        <h3>AI Analysis Results</h3>
+        <div id="analysisContent"></div>
+        <div id="nutritionInfo" style="margin-top: 10px;">
+          <h4>Nutritional Information</h4>
+          <div class="nutrition-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div><strong>Calories:</strong> <span id="nutrition-calories">0</span> kcal</div>
+            <div><strong>Protein:</strong> <span id="nutrition-protein">0</span> g</div>
+            <div><strong>Fat:</strong> <span id="nutrition-fat">0</span> g</div>
+            <div><strong>Carbs:</strong> <span id="nutrition-carbs">0</span> g</div>
+            <div><strong>Fiber:</strong> <span id="nutrition-fiber">0</span> g</div>
+            <div><strong>Sugar:</strong> <span id="nutrition-sugar">0</span> g</div>
+            <div><strong>Sodium:</strong> <span id="nutrition-sodium">0</span> mg</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="container">
+      <h2>Your Meals</h2>
+      <div id="list"></div>
+    </div>
+    
+    <script src="app.js"></script>
+    <script>
+      // Check authentication
+      document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = 'login.html';
+        }
+        
+        // Fetch user info
+        fetch('http://localhost:8000/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => {
+          if (!res.ok) {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+            throw new Error('Authentication failed');
+          }
+          return res.json();
+        })
+        .then(user => {
+          document.getElementById('userName').textContent = `Hello, ${user.name}!`;
+        })
+        .catch(err => console.error('Error fetching user:', err));
+      });
+      
+      // Logout handler
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = 'login.html';
+      });
+    </script>
+  </body>
+</html>

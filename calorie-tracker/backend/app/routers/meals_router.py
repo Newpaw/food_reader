@@ -100,8 +100,7 @@ async def create_meal(
                 else:
                     notes = f"AI Analysis: {ai_notes}"
         except Exception as e:
-            # Log the error but continue with default values if AI analysis fails
-            print(f"AI analysis error: {str(e)}")
+            # Continue with default values if AI analysis fails
             calories = calories or 300  # Default value
             protein = protein or 0      # Default value
             fat = fat or 0              # Default value
@@ -147,10 +146,8 @@ def list_meals(
 ):
     q = db.query(models.Meal).filter(models.Meal.user_id == user.id)
     if frm:
-        print(f"DEBUG: list_meals frm parameter: '{frm}'")
         q = q.filter(models.Meal.consumed_at >= frm)
     if to:
-        print(f"DEBUG: list_meals to parameter: '{to}'")
         q = q.filter(models.Meal.consumed_at < to)
     q = q.order_by(models.Meal.consumed_at.desc()).offset(offset).limit(limit)
     meals = q.all()
@@ -196,11 +193,6 @@ def summary(
         """), {"uid": user.id, "f": from_dt, "t": to_dt}
     ).fetchall()
 
-    # Debug the date string format in the SQL results
-    if rows:
-        print(f"DEBUG: First row date string: '{rows[0][0]}'")
-        print(f"DEBUG: Constructed date string: '{rows[0][0]}T00:00:00'")
-    
     days = [schemas.DailySummary(date=datetime.fromisoformat(r[0]+"T00:00:00+00:00"), total_calories=r[1], meals=r[2]) for r in rows]
     return schemas.SummaryOut(from_dt=from_dt, to_dt=to_dt, days=days)
 
@@ -227,8 +219,8 @@ def delete_meal(
         if meal.image_path and os.path.exists(meal.image_path):
             os.remove(meal.image_path)
     except Exception as e:
-        # Log error but don't fail the request if image deletion fails
-        print(f"Error deleting image file: {str(e)}")
+        # Silently continue if image deletion fails
+        pass
     
     return None  # 204 No Content response
 

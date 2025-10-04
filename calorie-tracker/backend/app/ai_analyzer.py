@@ -121,8 +121,7 @@ def analyze_food_image(image_path: str) -> Dict[str, Any]:
         return result
         
     except Exception as e:
-        # Log the error and return a default response
-        print(f"Error analyzing food image: {str(e)}")
+        # Return a default response on error
         return {
             "food_description": "Error analyzing image",
             "estimated_calories": 300,  # Default value

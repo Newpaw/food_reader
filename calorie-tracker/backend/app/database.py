@@ -10,7 +10,6 @@ if "sqlite" in settings.DATABASE_URL and ":" in settings.DATABASE_URL:
         db_path = db_path[3:]
         if os.path.exists(db_path):
             os.remove(db_path)
-            print(f"Removed existing database at {db_path} to recreate schema")
 
 engine = create_engine(settings.DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

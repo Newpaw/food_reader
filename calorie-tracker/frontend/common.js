@@ -54,7 +54,7 @@ async function fetchCurrentUser() {
     
     return await response.json();
   } catch (error) {
-    console.error('Error fetching user:', error);
+    // Return null on error
     return null;
   }
 }

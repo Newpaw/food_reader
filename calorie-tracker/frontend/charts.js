@@ -1,5 +1,8 @@
 // Charts and visualization functionality
 
+// Store chart instances for later destruction
+const chartInstances = {};
+
 // Load Chart.js from CDN
 function loadChartJS() {
   return new Promise((resolve, reject) => {
@@ -16,9 +19,20 @@ function loadChartJS() {
   });
 }
 
+// Destroy chart if it exists
+function destroyChart(chartId) {
+  if (chartInstances[chartId]) {
+    chartInstances[chartId].destroy();
+    chartInstances[chartId] = null;
+  }
+}
+
 // Create a daily calorie chart
 async function createDailyCalorieChart(containerId, data) {
   await loadChartJS();
+  
+  // Destroy previous chart instance if it exists
+  destroyChart(containerId);
   
   const ctx = document.getElementById(containerId).getContext('2d');
   
@@ -33,7 +47,8 @@ async function createDailyCalorieChart(containerId, data) {
   // Calculate recommended daily intake (example: 2000 calories)
   const recommendedIntake = Array(labels.length).fill(2000);
   
-  return new Chart(ctx, {
+  // Create and store the chart instance
+  chartInstances[containerId] = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
@@ -92,6 +107,9 @@ async function createDailyCalorieChart(containerId, data) {
 async function createMacronutrientChart(containerId, meals) {
   await loadChartJS();
   
+  // Destroy previous chart instance if it exists
+  destroyChart(containerId);
+  
   const ctx = document.getElementById(containerId).getContext('2d');
   
   // Calculate total macronutrients
@@ -110,7 +128,8 @@ async function createMacronutrientChart(containerId, meals) {
   const fatCalories = totalFat * 9;
   const carbCalories = totalCarbs * 4;
   
-  return new Chart(ctx, {
+  // Create and store the chart instance
+  chartInstances[containerId] = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Protein', 'Fat', 'Carbs'],
@@ -157,6 +176,9 @@ async function createMacronutrientChart(containerId, meals) {
 async function createMealFrequencyChart(containerId, data) {
   await loadChartJS();
   
+  // Destroy previous chart instance if it exists
+  destroyChart(containerId);
+  
   const ctx = document.getElementById(containerId).getContext('2d');
   
   // Extract dates and meal counts (convert UTC to local)
@@ -167,7 +189,8 @@ async function createMealFrequencyChart(containerId, data) {
   
   const mealCounts = data.days.map(day => day.meals);
   
-  return new Chart(ctx, {
+  // Create and store the chart instance
+  chartInstances[containerId] = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
@@ -216,6 +239,9 @@ async function createMealFrequencyChart(containerId, data) {
 async function createNutrientIntakeChart(containerId, meals) {
   await loadChartJS();
   
+  // Destroy previous chart instance if it exists
+  destroyChart(containerId);
+  
   const ctx = document.getElementById(containerId).getContext('2d');
   
   // Group meals by date
@@ -260,7 +286,8 @@ async function createNutrientIntakeChart(containerId, meals) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
   
-  return new Chart(ctx, {
+  // Create and store the chart instance
+  chartInstances[containerId] = new Chart(ctx, {
     type: 'line',
     data: {
       labels: formattedDates,

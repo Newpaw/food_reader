@@ -1,15 +1,25 @@
-version: '3.8'
+name: calorie-tracker
 
 services:
-  calorie-tracker:
+  app:
+    container_name: calorie-tracker
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"  # Backend API
-      - "8080:8080"  # Frontend server
-    volumes:
-      - ./backend/uploads:/app/backend/uploads
+    restart: unless-stopped
     env_file:
       - ./.env
-    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+    networks:
+      - cloudflare
+    ports:
+      - "18000:8000"   # backend uvnitř -> host na 18000
+      - "18080:8080"   # frontend uvnitř -> host na 18080
+
+networks:
+  cloudflare:
+    external: true
+    name: cloudflare # on n100

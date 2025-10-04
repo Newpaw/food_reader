@@ -235,10 +235,7 @@
           `;
           
           mealsByDate[date].forEach(meal => {
-            const mealTime = new Date(meal.consumed_at).toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit'
-            });
+            const mealTime = formatDate(meal.consumed_at);
             
             html += `
               <div class="meal-item" data-meal-id="${meal.id}">
@@ -320,11 +317,7 @@
           month: 'long',
           day: 'numeric'
         });
-        const formattedTime = consumedAt.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZoneName: 'short'
-        });
+        const formattedTime = formatDate(meal.consumed_at);
         
         // Extract food name from notes if available
         let foodName = meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1);
@@ -337,7 +330,8 @@
         
         modalContent.innerHTML = `
           <h3>${foodName}</h3>
-          <p><strong>Date:</strong> ${formattedDate} at ${formattedTime}</p>
+          <p><strong>Date:</strong> ${formattedDate}</p>
+          <p><strong>Time:</strong> ${formattedTime}</p>
           <div class="text-center mb-3">
             <img src="http://localhost:8000${meal.image_url}" alt="${meal.meal_type}" style="max-width: 100%; max-height: 300px; object-fit: contain;">
           </div>

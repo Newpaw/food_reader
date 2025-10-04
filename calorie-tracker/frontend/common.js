@@ -72,7 +72,7 @@ function localToUTC(localDate) {
   return new Date(localDate).toISOString();
 }
 
-// Format date for display in local timezone
+// Format date for display in local timezone with time zone name
 function formatDate(dateString) {
   const options = {
     year: 'numeric',
@@ -83,6 +83,25 @@ function formatDate(dateString) {
     timeZoneName: 'short'
   };
   return utcToLocal(dateString).toLocaleDateString(undefined, options);
+}
+
+// Format time only with time zone name
+function formatTime(dateString) {
+  const options = {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  };
+  return utcToLocal(dateString).toLocaleTimeString(undefined, options);
+}
+
+// Format time only without time zone name
+function formatTimeShort(dateString) {
+  const options = {
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  return utcToLocal(dateString).toLocaleTimeString(undefined, options);
 }
 
 // Format date for input fields (in local timezone)

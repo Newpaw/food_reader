@@ -38,8 +38,8 @@ async function createDailyCalorieChart(containerId, data) {
   
   // Extract dates and calorie values (convert UTC to local)
   const labels = data.days.map(day => {
-    const date = utcToLocal(day.date);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    // Use the same date formatting as in other parts of the app
+    return formatDate(day.date).split(',')[0]; // Get just the date part
   });
   
   const calorieValues = data.days.map(day => day.total_calories);
@@ -183,8 +183,8 @@ async function createMealFrequencyChart(containerId, data) {
   
   // Extract dates and meal counts (convert UTC to local)
   const labels = data.days.map(day => {
-    const date = utcToLocal(day.date);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    // Use the same date formatting as in other parts of the app
+    return formatDate(day.date).split(',')[0]; // Get just the date part
   });
   
   const mealCounts = data.days.map(day => day.meals);
@@ -282,6 +282,7 @@ async function createNutrientIntakeChart(containerId, meals) {
   
   // Format dates for display (already in local timezone)
   const formattedDates = dates.map(date => {
+    // Use the same date formatting as in other parts of the app
     const d = new Date(date);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });

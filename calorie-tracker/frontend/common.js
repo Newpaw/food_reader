@@ -61,7 +61,9 @@ async function fetchCurrentUser() {
 
 // Convert UTC date string to local date object
 function utcToLocal(dateString) {
-  const date = new Date(dateString);
+  // Create a date object that correctly interprets the input as UTC
+  // and then returns it in the local timezone
+  const date = new Date(dateString + 'Z');
   return date;
 }
 

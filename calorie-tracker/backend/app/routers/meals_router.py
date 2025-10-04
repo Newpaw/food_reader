@@ -1,4 +1,4 @@
-import os, uuid
+import os, uuid, pytz
 from datetime import datetime, date
 from typing import List, Optional
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
@@ -11,12 +11,13 @@ from ..ai_analyzer import get_meal_data_from_image
 def parse_iso_datetime(iso_string: str) -> datetime:
     """
     Parse ISO 8601 datetime strings, handling the 'Z' timezone designator.
+    Ensures the returned datetime object preserves timezone information.
     
     Args:
         iso_string: ISO 8601 datetime string, possibly with 'Z' timezone designator
         
     Returns:
-        datetime object
+        timezone-aware datetime object
     """
     # Handle 'Z' timezone designator (replace with +00:00 which fromisoformat can handle)
     if iso_string.endswith('Z'):
@@ -38,6 +39,10 @@ def parse_iso_datetime(iso_string: str) -> datetime:
             datetime_part = '.'.join(datetime_parts)
         
         iso_string = datetime_part + timezone_part
+    
+    # If no timezone info is present, assume UTC
+    if not ('+' in iso_string or '-' in iso_string[1:]):  # Skip potential negative sign at start
+        iso_string += '+00:00'
     
     return datetime.fromisoformat(iso_string)
 
@@ -105,7 +110,8 @@ async def create_meal(
             sugar = sugar or 0          # Default value
             sodium = sodium or 0        # Default value
             meal_type = meal_type or "snack"  # Default value
-            consumed_at = consumed_at or datetime.utcnow()  # Default to current time
+            # Default to current time in UTC with timezone info
+            consumed_at = consumed_at or datetime.now(pytz.UTC)
 
     meal = models.Meal(
         user_id=user.id, image_path=path, calories=calories,
@@ -195,7 +201,7 @@ def summary(
         print(f"DEBUG: First row date string: '{rows[0][0]}'")
         print(f"DEBUG: Constructed date string: '{rows[0][0]}T00:00:00'")
     
-    days = [schemas.DailySummary(date=datetime.fromisoformat(r[0]+"T00:00:00"), total_calories=r[1], meals=r[2]) for r in rows]
+    days = [schemas.DailySummary(date=datetime.fromisoformat(r[0]+"T00:00:00+00:00"), total_calories=r[1], meals=r[2]) for r in rows]
     return schemas.SummaryOut(from_dt=from_dt, to_dt=to_dt, days=days)
 
 @router.delete("/meals/{meal_id}", status_code=204)

@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import Optional, List
+import pytz
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -26,7 +27,7 @@ class MealCreate(BaseModel):
     sugar: Optional[int] = None
     sodium: Optional[int] = None
     meal_type: str
-    consumed_at: datetime
+    consumed_at: datetime = Field(..., description="Timestamp with timezone info")
     notes: Optional[str] = None
 
 class MealUpdate(BaseModel):
@@ -38,7 +39,7 @@ class MealUpdate(BaseModel):
     sugar: Optional[int] = None
     sodium: Optional[int] = None
     meal_type: Optional[str] = None
-    consumed_at: Optional[datetime] = None
+    consumed_at: Optional[datetime] = Field(None, description="Timestamp with timezone info")
     notes: Optional[str] = None
 
 class MealOut(BaseModel):
@@ -51,17 +52,17 @@ class MealOut(BaseModel):
     sugar: Optional[int] = None
     sodium: Optional[int] = None
     meal_type: str
-    consumed_at: datetime
+    consumed_at: datetime = Field(..., description="Timestamp with timezone info")
     notes: Optional[str]
     image_url: str
     class Config: orm_mode = True
 
 class DailySummary(BaseModel):
-    date: datetime
+    date: datetime = Field(..., description="Date with timezone info")
     total_calories: int
     meals: int
 
 class SummaryOut(BaseModel):
-    from_dt: datetime
-    to_dt: datetime
+    from_dt: datetime = Field(..., description="From datetime with timezone info")
+    to_dt: datetime = Field(..., description="To datetime with timezone info")
     days: List[DailySummary]

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
+import pytz
 
 class User(Base):
     __tablename__ = "users"
@@ -9,7 +10,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     password_hash = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(pytz.UTC))
 
     meals = relationship("Meal", back_populates="user")
 
@@ -28,6 +29,6 @@ class Meal(Base):
     meal_type = Column(String, nullable=False)  # breakfast|lunch|dinner|snack
     consumed_at = Column(DateTime, nullable=False)
     notes = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(pytz.UTC))
 
     user = relationship("User", back_populates="meals")

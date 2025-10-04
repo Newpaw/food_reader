@@ -173,7 +173,13 @@ function createNutritionBar(value, maxValue, color = 'var(--primary-color)') {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-  // Check authentication
+  // Skip authentication check on login page
+  const currentPage = window.location.pathname.split('/').pop();
+  if (currentPage === 'login.html') {
+    return; // Skip auth check on login page
+  }
+  
+  // Check authentication for all other pages
   if (checkAuth()) {
     // Initialize navigation
     initNavigation();

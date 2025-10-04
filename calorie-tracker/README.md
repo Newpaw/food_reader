@@ -154,7 +154,9 @@ calorie-tracker/
    ```
 
 4. Access the application:
-   - Open http://localhost:8080/frontend/login.html in your browser
+   - Open http://localhost:18080/frontend/login.html in your browser
+   
+   Note: The application is configured to use port 18000 for the backend API and port 18080 for the frontend when running with Docker.
 
 5. To stop the containers:
    ```bash
@@ -181,7 +183,9 @@ calorie-tracker/
    ```
 
 3. Access the application:
-   - Open http://localhost:8080/frontend/login.html in your browser
+   - Open http://localhost:18080/frontend/login.html in your browser
+   
+   Note: The application is configured to use port 18000 for the backend API and port 18080 for the frontend when running with Docker.
 
 4. To stop the container:
    ```bash
@@ -275,10 +279,16 @@ calorie-tracker/
 
 ### Common Issues
 
-1. **Backend API not accessible**:
-   - Check if the backend server is running on port 8000
-   - Verify network settings if running in Docker
-   - Check for any error messages in the backend logs
+1. **Backend API not accessible** (Connection Refused Error):
+   - When running with Docker, make sure you're using the correct ports:
+     - Backend API is available at http://localhost:18000
+     - Frontend is available at http://localhost:18080
+   - The frontend code is configured to connect to the backend on port 18000
+   - If you're getting "Connection Refused" errors, check that:
+     - Docker containers are running (`docker-compose ps`)
+     - Ports are correctly mapped in docker-compose.yml
+     - No firewall is blocking the connections
+   - Check for any error messages in the backend logs (`docker-compose logs`)
 
 2. **Frontend not loading**:
    - Ensure Nginx or the HTTP server is running correctly

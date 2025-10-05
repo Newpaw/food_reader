@@ -31,30 +31,54 @@
         <form id="mealForm">
           <div class="form-group">
             <label class="form-label">Upload Food Image:</label>
+            <p class="helper-text mb-2">Take a photo of your food or choose from your gallery. We'll analyze it automatically.</p>
+            
             <div class="photo-options">
               <div class="photo-option">
                 <label for="image" class="photo-option-button camera-option">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                     <circle cx="12" cy="13" r="4"></circle>
                   </svg>
-                  <span>Take Photo</span>
+                  <span>📷 Take Photo</span>
                 </label>
                 <input type="file" id="image" name="image" accept="image/*" capture="environment" class="photo-input" required />
               </div>
               <div class="photo-option">
                 <label for="gallery-image" class="photo-option-button gallery-option">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <circle cx="8.5" cy="8.5" r="1.5"></circle>
                     <polyline points="21 15 16 10 5 21"></polyline>
                   </svg>
-                  <span>Choose from Gallery</span>
+                  <span>🖼 Choose from Gallery</span>
                 </label>
                 <input type="file" id="gallery-image" name="image" accept="image/*" class="photo-input" />
               </div>
             </div>
-            <small class="text-info mt-2">Take a photo of your food or choose from your gallery, and we'll analyze it automatically!</small>
+            
+            <div id="imagePreviewContainer" class="image-preview-container mt-3" style="display: none;">
+              <div class="image-preview-header">
+                <h4>Selected Image</h4>
+                <button type="button" id="clearImageBtn" class="btn btn-sm btn-neutral">Clear</button>
+              </div>
+              <div id="imagePreview" class="image-preview"></div>
+            </div>
+            
+            <div id="uploadProgress" class="upload-progress mt-3" style="display: none;">
+              <div class="progress-bar-container">
+                <div id="progressBar" class="progress-bar"></div>
+              </div>
+              <div id="progressStatus" class="progress-status">Uploading... 0%</div>
+            </div>
+            
+            <div id="uploadSuccess" class="upload-success mt-3" style="display: none;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>Upload successful!</span>
+            </div>
           </div>
           
           <div class="form-group mt-4">
@@ -213,14 +237,66 @@
           }
         });
         
+        // Handle image selection and preview
+        function handleImageSelection(file) {
+          if (!file) return;
+          
+          // Show image preview
+          const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+          const imagePreview = document.getElementById('imagePreview');
+          
+          // Create image preview
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected food image">`;
+            imagePreviewContainer.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+          
+          // Clear the other input
+          if (file === cameraInput.files[0]) {
+            galleryInput.value = '';
+          } else {
+            cameraInput.value = '';
+          }
+        }
+        
+        // Handle camera input change
+        cameraInput.addEventListener('change', function() {
+          if (this.files.length > 0) {
+            handleImageSelection(this.files[0]);
+          }
+        });
+        
+        // Handle gallery input change
+        galleryInput.addEventListener('change', function() {
+          if (this.files.length > 0) {
+            handleImageSelection(this.files[0]);
+          }
+        });
+        
+        // Handle clear image button
+        const clearImageBtn = document.getElementById('clearImageBtn');
+        clearImageBtn.addEventListener('click', function() {
+          // Clear inputs and hide preview
+          cameraInput.value = '';
+          galleryInput.value = '';
+          document.getElementById('imagePreviewContainer').style.display = 'none';
+        });
+        
         // Handle form submission
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
           
           const messageEl = document.getElementById('mealMessage');
+          const uploadProgress = document.getElementById('uploadProgress');
+          const progressBar = document.getElementById('progressBar');
+          const progressStatus = document.getElementById('progressStatus');
+          const uploadSuccess = document.getElementById('uploadSuccess');
           
           messageEl.textContent = '';
           analysisResult.style.display = 'none';
+          uploadSuccess.style.display = 'none';
           
           // Check if an image was selected
           const cameraFile = cameraInput.files[0];
@@ -232,9 +308,10 @@
             return;
           }
           
-          // Show loading message
+          // Show loading message and progress bar
           messageEl.textContent = 'Analyzing your food image...';
           messageEl.className = 'text-info mt-2';
+          uploadProgress.style.display = 'block';
           
           try {
             const formData = new FormData();
@@ -246,11 +323,28 @@
               formData.append('image', galleryFile);
             }
             
+            // Simulate upload progress (since fetch doesn't support progress monitoring)
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+              progress += 5;
+              if (progress > 90) {
+                clearInterval(progressInterval);
+                progress = 90; // Hold at 90% until complete
+              }
+              progressBar.style.width = `${progress}%`;
+              progressStatus.textContent = `Uploading... ${progress}%`;
+            }, 200);
+            
             const response = await fetch(API.meals, {
               method: 'POST',
               headers: authHeaders(),
               body: formData
             });
+            
+            // Clear progress interval and set to 100%
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            progressStatus.textContent = 'Upload complete!';
             
             if (!response.ok) {
               const errorData = await response.json();
@@ -260,6 +354,10 @@
             const mealData = await response.json();
             originalMealData = { ...mealData };
             
+            // Hide progress bar and show success message
+            uploadProgress.style.display = 'none';
+            uploadSuccess.style.display = 'flex';
+            
             // Display success message
             messageEl.textContent = 'Meal analyzed successfully!';
             messageEl.className = 'text-success mt-2';
@@ -268,13 +366,20 @@
             displayAnalysisResult(mealData);
             
             // Reset the form and both inputs
-            form.reset();
-            cameraInput.value = '';
-            galleryInput.value = '';
+            setTimeout(() => {
+              form.reset();
+              cameraInput.value = '';
+              galleryInput.value = '';
+              document.getElementById('imagePreviewContainer').style.display = 'none';
+              uploadSuccess.style.display = 'none';
+            }, 3000);
             
             // Load recent meals
             loadRecentMeals();
           } catch (error) {
+            // Hide progress bar
+            uploadProgress.style.display = 'none';
+            
             messageEl.textContent = error.message;
             messageEl.className = 'text-danger mt-2';
             console.error('Error uploading meal:', error);

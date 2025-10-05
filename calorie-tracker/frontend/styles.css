@@ -634,8 +634,8 @@ tr:hover {
   /* Photo Upload Options */
   .photo-options {
     display: flex;
-    gap: 15px;
-    margin-bottom: 10px;
+    gap: 20px;
+    margin-bottom: 15px;
   }
   
   .photo-option {
@@ -647,37 +647,44 @@ tr:hover {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 25px;
     background-color: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
+    border-radius: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
     color: var(--text-color);
+    height: 160px;
   }
   
   .photo-option-button:hover {
     background-color: rgba(255, 255, 255, 0.15);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .photo-option-button:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   }
   
   .photo-option-button svg {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     stroke: var(--primary-color);
   }
   
   .photo-option-button span {
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 1.1rem;
   }
   
   .camera-option {
-    background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(65, 105, 225, 0.2));
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(65, 105, 225, 0.2));
   }
   
   .gallery-option {
-    background: linear-gradient(135deg, rgba(65, 105, 225, 0.2), rgba(138, 43, 226, 0.2));
+    background: linear-gradient(135deg, rgba(65, 105, 225, 0.3), rgba(138, 43, 226, 0.2));
   }
   
   .photo-input {
@@ -687,6 +694,90 @@ tr:hover {
     opacity: 0;
     overflow: hidden;
     z-index: -1;
+  }
+  
+  /* Image Preview */
+  .image-preview-container {
+    background: rgba(30, 30, 30, 0.7);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .image-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .image-preview-header h4 {
+    margin: 0;
+  }
+  
+  .image-preview {
+    text-align: center;
+  }
+  
+  .image-preview img {
+    max-width: 100%;
+    max-height: 250px;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+  
+  /* Upload Progress */
+  .upload-progress {
+    margin-top: 20px;
+  }
+  
+  .progress-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 5px;
+    transition: width 0.3s ease;
+  }
+  
+  .progress-status {
+    margin-top: 5px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+  }
+  
+  /* Upload Success */
+  .upload-success {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: rgba(78, 204, 163, 0.2);
+    border-radius: 8px;
+    color: var(--success-color);
+    font-weight: 500;
+    animation: fade-in 0.5s ease-out;
+  }
+  
+  .upload-success svg {
+    stroke: var(--success-color);
+    margin-right: 10px;
+  }
+  
+  /* Helper Text */
+  .helper-text {
+    color: var(--info-color);
+    font-size: 0.95rem;
+    margin-bottom: 15px;
   }
   
   @media (max-width: 480px) {

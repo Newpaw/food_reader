@@ -198,6 +198,7 @@
     </div>
     
     <script src="common.js"></script>
+    <script src="imageOptimizer.js"></script>
     <script src="charts.js"></script>
     <script src="app.js"></script>
     <script>
@@ -245,13 +246,22 @@
           const imagePreviewContainer = document.getElementById('imagePreviewContainer');
           const imagePreview = document.getElementById('imagePreview');
           
-          // Create image preview
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected food image">`;
-            imagePreviewContainer.style.display = 'block';
-          };
-          reader.readAsDataURL(file);
+          // Create optimized image preview using ImageOptimizer
+          ImageOptimizer.createThumbnail(file)
+            .then(thumbnailUrl => {
+              imagePreview.innerHTML = `<img src="${thumbnailUrl}" alt="Selected food image">`;
+              imagePreviewContainer.style.display = 'block';
+            })
+            .catch(error => {
+              console.error('Error creating thumbnail:', error);
+              // Fallback to original method if optimization fails
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected food image">`;
+                imagePreviewContainer.style.display = 'block';
+              };
+              reader.readAsDataURL(file);
+            });
           
           // Clear the other input
           if (file === cameraInput.files[0]) {
@@ -314,13 +324,40 @@
           uploadProgress.style.display = 'block';
           
           try {
+            // Get the selected file
+            const selectedFile = cameraFile || galleryFile;
+            
+            // Create a FormData object for the API request
             const formData = new FormData();
             
-            // Add the selected image to the form data
-            if (cameraFile) {
-              formData.append('image', cameraFile);
-            } else if (galleryFile) {
-              formData.append('image', galleryFile);
+            // Check if the image should be optimized
+            if (ImageOptimizer.shouldOptimize(selectedFile)) {
+              try {
+                // Show optimization status in progress message
+                messageEl.textContent = 'Optimizing and analyzing your food image...';
+                
+                // Optimize the image before uploading
+                const optimizedImage = await ImageOptimizer.optimizeImage(selectedFile);
+                
+                // Add the optimized image to the form data with the original filename
+                formData.append('image', optimizedImage, selectedFile.name);
+              } catch (optimizationError) {
+                console.warn('Image optimization failed, using original image:', optimizationError);
+                
+                // Fallback to original image if optimization fails
+                if (cameraFile) {
+                  formData.append('image', cameraFile);
+                } else if (galleryFile) {
+                  formData.append('image', galleryFile);
+                }
+              }
+            } else {
+              // Use original image for small files
+              if (cameraFile) {
+                formData.append('image', cameraFile);
+              } else if (galleryFile) {
+                formData.append('image', galleryFile);
+              }
             }
             
             // Simulate upload progress (since fetch doesn't support progress monitoring)
@@ -451,7 +488,7 @@
         // Display the food image
         foodImagePreview.innerHTML = `
           <img src="${mealData.image_url}" alt="${foodName}"
-               style="max-width: 100%; max-height: 300px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);">
+               class="food-thumbnail">
         `;
         
         // Display the analysis content

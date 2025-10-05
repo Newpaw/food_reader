@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Image Optimizer Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      
+      h1 {
+        color: #8A2BE2;
+        text-align: center;
+      }
+      
+      .container {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      
+      .form-group {
+        margin-bottom: 20px;
+      }
+      
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      
+      .image-preview-container {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+      }
+      
+      .image-preview {
+        width: 300px;
+        height: 250px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background-color: #eee;
+        border-radius: 8px;
+      }
+      
+      .image-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+      
+      .stats {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+        font-family: monospace;
+      }
+      
+      button {
+        background-color: #8A2BE2;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      
+      button:hover {
+        background-color: #7B1FA2;
+      }
+      
+      .photo-input {
+        display: block;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Image Optimizer Test</h1>
+      
+      <div class="form-group">
+        <label for="image">Select an image:</label>
+        <input type="file" id="image" accept="image/*" class="photo-input">
+      </div>
+      
+      <div class="form-group">
+        <button id="optimizeBtn">Optimize Image</button>
+      </div>
+      
+      <div id="originalContainer" class="image-preview-container" style="display: none;">
+        <h3>Original Image</h3>
+        <div id="originalPreview" class="image-preview"></div>
+        <div id="originalStats" class="stats"></div>
+      </div>
+      
+      <div id="optimizedContainer" class="image-preview-container" style="display: none;">
+        <h3>Optimized Image</h3>
+        <div id="optimizedPreview" class="image-preview"></div>
+        <div id="optimizedStats" class="stats"></div>
+      </div>
+      
+      <div id="thumbnailContainer" class="image-preview-container" style="display: none;">
+        <h3>Thumbnail Preview</h3>
+        <div id="thumbnailPreview" class="image-preview"></div>
+      </div>
+    </div>
+    
+    <script src="imageOptimizer.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const imageInput = document.getElementById('image');
+        const optimizeBtn = document.getElementById('optimizeBtn');
+        const originalContainer = document.getElementById('originalContainer');
+        const originalPreview = document.getElementById('originalPreview');
+        const originalStats = document.getElementById('originalStats');
+        const optimizedContainer = document.getElementById('optimizedContainer');
+        const optimizedPreview = document.getElementById('optimizedPreview');
+        const optimizedStats = document.getElementById('optimizedStats');
+        const thumbnailContainer = document.getElementById('thumbnailContainer');
+        const thumbnailPreview = document.getElementById('thumbnailPreview');
+        
+        let selectedFile = null;
+        
+        // Handle image selection
+        imageInput.addEventListener('change', (e) => {
+          selectedFile = e.target.files[0];
+          
+          if (selectedFile) {
+            // Display original image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              originalPreview.innerHTML = `<img src="${e.target.result}" alt="Original image">`;
+              originalContainer.style.display = 'block';
+              
+              // Display original image stats
+              originalStats.innerHTML = `
+                <p>Filename: ${selectedFile.name}</p>
+                <p>Type: ${selectedFile.type}</p>
+                <p>Size: ${(selectedFile.size / 1024).toFixed(2)} KB</p>
+                <p>Last Modified: ${new Date(selectedFile.lastModified).toLocaleString()}</p>
+              `;
+            };
+            reader.readAsDataURL(selectedFile);
+          }
+        });
+        
+        // Handle optimize button click
+        optimizeBtn.addEventListener('click', async () => {
+          if (!selectedFile) {
+            alert('Please select an image first');
+            return;
+          }
+          
+          try {
+            // Create thumbnail
+            const thumbnailUrl = await ImageOptimizer.createThumbnail(selectedFile);
+            thumbnailPreview.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail preview">`;
+            thumbnailContainer.style.display = 'block';
+            
+            // Optimize image
+            const optimizedImage = await ImageOptimizer.optimizeImage(selectedFile);
+            
+            // Convert optimized blob to data URL for display
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              optimizedPreview.innerHTML = `<img src="${e.target.result}" alt="Optimized image">`;
+              optimizedContainer.style.display = 'block';
+              
+              // Display optimized image stats
+              optimizedStats.innerHTML = `
+                <p>Type: ${optimizedImage.type}</p>
+                <p>Size: ${(optimizedImage.size / 1024).toFixed(2)} KB</p>
+                <p>Reduction: ${Math.round((1 - optimizedImage.size / selectedFile.size) * 100)}%</p>
+              `;
+            };
+            reader.readAsDataURL(optimizedImage);
+          } catch (error) {
+            console.error('Error optimizing image:', error);
+            alert(`Error optimizing image: ${error.message}`);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

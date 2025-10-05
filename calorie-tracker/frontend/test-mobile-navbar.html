@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Calorie Tracker - Test Mobile Navbar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      /* Override authentication check for testing */
+      .navbar-user-section {
+        display: flex !important;
+      }
+      #userName {
+        display: inline-block !important;
+      }
+      /* Force mobile view for testing */
+      @media (min-width: 769px) {
+        .navbar-container {
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .navbar-brand {
+          order: 2;
+        }
+        .navbar-toggle {
+          display: block !important;
+          order: 1;
+        }
+        .navbar-menu {
+          display: none;
+        }
+        .navbar-menu.active {
+          display: flex !important;
+        }
+        .navbar-user-desktop {
+          display: none !important;
+        }
+      }
+      
+      /* Show the user section in the menu */
+      .navbar-user-menu-item {
+        display: block !important;
+      }
+      
+      /* Add some styling for better visibility */
+      .navbar-menu {
+        background-color: #1a1a1a;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="navbar-container">
+        <button class="navbar-toggle">☰</button>
+        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
+        <ul class="navbar-menu">
+          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
+          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
+          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
+          <li class="navbar-item navbar-user-menu-item">
+            <div class="navbar-user-section">
+              <span id="userName">Hello, Test User!</span>
+              <button id="logoutBtn" class="btn btn-neutral btn-sm btn-outline">Logout</button>
+            </div>
+          </li>
+        </ul>
+        <div class="navbar-user-section navbar-user-desktop">
+          <span id="userName">Hello, Test User!</span>
+          <button id="logoutBtn" class="btn btn-neutral btn-sm btn-outline">Logout</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="container">
+      <div class="card">
+        <h2>Test Mobile Navbar</h2>
+        <p class="mb-3">This page is for testing the mobile navbar with user section inside the toggle menu.</p>
+        
+        <div class="form-group mt-4">
+          <button type="button" id="toggleNavbar" class="btn btn-primary btn-block">Toggle Navbar Menu</button>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Simple toggle for testing
+      document.addEventListener('DOMContentLoaded', function() {
+        // Mobile menu toggle
+        const navbarToggle = document.querySelector('.navbar-toggle');
+        const navbarMenu = document.querySelector('.navbar-menu');
+        
+        if (navbarToggle && navbarMenu) {
+          navbarToggle.addEventListener('click', () => {
+            navbarMenu.classList.toggle('active');
+          });
+        }
+        
+        // Additional toggle button in content
+        const toggleBtn = document.getElementById('toggleNavbar');
+        if (toggleBtn && navbarMenu) {
+          toggleBtn.addEventListener('click', () => {
+            navbarMenu.classList.toggle('active');
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

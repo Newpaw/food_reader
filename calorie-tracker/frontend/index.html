@@ -15,8 +15,14 @@
           <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
           <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
           <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
+          <li class="navbar-item navbar-user-menu-item">
+            <div class="navbar-user-section">
+              <span id="userName"></span>
+              <button id="logoutBtn" class="btn btn-neutral btn-sm btn-outline">Logout</button>
+            </div>
+          </li>
         </ul>
-        <div class="navbar-user-section">
+        <div class="navbar-user-section navbar-user-desktop">
           <span id="userName"></span>
           <button id="logoutBtn" class="btn btn-neutral btn-sm btn-outline">Logout</button>
         </div>
@@ -53,7 +59,7 @@
                   </svg>
                   <span>🖼 Choose from Gallery</span>
                 </label>
-                <input type="file" id="gallery-image" name="image" accept="image/*" class="photo-input" />
+                <input type="file" id="gallery-image" name="gallery-image" accept="image/*" class="photo-input" />
               </div>
             </div>
             
@@ -236,6 +242,7 @@
           if (this.files.length > 0) {
             cameraInput.value = ''; // Clear the other input
             handleImageSelection(this.files[0]); // Handle the selected image
+            console.log("Gallery image selected:", this.files[0].name);
           }
         });
         
@@ -264,11 +271,13 @@
               reader.readAsDataURL(file);
             });
           
-          // Clear the other input
+          // Clear the other input and ensure we're using the correct file
           if (file === cameraInput.files[0]) {
             galleryInput.value = '';
+            console.log("Camera file selected for preview");
           } else {
             cameraInput.value = '';
+            console.log("Gallery file selected for preview");
           }
         }
         
@@ -279,21 +288,8 @@
           }
         });
         
-        // Handle gallery input change
-        galleryInput.addEventListener('change', function() {
-          if (this.files.length > 0) {
-            handleImageSelection(this.files[0]);
-          }
-        });
+        // This duplicate event listener was causing issues - removed
         
-        // Handle clear image button
-        const clearImageBtn = document.getElementById('clearImageBtn');
-        clearImageBtn.addEventListener('click', function() {
-          // Clear inputs and hide preview
-          cameraInput.value = '';
-          galleryInput.value = '';
-          document.getElementById('imagePreviewContainer').style.display = 'none';
-        });
         
         // Handle form submission
         form.addEventListener('submit', async (e) => {
@@ -325,11 +321,23 @@
           uploadProgress.style.display = 'block';
           
           try {
-            // Get the selected file
-            const selectedFile = cameraFile || galleryFile;
+            // Get the selected file - ensure we're using the correct file
+            let selectedFile = null;
+            if (cameraFile) {
+              selectedFile = cameraFile;
+              console.log("Using camera file for upload");
+            } else if (galleryFile) {
+              selectedFile = galleryFile;
+              console.log("Using gallery file for upload");
+            }
+            
+            if (!selectedFile) {
+              throw new Error("No file selected");
+            }
             
             // Create a FormData object for the API request
             const formData = new FormData();
+            console.log("Selected file for upload:", selectedFile.name, "Size:", (selectedFile.size / 1024).toFixed(2) + "KB");
             
             // Check if the image should be optimized
             if (ImageOptimizer.shouldOptimize(selectedFile)) {
@@ -402,6 +410,7 @@
               galleryInput.value = '';
               document.getElementById('imagePreviewContainer').style.display = 'none';
               uploadSuccess.style.display = 'none';
+              console.log("Form reset after successful submission");
             }, 3000);
             
             // Load recent meals

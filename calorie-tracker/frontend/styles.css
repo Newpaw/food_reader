@@ -106,6 +106,10 @@ p {
   margin-right: 8px;
 }
 
+.navbar-user-menu-item {
+  display: none;
+}
+
 .navbar-brand {
   font-size: 1.5rem;
   font-weight: bold;
@@ -848,10 +852,20 @@ tr:hover {
     margin: 0.5rem 0;
   }
   
-  .navbar-user-section {
-    order: 2;
-    margin-right: auto;
-    margin-left: 1rem;
+  .navbar-user-desktop {
+    display: none;
+  }
+  
+  .navbar-user-menu-item {
+    display: block;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .navbar-menu .navbar-user-section {
+    width: 100%;
+    justify-content: center;
   }
   
   .nutrition-grid {

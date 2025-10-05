@@ -96,6 +96,16 @@ p {
   margin: 0 auto;
 }
 
+.navbar-user-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#userName {
+  margin-right: 8px;
+}
+
 .navbar-brand {
   font-size: 1.5rem;
   font-weight: bold;
@@ -150,6 +160,7 @@ p {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Forms */
@@ -236,6 +247,22 @@ p {
 .btn-danger:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(255, 82, 82, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid currentColor;
+  box-shadow: none;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+}
+
+.btn-neutral {
+  color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .btn-block {
@@ -537,6 +564,11 @@ tr:hover {
   to { transform: rotate(360deg); }
 }
 
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Tooltip */
 .tooltip {
   position: relative;
@@ -585,6 +617,88 @@ tr:hover {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .navbar-brand {
+    order: 2;
+  }
+  
+  .navbar-toggle {
+    display: block;
+    order: 1;
+  }
+  
+  /* Photo Upload Options */
+  .photo-options {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .photo-option {
+    flex: 1;
+  }
+  
+  .photo-option-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    color: var(--text-color);
+  }
+  
+  .photo-option-button:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  .photo-option-button svg {
+    margin-bottom: 10px;
+    stroke: var(--primary-color);
+  }
+  
+  .photo-option-button span {
+    font-weight: 500;
+  }
+  
+  .camera-option {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(65, 105, 225, 0.2));
+  }
+  
+  .gallery-option {
+    background: linear-gradient(135deg, rgba(65, 105, 225, 0.2), rgba(138, 43, 226, 0.2));
+  }
+  
+  .photo-input {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+  }
+  
+  @media (max-width: 480px) {
+    .photo-options {
+      flex-direction: column;
+    }
+    
+    .photo-option-button {
+      padding: 15px;
+    }
+  }
+  
   .navbar-menu {
     display: none;
     flex-direction: column;
@@ -595,6 +709,8 @@ tr:hover {
     background-color: var(--navbar-bg);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 1rem;
+    order: 4;
+    width: 100%;
   }
   
   .navbar-menu.active {
@@ -605,8 +721,9 @@ tr:hover {
     margin: 0.5rem 0;
   }
   
-  .navbar-toggle {
-    display: block;
+  .navbar-user-section {
+    order: 3;
+    margin-left: auto;
   }
   
   .nutrition-grid {

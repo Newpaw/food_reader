@@ -9,16 +9,16 @@
   <body>
     <div class="navbar">
       <div class="navbar-container">
-        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
         <button class="navbar-toggle">☰</button>
+        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
         <ul class="navbar-menu">
           <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
           <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
           <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
         </ul>
-        <div>
+        <div class="navbar-user-section">
           <span id="userName"></span>
-          <button id="logoutBtn" class="btn btn-danger">Logout</button>
+          <button id="logoutBtn" class="btn btn-neutral btn-sm btn-outline">Logout</button>
         </div>
       </div>
     </div>
@@ -30,13 +30,35 @@
         
         <form id="mealForm">
           <div class="form-group">
-            <label for="image" class="form-label">Upload Food Image:</label>
-            <input type="file" id="image" name="image" accept="image/*" class="form-control" required />
-            <small class="text-info">Just upload a photo of your food, and we'll analyze it automatically!</small>
+            <label class="form-label">Upload Food Image:</label>
+            <div class="photo-options">
+              <div class="photo-option">
+                <label for="image" class="photo-option-button camera-option">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  <span>Take Photo</span>
+                </label>
+                <input type="file" id="image" name="image" accept="image/*" capture="environment" class="photo-input" required />
+              </div>
+              <div class="photo-option">
+                <label for="gallery-image" class="photo-option-button gallery-option">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  <span>Choose from Gallery</span>
+                </label>
+                <input type="file" id="gallery-image" name="image" accept="image/*" class="photo-input" />
+              </div>
+            </div>
+            <small class="text-info mt-2">Take a photo of your food or choose from your gallery, and we'll analyze it automatically!</small>
           </div>
           
           <div class="form-group mt-4">
-            <button type="submit" class="btn btn-primary btn-block">Analyze & Upload Meal</button>
+            <button type="submit" class="btn btn-primary btn-block" style="font-size: 1.1rem; padding: 0.9rem 1.5rem; font-weight: 600;">Analyze & Upload Meal</button>
           </div>
         </form>
         
@@ -44,11 +66,6 @@
       </div>
       
       <div id="analysisResult" class="card" style="display: none; animation: fade-in 0.5s ease-out;">
-
-      @keyframes fade-in {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
         <h3>AI Analysis Results</h3>
         
         <div class="mb-3">
@@ -177,9 +194,24 @@
         const analysisResult = document.getElementById('analysisResult');
         const saveChangesBtn = document.getElementById('saveChangesBtn');
         const resetChangesBtn = document.getElementById('resetChangesBtn');
+        const cameraInput = document.getElementById('image');
+        const galleryInput = document.getElementById('gallery-image');
         
         // Store the original meal data
         let originalMealData = null;
+        
+        // Handle photo input selection
+        cameraInput.addEventListener('change', function() {
+          if (this.files.length > 0) {
+            galleryInput.value = ''; // Clear the other input
+          }
+        });
+        
+        galleryInput.addEventListener('change', function() {
+          if (this.files.length > 0) {
+            cameraInput.value = ''; // Clear the other input
+          }
+        });
         
         // Handle form submission
         form.addEventListener('submit', async (e) => {
@@ -190,12 +222,29 @@
           messageEl.textContent = '';
           analysisResult.style.display = 'none';
           
+          // Check if an image was selected
+          const cameraFile = cameraInput.files[0];
+          const galleryFile = galleryInput.files[0];
+          
+          if (!cameraFile && !galleryFile) {
+            messageEl.textContent = 'Please select an image or take a photo';
+            messageEl.className = 'text-danger mt-2';
+            return;
+          }
+          
           // Show loading message
           messageEl.textContent = 'Analyzing your food image...';
           messageEl.className = 'text-info mt-2';
           
           try {
-            const formData = new FormData(form);
+            const formData = new FormData();
+            
+            // Add the selected image to the form data
+            if (cameraFile) {
+              formData.append('image', cameraFile);
+            } else if (galleryFile) {
+              formData.append('image', galleryFile);
+            }
             
             const response = await fetch(API.meals, {
               method: 'POST',
@@ -218,8 +267,10 @@
             // Show the analysis result
             displayAnalysisResult(mealData);
             
-            // Reset the form
+            // Reset the form and both inputs
             form.reset();
+            cameraInput.value = '';
+            galleryInput.value = '';
             
             // Load recent meals
             loadRecentMeals();

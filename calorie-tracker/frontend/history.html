@@ -45,17 +45,17 @@
     </div>
 
     <!-- Meal Detail Modal -->
-    <div id="mealModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
-      <div style="background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; max-width: 600px; position: relative;">
-        <button id="closeModal" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <div id="mealModal" class="modal">
+      <div class="modal-content">
+        <button id="closeModal" class="modal-close">&times;</button>
         <div id="mealModalContent"></div>
       </div>
     </div>
 
     <!-- Edit Meal Modal -->
-    <div id="editMealModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
-      <div style="background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; max-width: 600px; position: relative;">
-        <button id="closeEditModal" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+    <div id="editMealModal" class="modal">
+      <div class="modal-content">
+        <button id="closeEditModal" class="modal-close">&times;</button>
         <h3>Edit Meal</h3>
         <form id="editMealForm">
           <input type="hidden" id="editMealId">
@@ -126,8 +126,8 @@
     </div>
     
     <!-- Delete Confirmation Modal -->
-    <div id="deleteConfirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
-      <div style="background-color: white; margin: 15% auto; padding: 20px; border-radius: 8px; max-width: 400px; text-align: center;">
+    <div id="deleteConfirmModal" class="modal">
+      <div class="modal-content" style="max-width: 400px; text-align: center;">
         <h3>Confirm Deletion</h3>
         <p>Are you sure you want to delete this meal? This action cannot be undone.</p>
         <input type="hidden" id="deleteMealId">

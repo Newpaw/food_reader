@@ -13,7 +13,17 @@
     </div>
     
     <div class="container">
-      <div class="card">
+      <div class="login-container" style="display: flex; flex-direction: column; align-items: center; margin-top: 2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 2rem;">CT</span>
+          </div>
+          <h1 style="margin-bottom: 0.5rem;">Calorie Tracker</h1>
+          <p style="color: rgba(255, 255, 255, 0.7);">Track your nutrition with AI-powered insights</p>
+        </div>
+      </div>
+      
+      <div class="card" style="max-width: 500px; margin: 0 auto;">
         <h2>Login</h2>
         <form id="loginForm">
           <div class="form-group">
@@ -24,12 +34,12 @@
             <label for="loginPassword" class="form-label">Password</label>
             <input id="loginPassword" type="password" class="form-control" placeholder="Enter your password" required />
           </div>
-          <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Sign in</button>
         </form>
         <p id="loginMessage" class="text-danger mt-2"></p>
       </div>
       
-      <div class="card">
+      <div class="card" style="max-width: 500px; margin: 2rem auto 0;">
         <h2>Register</h2>
         <form id="registerForm">
           <div class="form-group">
@@ -44,7 +54,7 @@
             <label for="registerPassword" class="form-label">Password</label>
             <input id="registerPassword" type="password" class="form-control" placeholder="Choose a password" required />
           </div>
-          <button type="submit" class="btn btn-primary btn-block">Register</button>
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Register</button>
         </form>
         <p id="registerMessage" class="text-danger mt-2"></p>
       </div>

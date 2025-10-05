@@ -284,12 +284,14 @@ calorie-tracker/
      - When accessing via http://localhost:18080, API requests go to http://localhost:18080/auth/...
      - When accessing via http://192.168.1.80:18080, API requests go to http://192.168.1.80:18080/auth/...
    - Nginx proxies these requests to the backend service running inside the container
+   - The application includes CORS headers to allow cross-origin requests
    - If you're getting "Connection Refused" errors, check that:
      - Docker containers are running (`docker-compose ps`)
      - Ports are correctly mapped in docker-compose.yml
      - No firewall is blocking the connections
      - You're accessing the application through the same hostname/IP that the browser uses for API requests
    - Check for any error messages in the backend logs (`docker-compose logs`)
+   - Try clearing your browser cache or using incognito mode to ensure you're not using cached JavaScript files
 
 2. **Content Security Policy (CSP) Issues**:
    - The application uses a strict Content Security Policy to enhance security

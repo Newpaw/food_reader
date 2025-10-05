@@ -28,8 +28,11 @@ function logout() {
 }
 
 // API endpoints
-// Use the correct port for the backend API when running in Docker
-const API_BASE_URL = 'http://localhost:18000';
+// Use relative URLs to work with any host (including IP addresses)
+// This ensures API requests go to the same host/port as the frontend
+const API_BASE_URL = '';
+
+// Define API endpoints
 const API = {
   login: `${API_BASE_URL}/auth/login`,
   register: `${API_BASE_URL}/auth/register`,

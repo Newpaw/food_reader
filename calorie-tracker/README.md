@@ -280,15 +280,26 @@ calorie-tracker/
 ### Common Issues
 
 1. **Backend API not accessible** (Connection Refused Error):
-   - When running with Docker, make sure you're using the correct ports:
-     - Backend API is available at http://localhost:18000
-     - Frontend is available at http://localhost:18080
-   - The frontend code is configured to connect to the backend on port 18000
+   - The application uses relative URLs for API endpoints, which means:
+     - When accessing via http://localhost:18080, API requests go to http://localhost:18080/auth/...
+     - When accessing via http://192.168.1.80:18080, API requests go to http://192.168.1.80:18080/auth/...
+   - Nginx proxies these requests to the backend service running inside the container
    - If you're getting "Connection Refused" errors, check that:
      - Docker containers are running (`docker-compose ps`)
      - Ports are correctly mapped in docker-compose.yml
      - No firewall is blocking the connections
+     - You're accessing the application through the same hostname/IP that the browser uses for API requests
    - Check for any error messages in the backend logs (`docker-compose logs`)
+
+2. **Content Security Policy (CSP) Issues**:
+   - The application uses a strict Content Security Policy to enhance security
+   - If you're seeing CSP errors in the browser console, you may need to update the nginx.conf file
+   - The current policy allows:
+     - Scripts from: 'self', 'unsafe-inline', cdn.jsdelivr.net, static.cloudflareinsights.com
+     - Images from: 'self', data: URLs, and any host (*)
+     - Styles from: 'self', 'unsafe-inline', cdn.jsdelivr.net
+     - Connections to: 'self', any host (*), cdn.jsdelivr.net, static.cloudflareinsights.com
+   - If you're using additional external resources, you'll need to add them to the CSP
 
 2. **Frontend not loading**:
    - Ensure Nginx or the HTTP server is running correctly

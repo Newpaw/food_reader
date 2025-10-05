@@ -235,6 +235,7 @@
         galleryInput.addEventListener('change', function() {
           if (this.files.length > 0) {
             cameraInput.value = ''; // Clear the other input
+            handleImageSelection(this.files[0]); // Handle the selected image
           }
         });
         
@@ -345,19 +346,11 @@
                 console.warn('Image optimization failed, using original image:', optimizationError);
                 
                 // Fallback to original image if optimization fails
-                if (cameraFile) {
-                  formData.append('image', cameraFile);
-                } else if (galleryFile) {
-                  formData.append('image', galleryFile);
-                }
+                formData.append('image', selectedFile);
               }
             } else {
               // Use original image for small files
-              if (cameraFile) {
-                formData.append('image', cameraFile);
-              } else if (galleryFile) {
-                formData.append('image', galleryFile);
-              }
+              formData.append('image', selectedFile);
             }
             
             // Simulate upload progress (since fetch doesn't support progress monitoring)

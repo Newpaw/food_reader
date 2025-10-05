@@ -161,6 +161,12 @@ p {
   font-size: 1.5rem;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+.navbar-toggle:hover {
+  color: var(--primary-color);
 }
 
 /* Forms */
@@ -789,6 +795,12 @@ tr:hover {
     margin-bottom: 15px;
   }
   
+  @media (max-width: 768px) {
+    .navbar-toggle {
+      display: block;
+    }
+  }
+  
   @media (max-width: 480px) {
     .photo-options {
       flex-direction: column;
@@ -797,6 +809,20 @@ tr:hover {
     .photo-option-button {
       padding: 15px;
     }
+  }
+  
+  /* Mobile navbar adjustments */
+  .navbar-container {
+    flex-wrap: wrap;
+  }
+  
+  .navbar-toggle {
+    order: 3;
+    margin-left: auto;
+  }
+  
+  .navbar-brand {
+    order: 1;
   }
   
   .navbar-menu {
@@ -811,6 +837,7 @@ tr:hover {
     padding: 1rem;
     order: 4;
     width: 100%;
+    z-index: 100;
   }
   
   .navbar-menu.active {
@@ -822,8 +849,9 @@ tr:hover {
   }
   
   .navbar-user-section {
-    order: 3;
-    margin-left: auto;
+    order: 2;
+    margin-right: auto;
+    margin-left: 1rem;
   }
   
   .nutrition-grid {

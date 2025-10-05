@@ -95,12 +95,28 @@
       <h1>Image Optimizer Test</h1>
       
       <div class="form-group">
-        <label for="image">Select an image:</label>
-        <input type="file" id="image" accept="image/*" class="photo-input">
+        <label>Upload Food Image:</label>
+        <p style="margin-bottom: 10px; color: #666;">Take a photo of your food or choose from your gallery.</p>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <div>
+            <label for="image" style="display: block; padding: 10px 15px; background-color: #8A2BE2; color: white; border-radius: 4px; cursor: pointer; text-align: center;">
+              📷 Take Photo
+            </label>
+            <input type="file" id="image" accept="image/*" capture="environment" style="display: none;">
+          </div>
+          <div>
+            <label for="gallery-image" style="display: block; padding: 10px 15px; background-color: #4169E1; color: white; border-radius: 4px; cursor: pointer; text-align: center;">
+              🖼 Choose from Gallery
+            </label>
+            <input type="file" id="gallery-image" accept="image/*" style="display: none;">
+          </div>
+        </div>
       </div>
       
-      <div class="form-group">
+      <div class="form-group" style="display: flex; gap: 10px;">
         <button id="optimizeBtn">Optimize Image</button>
+        <button id="clearBtn" style="background-color: #666;">Clear</button>
       </div>
       
       <div id="originalContainer" class="image-preview-container" style="display: none;">
@@ -135,13 +151,47 @@
         const thumbnailContainer = document.getElementById('thumbnailContainer');
         const thumbnailPreview = document.getElementById('thumbnailPreview');
         
+        const galleryInput = document.getElementById('gallery-image');
         let selectedFile = null;
         
-        // Handle image selection
+        // Handle camera image selection
         imageInput.addEventListener('change', (e) => {
-          selectedFile = e.target.files[0];
-          
-          if (selectedFile) {
+          if (e.target.files.length > 0) {
+            selectedFile = e.target.files[0];
+            galleryInput.value = ''; // Clear gallery input
+            displaySelectedImage(selectedFile);
+          }
+        });
+        
+        // Handle gallery image selection
+        galleryInput.addEventListener('change', (e) => {
+          if (e.target.files.length > 0) {
+            selectedFile = e.target.files[0];
+            imageInput.value = ''; // Clear camera input
+            displaySelectedImage(selectedFile);
+          }
+          // Handle clear button click
+          const clearBtn = document.getElementById('clearBtn');
+          clearBtn.addEventListener('click', () => {
+            // Clear inputs
+            imageInput.value = '';
+            galleryInput.value = '';
+            selectedFile = null;
+            
+            // Hide containers
+            originalContainer.style.display = 'none';
+            optimizedContainer.style.display = 'none';
+            thumbnailContainer.style.display = 'none';
+            
+            // Reset button
+            optimizeBtn.textContent = 'Optimize Image';
+            optimizeBtn.disabled = false;
+          });
+        });
+        
+        // Display selected image
+        function displaySelectedImage(file) {
+          if (file) {
             // Display original image
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -150,24 +200,29 @@
               
               // Display original image stats
               originalStats.innerHTML = `
-                <p>Filename: ${selectedFile.name}</p>
-                <p>Type: ${selectedFile.type}</p>
-                <p>Size: ${(selectedFile.size / 1024).toFixed(2)} KB</p>
-                <p>Last Modified: ${new Date(selectedFile.lastModified).toLocaleString()}</p>
+                <p>Filename: ${file.name}</p>
+                <p>Type: ${file.type}</p>
+                <p>Size: ${(file.size / 1024).toFixed(2)} KB</p>
+                <p>Last Modified: ${new Date(file.lastModified).toLocaleString()}</p>
+                <p>Source: ${file === imageInput.files[0] ? 'Camera' : 'Gallery'}</p>
               `;
             };
-            reader.readAsDataURL(selectedFile);
+            reader.readAsDataURL(file);
           }
-        });
+        }
         
         // Handle optimize button click
         optimizeBtn.addEventListener('click', async () => {
           if (!selectedFile) {
-            alert('Please select an image first');
+            alert('Please select an image first using either "Take Photo" or "Choose from Gallery"');
             return;
           }
           
           try {
+            // Show processing message
+            optimizeBtn.textContent = 'Processing...';
+            optimizeBtn.disabled = true;
+            
             // Create thumbnail
             const thumbnailUrl = await ImageOptimizer.createThumbnail(selectedFile);
             thumbnailPreview.innerHTML = `<img src="${thumbnailUrl}" alt="Thumbnail preview">`;
@@ -187,12 +242,21 @@
                 <p>Type: ${optimizedImage.type}</p>
                 <p>Size: ${(optimizedImage.size / 1024).toFixed(2)} KB</p>
                 <p>Reduction: ${Math.round((1 - optimizedImage.size / selectedFile.size) * 100)}%</p>
+                <p>Source: ${selectedFile === imageInput.files[0] ? 'Camera' : 'Gallery'}</p>
               `;
+              
+              // Reset button
+              optimizeBtn.textContent = 'Optimize Image';
+              optimizeBtn.disabled = false;
             };
             reader.readAsDataURL(optimizedImage);
           } catch (error) {
             console.error('Error optimizing image:', error);
             alert(`Error optimizing image: ${error.message}`);
+            
+            // Reset button
+            optimizeBtn.textContent = 'Optimize Image';
+            optimizeBtn.disabled = false;
           }
         });
       });

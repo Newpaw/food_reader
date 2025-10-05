@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Navbar Responsiveness Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .test-container {
+        padding: 20px;
+        margin-top: 20px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      
+      .screen-size {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+      
+      .resize-instructions {
+        margin-bottom: 20px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .test-section {
+        margin-bottom: 30px;
+      }
+      
+      .test-section h3 {
+        margin-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 5px;
+      }
+      
+      .test-item {
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+      }
+      
+      @media (max-width: 768px) {
+        .mobile-only {
+          display: block;
+          color: var(--success-color);
+        }
+        
+        .desktop-only {
+          display: none;
+        }
+      }
+      
+      @media (min-width: 769px) {
+        .mobile-only {
+          display: none;
+        }
+        
+        .desktop-only {
+          display: block;
+          color: var(--success-color);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="navbar-container">
+        <button class="navbar-toggle">☰</button>
+        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
+        <ul class="navbar-menu">
+          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
+          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
+          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
+        </ul>
+        <div class="navbar-user-section">
+          <span id="userName">Hello, User!</span>
+          <button id="logoutBtn" class="btn btn-neutral btn-sm btn-outline">Logout</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="container">
+      <div class="card">
+        <h2>Navbar Responsiveness Test</h2>
+        <p>This page helps test the navbar responsiveness across different screen sizes.</p>
+        
+        <div class="test-container">
+          <div class="screen-size">Current Screen Size: <span id="screenSize"></span></div>
+          <div class="resize-instructions">Resize your browser window to see how the navbar responds to different screen sizes.</div>
+          
+          <div class="test-section">
+            <h3>Mobile View (<768px)</h3>
+            <div class="test-item mobile-only">
+              ✅ You are currently viewing in mobile mode
+            </div>
+            <div class="test-item desktop-only">
+              ❌ You are currently viewing in desktop mode
+            </div>
+            <div class="test-item">
+              <p>In mobile view, you should see:</p>
+              <ul>
+                <li>Hamburger menu on the right side</li>
+                <li>Menu items hidden until hamburger is clicked</li>
+                <li>User section properly aligned</li>
+                <li>Proper spacing between elements</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="test-section">
+            <h3>Desktop View (>768px)</h3>
+            <div class="test-item desktop-only">
+              ✅ You are currently viewing in desktop mode
+            </div>
+            <div class="test-item mobile-only">
+              ❌ You are currently viewing in mobile mode
+            </div>
+            <div class="test-item">
+              <p>In desktop view, you should see:</p>
+              <ul>
+                <li>No hamburger menu visible</li>
+                <li>Menu items displayed horizontally</li>
+                <li>User section properly aligned</li>
+                <li>Proper spacing between elements</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="common.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Display screen size
+        function updateScreenSize() {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          document.getElementById('screenSize').textContent = `${width}px × ${height}px`;
+          
+          // Add appropriate class to body
+          if (width <= 768) {
+            document.body.classList.add('mobile-view');
+            document.body.classList.remove('desktop-view');
+          } else {
+            document.body.classList.add('desktop-view');
+            document.body.classList.remove('mobile-view');
+          }
+        }
+        
+        // Update on load and resize
+        updateScreenSize();
+        window.addEventListener('resize', updateScreenSize);
+        
+        // Initialize navigation
+        initNavigation();
+        
+        // Handle navbar toggle for testing
+        const navbarToggle = document.querySelector('.navbar-toggle');
+        const navbarMenu = document.querySelector('.navbar-menu');
+        
+        if (navbarToggle && navbarMenu) {
+          navbarToggle.addEventListener('click', () => {
+            navbarMenu.classList.toggle('active');
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

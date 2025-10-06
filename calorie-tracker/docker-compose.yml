@@ -13,7 +13,7 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ./backend/uploads:/app/backend/uploads
-      - ./data/calories.db:/app/calories.db
+      - ./data:/app/data
     networks:
       - cloudflare
     ports:

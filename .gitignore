@@ -15,4 +15,6 @@ env
 *.png
 *.webp
 
+*.jpg
+
 *.db

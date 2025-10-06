@@ -12,7 +12,7 @@ wheels/
 setting.py
 env
 
-*.png
+
 *.webp
 
 *.jpg

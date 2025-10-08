@@ -95,7 +95,7 @@ def analyze_food_image(image_path: str) -> Dict[str, Any]:
             # Fallback if JSON extraction fails
             result = {
                 "food_description": "Unknown food",
-                "estimated_calories": 300,  # Default value
+                "estimated_calories": 1,  # Default value
                 "protein": 0,
                 "fat": 0,
                 "carbs": 0,
@@ -108,7 +108,7 @@ def analyze_food_image(image_path: str) -> Dict[str, Any]:
         
         # Ensure all required fields are present
         result.setdefault("food_description", "Unknown food")
-        result.setdefault("estimated_calories", 300)
+        result.setdefault("estimated_calories", 1)
         result.setdefault("protein", 0)
         result.setdefault("fat", 0)
         result.setdefault("carbs", 0)
@@ -124,7 +124,7 @@ def analyze_food_image(image_path: str) -> Dict[str, Any]:
         # Return a default response on error
         return {
             "food_description": "Error analyzing image",
-            "estimated_calories": 300,  # Default value
+            "estimated_calories": 1,  # Default value
             "protein": 0,
             "fat": 0,
             "carbs": 0,
@@ -144,7 +144,7 @@ def get_meal_data_from_image(image_path: str) -> Tuple[int, int, int, int, int, 
     analysis = analyze_food_image(image_path)
     
     # Extract the data
-    calories = int(analysis.get("estimated_calories", 300))
+    calories = int(analysis.get("estimated_calories", 1))
     protein = int(analysis.get("protein", 0))
     fat = int(analysis.get("fat", 0))
     carbs = int(analysis.get("carbs", 0))

@@ -4,16 +4,16 @@ A simple yet powerful nutrition tracking application with AI-powered food image 
 
 ## Features
 
-- **AI-Powered Food Analysis**: Upload food photos and get automatic analysis using OpenAI's Vision API
-- **Comprehensive Nutritional Tracking**: Track calories, protein, fat, carbohydrates, fiber, sugar, and sodium
-- **User Authentication**: Email and password-based registration and login with JWT tokens
-- **Meal Tracking**: Upload meal photos with automatic or manual metadata (nutritional info, meal type, time, notes)
-- **Image Storage**: Photos are stored on disk with proper organization
-- **Calorie Summaries**: View daily calorie totals and meal counts
-- **Responsive UI**: Simple and clean interface for tracking meals
-- **Timezone Support**: All dates and times are displayed in the user's local timezone
-- **Docker Support**: Easy deployment with Docker and docker-compose
-- **Nginx Web Server**: Static content served efficiently through Nginx
+- **AI-Powered Food Analysis**: Upload food photos and get automatic analysis using OpenAI's Vision API  
+- **Comprehensive Nutritional Tracking**: Track calories, protein, fat, carbohydrates, fiber, sugar, and sodium  
+- **User Authentication**: Email and password-based registration and login with JWT tokens  
+- **Meal Tracking**: Upload meal photos with automatic or manual metadata (nutritional info, meal type, time, notes)  
+- **Image Storage**: Photos are stored on disk with proper organization  
+- **Calorie Summaries**: View daily calorie totals and meal counts  
+- **Responsive UI**: Simple and clean interface for tracking meals  
+- **Timezone Support**: All dates and times are displayed in the user's local timezone  
+- **Docker Support**: Easy deployment with Docker and docker-compose  
+- **Nginx Web Server**: Static content served efficiently through Nginx  
 
 ## Project Structure
 
@@ -27,348 +27,247 @@ calorie-tracker/
 │  │  ├─ models.py            # SQLAlchemy models
 │  │  ├─ schemas.py           # Pydantic schemas
 │  │  ├─ auth.py              # Authentication utilities
-│  │  ├─ crud.py              # Database operations
-│  │  ├─ deps.py              # Dependency injection
-│  │  ├─ ai_analyzer.py       # OpenAI Vision API integration
-│  │  └─ routers/             # API endpoints
-│  │     ├─ auth_router.py    # Authentication routes
-│  │     ├─ meals_router.py   # Meal management routes
-│  │     └─ users_router.py   # User profile routes
-│  ├─ uploads/                # Generated at runtime
-│  └─ static/                 # Optional static files
+│  │  ├─ crud.py             # Database operations
+│  │  ├─ deps.py             # Dependency injection
+│  │  ├─ ai_analyzer.py      # OpenAI Vision API integration
+│  │  └─ routers/            # API endpoints
+│  ├─ uploads/               # Generated at runtime
+│  └─ static/                # Optional static files
 ├─ frontend/
-│  ├─ index.html              # Main application page
-│  ├─ login.html              # Login page
-│  ├─ history.html            # Meal history page
-│  ├─ metrics.html            # Nutrition metrics page
-│  ├─ common.js               # Shared JavaScript utilities
-│  ├─ charts.js               # Chart visualization code
-│  ├─ app.js                  # Frontend JavaScript
-│  └─ styles.css              # CSS styles
-├─ nginx.conf                 # Nginx configuration
-├─ Dockerfile                 # Docker build instructions
-├─ docker-compose.yml         # Docker Compose configuration
-├─ .env.example               # Example environment variables
-└─ requirements.txt           # Python dependencies
+│  ├─ index.html             # Main application page
+│  ├─ login.html             # Login page
+│  ├─ history.html           # Meal history page
+│  ├─ metrics.html           # Nutrition metrics page
+│  ├─ common.js              # Shared JavaScript utilities
+│  ├─ charts.js             # Chart visualization code
+│  ├─ app.js                # Frontend JavaScript
+│  └─ styles.css            # CSS styles
+├─ nginx.conf               # Nginx configuration
+├─ Dockerfile              # Docker build instructions
+├─ docker-compose.yml      # Docker Compose (production)
+├─ docker-compose.local.yml # Docker Compose (local dev)
+├─ Makefile               # Shortcuts for local dev
+├─ .env.example           # Example environment variables
+└─ requirements.txt       # Python dependencies
 ```
 
 ## Installation
 
+### Prerequisites
+- Python 3.8+
+- Docker and Docker Compose (optional)
+- Make (optional, for using Makefile)
+
 1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd calorie-tracker
-   ```
+```bash
+git clone https://github.com/yourusername/calorie-tracker.git
+cd calorie-tracker
+```
 
-2. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env file to add your OpenAI API key and other settings
-   ```
+2. Set up environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your OpenAI API key and other settings
+```
 
 ## Running the Application
 
-### Option 1: Running Locally (Without Docker)
+### Option 1: Docker Compose (Recommended)
 
-#### Backend Setup
+Production mode:
+```bash
+docker compose up -d
+```
 
-1. Set up environment variables:
-   ```bash
-   export OPENAI_API_KEY=your_openai_api_key_here
-   export JWT_SECRET_KEY=your_jwt_secret_key_here
-   ```
+Development mode:
+```bash
+make up    # Starts the application
+make down  # Stops the application
+make logs  # Views backend logs
+```
 
-2. Start the backend server:
-   ```bash
-   cd calorie-tracker
-   uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
-   ```
+Access the application at: http://localhost:18080
 
-#### Frontend Setup
+### Option 2: Manual Setup
 
-##### Option A: Using Nginx (Recommended)
+1. Create and activate virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-1. Install Nginx:
-   ```bash
-   # Ubuntu/Debian
-   sudo apt-get install nginx
+2. Start the backend:
+```bash
+cd backend
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-   # CentOS/RHEL
-   sudo yum install nginx
+3. Serve the frontend:
+- Using Python: `python -m http.server 8080`
+- Or configure with Nginx
 
-   # macOS
-   brew install nginx
-   ```
+## API Endpoints
 
-2. Configure Nginx:
-   ```bash
-   # Copy the nginx.conf file to your Nginx configuration directory
-   sudo cp nginx.conf /etc/nginx/conf.d/calorie-tracker.conf
-   
-   # Edit the configuration file to update paths if needed
-   sudo nano /etc/nginx/conf.d/calorie-tracker.conf
-   
-   # Restart Nginx
-   sudo systemctl restart nginx  # Linux
-   sudo brew services restart nginx  # macOS
-   ```
+- `POST /auth/register` - Create new user account
+- `POST /auth/login` - Obtain JWT token
+- `GET /users/me` - Get current user profile
+- `POST /me/meals` - Create new meal entry
+- `GET /me/meals` - List user's meals
+- `GET /me/summary` - Get nutrition summary
+- `PUT /me/meals/{meal_id}` - Update meal
+- `DELETE /me/meals/{meal_id}` - Delete meal
 
-3. Access the application:
-   - Open http://localhost:8080/frontend/login.html in your browser
+## Development
 
-##### Option B: Using Python's HTTP Server
+### Using the Makefile
 
-1. Serve the frontend files:
-   ```bash
-   cd calorie-tracker
-   python -m http.server 8080
-   ```
+```bash
+make up         # Start application
+make down       # Stop application
+make rebuild    # Rebuild containers
+make logs       # View backend logs
+make reset-db   # Reset database (⚠️ Deletes all data)
+```
 
-2. Access the application:
-   - Open http://localhost:8080/frontend/login.html in your browser
+## Security Notes
 
-### Option 2: Running with Docker Compose
+For production deployment:
+- Generate a strong JWT secret key
+- Enable HTTPS
+- Configure rate limiting
+- Set appropriate file upload limits
+- Consider using PostgreSQL instead of SQLite
 
-1. Make sure Docker and Docker Compose are installed on your system.
+## License
 
-2. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env file to add your OpenAI API key and other settings
-   ```
+MIT License - See LICENSE file for details
+  make rebuild
 
-3. Build and start the Docker containers:
-   ```bash
-   docker-compose up -d
-   ```
 
-4. Access the application:
-   - Open http://localhost:18080/frontend/login.html in your browser
-   
-   Note: The application is configured to use port 18000 for the backend API and port 18080 for the frontend when running with Docker.
+> **Reset the database (⚠️ deletes all data):**
 
-5. To stop the containers:
-   ```bash
-   docker-compose down
-   ```
+  ```bash
+  make reset-db
+  ```
+
+> Requires `make`. On Ubuntu/Debian:
+>
+> ```bash
+> sudo apt update && sudo apt install make -y
+> ```
+
+---
 
 ### Option 3: Running with Docker (Without Compose)
 
-1. Build the Docker image:
-   ```bash
-   docker build -t calorie-tracker .
-   ```
+```bash
+docker build -t calorie-tracker .
+docker run -d \
+  -p 18080:8080 \
+  -p 18000:8000 \
+  -e OPENAI_API_KEY=your_openai_api_key_here \
+  -e JWT_SECRET_KEY=your_jwt_secret_key_here \
+  -v $(pwd)/backend/uploads:/app/backend/uploads \
+  --name calorie-tracker \
+  calorie-tracker
+```
 
-2. Run the container:
-   ```bash
-   docker run -d \
-     -p 8080:80 \
-     -p 8000:8000 \
-     -e OPENAI_API_KEY=your_openai_api_key_here \
-     -e JWT_SECRET_KEY=your_jwt_secret_key_here \
-     -v $(pwd)/backend/uploads:/app/backend/uploads \
-     --name calorie-tracker \
-     calorie-tracker
-   ```
-
-3. Access the application:
-   - Open http://localhost:18080/frontend/login.html in your browser
-   
-   Note: The application is configured to use port 18000 for the backend API and port 18080 for the frontend when running with Docker.
-
-4. To stop the container:
-   ```bash
-   docker stop calorie-tracker
-   docker rm calorie-tracker
-   ```
+---
 
 ## Getting Started
 
 1. Register a new user account
 2. Login with your credentials
-3. Upload a food image on the main page
-4. Review the AI-generated nutritional information
-5. Adjust values if needed and save
-6. View your meal history and nutritional metrics
+3. Upload a food image
+4. Review the AI-generated nutritional info
+5. Save meal → view in history & metrics
+
+---
 
 ## API Endpoints
 
-### Authentication
+* `POST /auth/register` – Register a new user
+* `POST /auth/login` – Login and get JWT
+* `GET /users/me` – Get user profile
+* `POST /me/meals` – Create meal (with image + nutrition info)
+* `GET /me/meals` – List meals
+* `GET /me/summary` – Calorie summary
+* `PUT /me/meals/{meal_id}` – Update meal
+* `DELETE /me/meals/{meal_id}` – Delete meal
 
-- `POST /auth/register` - Register a new user
-  - Body: `{ "email": "user@example.com", "name": "User Name", "password": "password" }`
-
-- `POST /auth/login` - Login and get access token
-  - Body: `{ "email": "user@example.com", "password": "password", "name": "n/a" }`
-
-### User
-
-- `GET /users/me` - Get current user profile
-  - Headers: `Authorization: Bearer <token>`
-
-### Meals
-
-- `POST /me/meals` - Create a new meal entry
-  - Headers: `Authorization: Bearer <token>`
-  - Body: `multipart/form-data` with fields:
-    - `image`: File upload
-    - `calories`: Integer
-    - `protein`: Integer (grams)
-    - `fat`: Integer (grams)
-    - `carbs`: Integer (grams)
-    - `fiber`: Integer (grams)
-    - `sugar`: Integer (grams)
-    - `sodium`: Integer (milligrams)
-    - `meal_type`: String (breakfast|lunch|dinner|snack)
-    - `consumed_at`: ISO datetime
-    - `notes`: Optional string
-
-- `GET /me/meals` - List user's meals
-  - Headers: `Authorization: Bearer <token>`
-  - Query parameters:
-    - `frm`: Optional start date
-    - `to`: Optional end date
-    - `limit`: Optional limit (default: 50)
-    - `offset`: Optional offset (default: 0)
-
-- `GET /me/summary` - Get calorie summary
-  - Headers: `Authorization: Bearer <token>`
-  - Query parameters:
-    - `frm`: Start date
-    - `to`: End date
-
-- `PUT /me/meals/{meal_id}` - Update a meal
-  - Headers: `Authorization: Bearer <token>`
-  - Body: JSON with fields to update
-
-- `DELETE /me/meals/{meal_id}` - Delete a meal
-  - Headers: `Authorization: Bearer <token>`
+---
 
 ## Technologies Used
 
-- **Backend**:
-  - FastAPI - Modern, fast web framework
-  - SQLAlchemy - SQL toolkit and ORM
-  - Pydantic - Data validation and settings management
-  - JWT - Token-based authentication
-  - SQLite - Database (easily upgradable to PostgreSQL)
-  - OpenAI API - For AI-powered food image analysis
+* **Backend**: FastAPI, SQLAlchemy, Pydantic, JWT, SQLite, OpenAI API
+* **Frontend**: HTML, JavaScript, Chart.js
+* **Infrastructure**: Nginx, Docker, Docker Compose
 
-- **Frontend**:
-  - Pure HTML/JavaScript - No build tools required
-  - Fetch API - For API communication
-  - Chart.js - For data visualization
-
-- **Infrastructure**:
-  - Nginx - High-performance web server
-  - Docker - Containerization
-  - Docker Compose - Multi-container orchestration
+---
 
 ## Troubleshooting
 
-### Common Issues
+* **Backend API not accessible** → check containers (`docker compose ps`), ports, logs.
+* **Image upload fails** → check permissions on `backend/uploads`.
+* **OpenAI API errors** → verify API key & quota.
 
-1. **Backend API not accessible** (Connection Refused Error):
-   - The application uses relative URLs for API endpoints, which means:
-     - When accessing via http://localhost:18080, API requests go to http://localhost:18080/auth/...
-     - When accessing via http://192.168.1.80:18080, API requests go to http://192.168.1.80:18080/auth/...
-   - Nginx proxies these requests to the backend service running inside the container
-   - The application includes CORS headers to allow cross-origin requests
-   - If you're getting "Connection Refused" errors, check that:
-     - Docker containers are running (`docker-compose ps`)
-     - Ports are correctly mapped in docker-compose.yml
-     - No firewall is blocking the connections
-     - You're accessing the application through the same hostname/IP that the browser uses for API requests
-   - Check for any error messages in the backend logs (`docker-compose logs`)
-   - Try clearing your browser cache or using incognito mode to ensure you're not using cached JavaScript files
+Logs:
 
-2. **Content Security Policy (CSP) Issues**:
-   - The application uses a strict Content Security Policy to enhance security
-   - If you're seeing CSP errors in the browser console, you may need to update the nginx.conf file
-   - The current policy allows:
-     - Scripts from: 'self', 'unsafe-inline', cdn.jsdelivr.net, static.cloudflareinsights.com
-     - Images from: 'self', data: URLs, and any host (*)
-     - Styles from: 'self', 'unsafe-inline', cdn.jsdelivr.net
-     - Connections to: 'self', any host (*), cdn.jsdelivr.net, static.cloudflareinsights.com
-   - If you're using additional external resources, you'll need to add them to the CSP
+```bash
+docker compose logs -f app
+```
 
-2. **Frontend not loading**:
-   - Ensure Nginx or the HTTP server is running correctly
-   - Check browser console for JavaScript errors
-   - Verify that the frontend can access the backend API
-
-3. **Image upload failing**:
-   - Check if the uploads directory exists and has proper permissions
-   - Verify that the image file size is not too large
-   - Check backend logs for any API errors
-
-4. **OpenAI API errors**:
-   - Verify your API key is correct and has sufficient credits
-   - Check network connectivity to OpenAI services
-   - Look for rate limiting or quota issues in the logs
-
-### Logs
-
-- **Backend logs**: When running with `uvicorn`, logs are output to the console
-- **Docker logs**: Use `docker-compose logs` or `docker logs calorie-tracker`
-- **Nginx logs**: Check `/var/log/nginx/error.log` and `/var/log/nginx/access.log`
+---
 
 ## Security Considerations
 
-For production deployment, consider:
-- Changing the JWT secret key in the .env file
-- Securing the OpenAI API key using environment variables
-- Adding file upload size limits
-- Implementing MIME type validation
-- Setting up proper CORS configuration
-- Moving to a more robust database like PostgreSQL
-- Adding rate limiting
-- Using HTTPS for all communications
-- Implementing proper backup strategies for the database and uploaded images
+For production:
 
-## AI Food Analysis
+* Change JWT secret in `.env`
+* Use HTTPS
+* Add rate limiting
+* Limit upload size
+* Move to PostgreSQL/MySQL for scale
 
-The application uses OpenAI's Vision API to analyze food images and extract the following information:
-- Food type and description
-- Comprehensive nutritional information:
-  - Calories (kcal)
-  - Protein (g)
-  - Fat (g)
-  - Carbohydrates (g)
-  - Fiber (g)
-  - Sugar (g)
-  - Sodium (mg)
-- Suggested meal type (breakfast, lunch, dinner, or snack)
-- Additional nutritional insights
-
-Users can still manually override any AI-detected values if needed. The AI analysis happens on the server-side when the image is uploaded, so no additional API calls are needed from the frontend.
-
-## Timezone Handling
-
-The application handles timezones in the following way:
-- All dates and times are stored in UTC format in the database
-- The frontend automatically converts UTC times to the user's local timezone for display
-- When filtering by date ranges, the application properly converts local dates to UTC for API requests
-- Date/time pickers in forms show times in the user's local timezone
-- All charts and visualizations display dates in the user's local timezone
-
-This ensures a consistent user experience regardless of the user's location or the server's timezone.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License – see LICENSE file for details.
+
+---
+
+## Makefile
+
+For convenience, here is the full `Makefile`:
+
+```makefile
+# Makefile for Calorie Tracker (local environment)
+
+COMPOSE = docker compose -f docker-compose.local.yml
+
+# Start the application (with build)
+up:
+	mkdir -p ../db_folder
+	$(COMPOSE) up -d --build
+
+# Stop the application
+down:
+	$(COMPOSE) down
+
+# Rebuild without cache
+rebuild:
+	$(COMPOSE) build --no-cache
+	$(COMPOSE) up -d
+
+# View logs from the backend container
+logs:
+	$(COMPOSE) logs -f app
+
+# ⚠️ WARNING: This will delete your database and all data!
+reset-db:
+	rm -f ../db_folder/app.db
+	mkdir -p ../db_folder
+	$(COMPOSE) up -d --build
+```

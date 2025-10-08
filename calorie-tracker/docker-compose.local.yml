@@ -1,0 +1,19 @@
+name: calorie-tracker-local
+
+services:
+  app:
+    container_name: calorie-tracker-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+      - ./data:/app/data
+    ports:
+      - "18000:8000"   # backend
+      - "18080:8080"   # frontend

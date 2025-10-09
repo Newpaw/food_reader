@@ -207,10 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize navigation
     initNavigation();
     
-    // Set up logout button
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', logout);
+    // Set up logout buttons
+    const logoutBtnMobile = document.getElementById('logoutBtnMobile');
+    const logoutBtnDesktop = document.getElementById('logoutBtnDesktop');
+    
+    if (logoutBtnMobile) {
+      logoutBtnMobile.addEventListener('click', logout);
+    }
+    
+    if (logoutBtnDesktop) {
+      logoutBtnDesktop.addEventListener('click', logout);
     }
     
     // Fetch and display user info

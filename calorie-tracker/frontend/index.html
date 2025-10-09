@@ -68,7 +68,7 @@
                   </svg>
                   <span>📷 Take Photo</span>
                 </label>
-                <input type="file" id="image" name="image" accept="image/*" capture="environment" class="photo-input" required />
+                <input type="file" id="image" name="image" accept="image/*" capture="environment" class="photo-input" />
               </div>
               <div class="photo-option">
                 <label for="gallery-image" class="photo-option-button gallery-option">
@@ -79,7 +79,7 @@
                   </svg>
                   <span>🖼 Choose from Gallery</span>
                 </label>
-                <input type="file" id="gallery-image" name="gallery-image" accept="image/*" class="photo-input" />
+                <input type="file" id="gallery-image" name="image" accept="image/*" class="photo-input" />
               </div>
             </div>
             
@@ -255,34 +255,47 @@
         cameraInput.addEventListener('change', function() {
           if (this.files.length > 0) {
             galleryInput.value = ''; // Clear the other input
+            console.log("Camera input change event - file selected:", this.files[0].name, "Size:", (this.files[0].size / 1024).toFixed(2) + "KB", "Type:", this.files[0].type);
           }
         });
         
         galleryInput.addEventListener('change', function() {
           if (this.files.length > 0) {
             cameraInput.value = ''; // Clear the other input
+            console.log("Gallery input change event - file selected:", this.files[0].name, "Size:", (this.files[0].size / 1024).toFixed(2) + "KB", "Type:", this.files[0].type);
             handleImageSelection(this.files[0]); // Handle the selected image
-            console.log("Gallery image selected:", this.files[0].name);
+            
+            // Make sure the gallery image is recognized as a valid form input
+            document.getElementById('mealMessage').textContent = '';
+            document.getElementById('mealMessage').className = '';
           }
         });
         
         // Handle image selection and preview
         function handleImageSelection(file) {
-          if (!file) return;
+          console.log("handleImageSelection called with file:", file ? file.name : "null");
+          if (!file) {
+            console.error("No file provided to handleImageSelection");
+            return;
+          }
           
           // Show image preview
           const imagePreviewContainer = document.getElementById('imagePreviewContainer');
           const imagePreview = document.getElementById('imagePreview');
           
+          console.log("Creating thumbnail for file:", file.name);
+          
           // Create optimized image preview using ImageOptimizer
           ImageOptimizer.createThumbnail(file)
             .then(thumbnailUrl => {
+              console.log("Thumbnail created successfully for:", file.name);
               imagePreview.innerHTML = `<img src="${thumbnailUrl}" alt="Selected food image">`;
               imagePreviewContainer.style.display = 'block';
             })
             .catch(error => {
               console.error('Error creating thumbnail:', error);
               // Fallback to original method if optimization fails
+              console.log("Using fallback method for thumbnail creation");
               const reader = new FileReader();
               reader.onload = function(e) {
                 imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected food image">`;
@@ -294,26 +307,29 @@
           // Clear the other input and ensure we're using the correct file
           if (file === cameraInput.files[0]) {
             galleryInput.value = '';
-            console.log("Camera file selected for preview");
+            console.log("Camera file selected for preview - cleared gallery input");
           } else {
             cameraInput.value = '';
-            console.log("Gallery file selected for preview");
+            console.log("Gallery file selected for preview - cleared camera input");
           }
         }
         
         // Handle camera input change
         cameraInput.addEventListener('change', function() {
+          console.log("Camera input change event handler");
           if (this.files.length > 0) {
+            console.log("Camera input has files, calling handleImageSelection");
             handleImageSelection(this.files[0]);
           }
         });
         
-        // This duplicate event listener was causing issues - removed
+        // Note: The gallery input change event is already handled above
         
         
         // Handle form submission
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
+          console.log("Form submit event triggered");
           
           const messageEl = document.getElementById('mealMessage');
           const uploadProgress = document.getElementById('uploadProgress');
@@ -328,6 +344,9 @@
           // Check if an image was selected
           const cameraFile = cameraInput.files[0];
           const galleryFile = galleryInput.files[0];
+          
+          console.log("Form submission - Camera file:", cameraFile ? cameraFile.name : "none");
+          console.log("Form submission - Gallery file:", galleryFile ? galleryFile.name : "none");
           
           if (!cameraFile && !galleryFile) {
             messageEl.textContent = 'Please select an image or take a photo';
@@ -345,40 +364,49 @@
             let selectedFile = null;
             if (cameraFile) {
               selectedFile = cameraFile;
-              console.log("Using camera file for upload");
+              console.log("Using camera file for upload:", cameraFile.name, "Size:", (cameraFile.size / 1024).toFixed(2) + "KB", "Type:", cameraFile.type);
             } else if (galleryFile) {
               selectedFile = galleryFile;
-              console.log("Using gallery file for upload");
+              console.log("Using gallery file for upload:", galleryFile.name, "Size:", (galleryFile.size / 1024).toFixed(2) + "KB", "Type:", galleryFile.type);
             }
             
             if (!selectedFile) {
+              console.error("No file selected for upload");
               throw new Error("No file selected");
             }
             
             // Create a FormData object for the API request
             const formData = new FormData();
-            console.log("Selected file for upload:", selectedFile.name, "Size:", (selectedFile.size / 1024).toFixed(2) + "KB");
+            console.log("Selected file for upload:", selectedFile.name, "Size:", (selectedFile.size / 1024).toFixed(2) + "KB", "Type:", selectedFile.type);
             
             // Check if the image should be optimized
-            if (ImageOptimizer.shouldOptimize(selectedFile)) {
+            const shouldOptimize = ImageOptimizer.shouldOptimize(selectedFile);
+            console.log("Should optimize image:", shouldOptimize);
+            
+            if (shouldOptimize) {
               try {
                 // Show optimization status in progress message
                 messageEl.textContent = 'Optimizing and analyzing your food image...';
                 
                 // Optimize the image before uploading
+                console.log("Starting image optimization for:", selectedFile.name);
                 const optimizedImage = await ImageOptimizer.optimizeImage(selectedFile);
+                console.log("Image optimization successful, optimized size:", (optimizedImage.size / 1024).toFixed(2) + "KB");
                 
                 // Add the optimized image to the form data with the original filename
                 formData.append('image', optimizedImage, selectedFile.name);
+                console.log("Added optimized image to form data with name:", selectedFile.name);
               } catch (optimizationError) {
                 console.warn('Image optimization failed, using original image:', optimizationError);
                 
                 // Fallback to original image if optimization fails
                 formData.append('image', selectedFile);
+                console.log("Added original image to form data (optimization failed)");
               }
             } else {
               // Use original image for small files
               formData.append('image', selectedFile);
+              console.log("Added original image to form data (small file, no optimization needed)");
             }
             
             // Simulate upload progress (since fetch doesn't support progress monitoring)
@@ -393,11 +421,21 @@
               progressStatus.textContent = `Uploading... ${progress}%`;
             }, 200);
             
+            // Add a debug log to check the FormData contents
+            console.log("Sending API request to:", API.meals);
+            console.log("FormData contains image:", formData.has('image'));
+            
+            // Log all entries in the FormData
+            for (let pair of formData.entries()) {
+              console.log(`FormData entry - ${pair[0]}: ${pair[1] instanceof File ? pair[1].name : pair[1]}`);
+            }
+            
             const response = await fetch(API.meals, {
               method: 'POST',
               headers: authHeaders(),
               body: formData
             });
+            console.log("API response status:", response.status);
             
             // Clear progress interval and set to 100%
             clearInterval(progressInterval);

@@ -26,13 +26,23 @@ const ImageOptimizer = {
    * @returns {Promise<Blob>} - Promise resolving to the optimized image blob
    */
   async optimizeImage(file, options = {}) {
+    console.log("ImageOptimizer.optimizeImage called with file:", file ? file.name : "null", "Type:", file ? file.type : "unknown");
+    
     // Merge default config with provided options
     const settings = { ...this.config, ...options };
+    console.log("Optimization settings:", JSON.stringify(settings));
     
     // Create a promise to handle the image processing
     return new Promise((resolve, reject) => {
       // Check if the file is an image
-      if (!file || !file.type.startsWith('image/')) {
+      if (!file) {
+        console.error("ImageOptimizer.optimizeImage: No file provided");
+        reject(new Error('No file provided for optimization'));
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        console.error("ImageOptimizer.optimizeImage: Invalid file type:", file.type);
         reject(new Error('Invalid file type. Please select an image.'));
         return;
       }
@@ -42,13 +52,18 @@ const ImageOptimizer = {
       
       // Set up the FileReader onload event
       reader.onload = (event) => {
+        console.log("FileReader loaded file data successfully");
+        
         // Create an image element to load the file data
         const img = new Image();
         
         // Set up the image onload event
         img.onload = () => {
+          console.log("Image loaded successfully. Original dimensions:", img.width, "x", img.height);
+          
           // Calculate new dimensions while maintaining aspect ratio
           const dimensions = this._calculateDimensions(img.width, img.height, settings.maxWidth, settings.maxHeight);
+          console.log("Calculated dimensions for optimization:", dimensions.width, "x", dimensions.height);
           
           // Create a canvas element for resizing
           const canvas = document.createElement('canvas');
@@ -57,32 +72,42 @@ const ImageOptimizer = {
           
           // Get the canvas context and draw the resized image
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
-          
-          // Convert the canvas to a Blob with the specified quality
-          canvas.toBlob((blob) => {
-            if (blob) {
-              // Log optimization results
-              console.log(`Image optimized: ${(file.size / 1024).toFixed(2)}KB → ${(blob.size / 1024).toFixed(2)}KB (${Math.round((1 - blob.size / file.size) * 100)}% reduction)`);
-              resolve(blob);
-            } else {
-              reject(new Error('Failed to optimize image'));
-            }
-          }, settings.format, settings.quality);
+          try {
+            ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
+            console.log("Image drawn to canvas successfully");
+            
+            // Convert the canvas to a Blob with the specified quality
+            canvas.toBlob((blob) => {
+              if (blob) {
+                // Log optimization results
+                console.log(`Image optimized: ${(file.size / 1024).toFixed(2)}KB → ${(blob.size / 1024).toFixed(2)}KB (${Math.round((1 - blob.size / file.size) * 100)}% reduction)`);
+                resolve(blob);
+              } else {
+                console.error("Failed to create blob from canvas");
+                reject(new Error('Failed to optimize image - blob creation failed'));
+              }
+            }, settings.format, settings.quality);
+          } catch (error) {
+            console.error("Error drawing image to canvas:", error);
+            reject(new Error(`Failed to draw image to canvas: ${error.message}`));
+          }
         };
         
         // Handle image loading errors
-        img.onerror = () => {
-          reject(new Error('Failed to load image'));
+        img.onerror = (error) => {
+          console.error("Error loading image:", error);
+          reject(new Error('Failed to load image for optimization'));
         };
         
         // Set the image source to the FileReader result
+        console.log("Setting image source from FileReader result");
         img.src = event.target.result;
       };
       
       // Handle FileReader errors
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
+      reader.onerror = (error) => {
+        console.error("FileReader error:", error);
+        reject(new Error('Failed to read file for optimization'));
       };
       
       // Read the file as a data URL
@@ -97,27 +122,40 @@ const ImageOptimizer = {
    * @returns {Promise<string>} - Promise resolving to the thumbnail data URL
    */
   async createThumbnail(file, options = {}) {
+    console.log("ImageOptimizer.createThumbnail called with file:", file ? file.name : "null", "Type:", file ? file.type : "unknown");
+    
     // Merge default config with provided options
     const settings = { ...this.config, ...options };
     
     return new Promise((resolve, reject) => {
+      if (!file) {
+        console.error("ImageOptimizer.createThumbnail: No file provided");
+        reject(new Error('No file provided for thumbnail creation'));
+        return;
+      }
+      
       // Create a FileReader to read the file
       const reader = new FileReader();
       
       // Set up the FileReader onload event
       reader.onload = (event) => {
+        console.log("FileReader loaded file data successfully for thumbnail");
+        
         // Create an image element to load the file data
         const img = new Image();
         
         // Set up the image onload event
         img.onload = () => {
+          console.log("Image loaded successfully for thumbnail. Original dimensions:", img.width, "x", img.height);
+          
           // Calculate thumbnail dimensions while maintaining aspect ratio
           const dimensions = this._calculateDimensions(
-            img.width, 
-            img.height, 
-            settings.thumbnailWidth, 
+            img.width,
+            img.height,
+            settings.thumbnailWidth,
             settings.thumbnailHeight
           );
+          console.log("Calculated dimensions for thumbnail:", dimensions.width, "x", dimensions.height);
           
           // Create a canvas element for the thumbnail
           const canvas = document.createElement('canvas');
@@ -134,16 +172,19 @@ const ImageOptimizer = {
         };
         
         // Handle image loading errors
-        img.onerror = () => {
+        img.onerror = (error) => {
+          console.error("Error loading image for thumbnail:", error);
           reject(new Error('Failed to load image for thumbnail'));
         };
         
         // Set the image source to the FileReader result
+        console.log("Setting image source from FileReader result for thumbnail");
         img.src = event.target.result;
       };
       
       // Handle FileReader errors
-      reader.onerror = () => {
+      reader.onerror = (error) => {
+        console.error("FileReader error for thumbnail:", error);
         reject(new Error('Failed to read file for thumbnail'));
       };
       
@@ -193,12 +234,17 @@ const ImageOptimizer = {
    * @returns {boolean} - True if the image should be optimized
    */
   shouldOptimize(file) {
-    // Skip optimization for small files (less than 100KB)
-    if (file.size < 100 * 1024) {
+    if (!file) {
+      console.error("ImageOptimizer.shouldOptimize: No file provided");
       return false;
     }
     
-    return true;
+    // Skip optimization for small files (less than 100KB)
+    const fileSize = file.size / 1024;
+    const shouldOptimize = fileSize >= 100;
+    console.log(`File size: ${fileSize.toFixed(2)}KB, Should optimize: ${shouldOptimize}`);
+    
+    return shouldOptimize;
   },
 
   /**

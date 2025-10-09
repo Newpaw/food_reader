@@ -1,6 +1,6 @@
 # Makefile for Calorie Tracker (local environment)
 
-COMPOSE = docker compose -f docker-compose.yml
+COMPOSE = docker compose -f docker-compose.local.yml
 
 # Start the application (with build)
 up:

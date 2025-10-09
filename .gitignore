@@ -12,6 +12,11 @@ wheels/
 setting.py
 env
 
+# Ignore all files in uploads folder
+calorie-tracker/backend/uploads/*
+
+# But keep the folder itself
+!calorie-tracker/backend/uploads/.gitkeep
 
 *.webp
 

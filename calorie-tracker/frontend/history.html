@@ -177,73 +177,88 @@
     }
     </script>
     <script>
-      // Initialize date filters with last 7 days
+      // Initialize date filters with today's date only and automatically load data
       document.addEventListener('DOMContentLoaded', () => {
         // Bypass auth check for testing
         // if (!checkAuth()) return;
         
         const today = new Date();
-        const lastWeek = new Date(today);
-        lastWeek.setDate(today.getDate() - 7);
         
-        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+        // Set both from and to dates to today for default filtering
+        document.getElementById('fromDate').value = today.toISOString().split('T')[0];
         document.getElementById('toDate').value = today.toISOString().split('T')[0];
         
-        // For testing, just show the UI without loading data
-        // loadMeals();
+        console.log(`DEBUG: Initialized history page with today's date: ${today.toISOString().split('T')[0]}`);
         
-        // Mock data for testing
-        const mockMeals = [
-          {
-            id: 1,
-            meal_type: "breakfast",
-            calories: 450,
-            consumed_at: "2025-10-10T08:30:00Z",
-            protein: 20,
-            fat: 15,
-            carbs: 60,
-            image_url: "assets/images/text-meal-placeholder.svg",
-            notes: "AI Analysis: Oatmeal with fruits"
-          },
-          {
-            id: 2,
-            meal_type: "lunch",
-            calories: 650,
-            consumed_at: "2025-10-10T12:30:00Z",
-            protein: 35,
-            fat: 25,
-            carbs: 70,
-            image_url: "assets/images/text-meal-placeholder.svg",
-            notes: "AI Analysis: Chicken salad"
-          }
-        ];
-        
-        displayMeals(mockMeals);
+        // Automatically load meals with today's date filter
+        if (typeof API !== 'undefined') {  // Check if we're in a real environment, not testing
+          console.log("DEBUG: Automatically loading meals with today's date filter");
+          loadMeals();
+        } else {
+          console.log("DEBUG: In testing mode, using mock data");
+          // Mock data for testing
+          const mockMeals = [
+            {
+              id: 1,
+              meal_type: "breakfast",
+              calories: 450,
+              consumed_at: "2025-10-10T08:30:00Z",
+              protein: 20,
+              fat: 15,
+              carbs: 60,
+              image_url: "assets/images/text-meal-placeholder.svg",
+              notes: "AI Analysis: Oatmeal with fruits"
+            },
+            {
+              id: 2,
+              meal_type: "lunch",
+              calories: 650,
+              consumed_at: "2025-10-10T12:30:00Z",
+              protein: 35,
+              fat: 25,
+              carbs: 70,
+              image_url: "assets/images/text-meal-placeholder.svg",
+              notes: "AI Analysis: Chicken salad"
+            }
+          ];
+          
+          displayMeals(mockMeals);
+        }
       });
       
       // Load meals with optional date filtering
       async function loadMeals() {
+        console.log("DEBUG: Loading meals with date filtering");
         const fromDate = document.getElementById('fromDate').value;
         const toDate = document.getElementById('toDate').value;
+        
+        console.log(`DEBUG: Date range selected - from: ${fromDate}, to: ${toDate}`);
         
         let url = `${API.meals}?limit=50`;
         // Convert local dates to UTC for API
         if (fromDate) {
           const fromUTC = new Date(`${fromDate}T00:00:00`).toISOString();
           url += `&frm=${fromUTC}`;
+          console.log(`DEBUG: From date converted to UTC: ${fromUTC}`);
         }
         if (toDate) {
           const toUTC = new Date(`${toDate}T23:59:59`).toISOString();
           url += `&to=${toUTC}`;
+          console.log(`DEBUG: To date converted to UTC: ${toUTC}`);
         }
+        
+        console.log(`DEBUG: Fetching meals from URL: ${url}`);
         
         try {
           const response = await fetch(url, {
             headers: authHeaders()
           });
           
+          console.log(`DEBUG: API response status: ${response.status}`);
+          
           if (!response.ok) {
             if (response.status === 401) {
+              console.log("DEBUG: Authentication failed, logging out");
               logout();
               return;
             }
@@ -251,6 +266,13 @@
           }
           
           const meals = await response.json();
+          console.log(`DEBUG: Received ${meals.length} meals from API`);
+          
+          // Log meal IDs for debugging
+          if (meals.length > 0) {
+            console.log("DEBUG: Meal IDs received:", meals.map(m => m.id).join(", "));
+          }
+          
           displayMeals(meals);
         } catch (error) {
           console.error('Error loading meals:', error);
@@ -264,15 +286,29 @@
       function displayMeals(meals) {
         const mealsListEl = document.getElementById('mealsList');
         
+        console.log(`DEBUG: Displaying ${meals.length} meals`);
+        
         if (meals.length === 0) {
           mealsListEl.innerHTML = '<p>No meals found for the selected period.</p>';
           return;
         }
         
+        // Track which meal IDs we've seen to avoid duplicates
+        const processedMealIds = new Set();
+        
         // Group meals by date (in local timezone)
         const mealsByDate = {};
         
         meals.forEach(meal => {
+          // Skip if this meal ID has already been processed or is null/undefined
+          if (!meal.id || processedMealIds.has(meal.id)) {
+            console.log(`DEBUG: Skipping duplicate or invalid meal ID: ${meal.id}`);
+            return;
+          }
+          
+          // Mark this meal ID as processed
+          processedMealIds.add(meal.id);
+          
           const localDate = utcToLocal(meal.consumed_at);
           const date = localDate.toLocaleDateString();
           if (!mealsByDate[date]) {
@@ -524,23 +560,32 @@
       
       // Delete meal
       async function deleteMeal(mealId) {
+        console.log(`DEBUG: Attempting to delete meal with ID: ${mealId}`);
         try {
-          const response = await fetch(`${API.meals}/${mealId}`, {
+          const url = `${API.meals}/${mealId}`;
+          console.log(`DEBUG: Sending DELETE request to: ${url}`);
+          
+          const response = await fetch(url, {
             method: 'DELETE',
             headers: authHeaders()
           });
           
+          console.log(`DEBUG: Delete response status: ${response.status}`);
+          
           if (!response.ok) {
             if (response.status === 401) {
+              console.log("DEBUG: Authentication failed during delete, logging out");
               logout();
               return false;
             }
             throw new Error(`Failed to delete meal: ${response.status}`);
           }
           
+          console.log(`DEBUG: Meal successfully deleted: ${mealId}`);
           return true;
         } catch (error) {
           console.error('Error deleting meal:', error);
+          console.log(`DEBUG: Delete error details: ${error.message}`);
           return false;
         }
       }
@@ -635,21 +680,61 @@
       // Confirm delete button
       document.getElementById('confirmDelete').addEventListener('click', async () => {
         const mealId = document.getElementById('deleteMealId').value;
+        console.log(`DEBUG: Confirming deletion of meal ID: ${mealId}`);
+        
         const success = await deleteMeal(mealId);
         
         if (success) {
+          console.log(`DEBUG: Deletion confirmed successful for meal ID: ${mealId}`);
           document.getElementById('deleteConfirmModal').style.display = 'none';
           
-          // Show a temporary success message
-          const mealsListEl = document.getElementById('mealsList');
-          const originalContent = mealsListEl.innerHTML;
-          mealsListEl.innerHTML = '<p class="text-success">Meal deleted successfully!</p>';
-          
-          // Reload meals after a short delay
-          setTimeout(() => {
+          // Immediately remove the deleted meal from the UI
+          const deletedItem = document.querySelector(`.meal-item[data-meal-id="${mealId}"]`);
+          if (deletedItem) {
+            console.log(`DEBUG: Removing meal ID ${mealId} from UI`);
+            
+            // Check if this is the last meal in its date group
+            const dateGroup = deletedItem.closest('.date-group');
+            const remainingMeals = dateGroup.querySelectorAll('.meal-item');
+            
+            if (remainingMeals.length <= 1) {
+              // This is the last meal in the date group, remove the entire group
+              console.log(`DEBUG: Removing entire date group as this was the last meal`);
+              dateGroup.remove();
+            } else {
+              // Just remove this meal item
+              deletedItem.remove();
+            }
+            
+            // Show a temporary success message
+            const mealsListEl = document.getElementById('mealsList');
+            if (mealsListEl.children.length === 0) {
+              mealsListEl.innerHTML = '<p>No meals found for the selected period.</p>';
+            } else {
+              // Add a success message that will fade out
+              const successMsg = document.createElement('div');
+              successMsg.className = 'alert alert-success';
+              successMsg.textContent = 'Meal deleted successfully!';
+              successMsg.style.position = 'fixed';
+              successMsg.style.top = '20px';
+              successMsg.style.right = '20px';
+              successMsg.style.zIndex = '1000';
+              document.body.appendChild(successMsg);
+              
+              // Remove the message after 3 seconds
+              setTimeout(() => {
+                successMsg.style.opacity = '0';
+                successMsg.style.transition = 'opacity 0.5s';
+                setTimeout(() => successMsg.remove(), 500);
+              }, 3000);
+            }
+          } else {
+            console.log(`DEBUG: Could not find meal ID ${mealId} in the UI`);
+            // Reload meals as fallback
             loadMeals();
-          }, 1500);
+          }
         } else {
+          console.log(`DEBUG: Deletion failed for meal ID: ${mealId}`);
           alert('Failed to delete meal. Please try again.');
         }
       });

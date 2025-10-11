@@ -147,45 +147,54 @@
     <script src="common.js"></script>
     <script src="charts.js"></script>
     <script>
-      // Initialize date range with last 7 days
+      // Initialize date range with today's date only and automatically load data
       document.addEventListener('DOMContentLoaded', () => {
         // Bypass auth check for testing
         // if (!checkAuth()) return;
         
         const today = new Date();
-        const lastWeek = new Date(today);
-        lastWeek.setDate(today.getDate() - 7);
         
-        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+        // Set both from and to dates to today for default filtering
+        document.getElementById('fromDate').value = today.toISOString().split('T')[0];
         document.getElementById('toDate').value = today.toISOString().split('T')[0];
         
-        // For testing, just show the UI without loading data
-        // loadMetrics();
+        console.log(`DEBUG: Initialized metrics page with today's date: ${today.toISOString().split('T')[0]}`);
         
-        // Mock data for testing
-        const mockSummaryData = {
-          days: [
-            { total_calories: 2000, meals: 3 },
-            { total_calories: 1800, meals: 3 },
-            { total_calories: 2200, meals: 4 }
-          ]
-        };
-        
-        const mockMealsData = [
-          { protein: 50, fat: 70, carbs: 200 },
-          { protein: 60, fat: 65, carbs: 180 },
-          { protein: 55, fat: 75, carbs: 210 }
-        ];
-        
-        updateMetrics(mockSummaryData, mockMealsData);
+        // Automatically load metrics with today's date filter
+        if (typeof API !== 'undefined') {  // Check if we're in a real environment, not testing
+          console.log("DEBUG: Automatically loading metrics with today's date filter");
+          loadMetrics();
+        } else {
+          console.log("DEBUG: In testing mode, using mock data");
+          // Mock data for testing
+          const mockSummaryData = {
+            days: [
+              { total_calories: 2000, meals: 3 },
+              { total_calories: 1800, meals: 3 },
+              { total_calories: 2200, meals: 4 }
+            ]
+          };
+          
+          const mockMealsData = [
+            { id: 1, protein: 50, fat: 70, carbs: 200 },
+            { id: 2, protein: 60, fat: 65, carbs: 180 },
+            { id: 3, protein: 55, fat: 75, carbs: 210 }
+          ];
+          
+          updateMetrics(mockSummaryData, mockMealsData);
+        }
       });
       
       // Load metrics data
       async function loadMetrics() {
+        console.log("DEBUG: Loading metrics data");
         const fromDate = document.getElementById('fromDate').value;
         const toDate = document.getElementById('toDate').value;
         
+        console.log(`DEBUG: Metrics date range - from: ${fromDate}, to: ${toDate}`);
+        
         if (!fromDate || !toDate) {
+          console.log("DEBUG: Invalid date range selected");
           alert('Please select a valid date range');
           return;
         }
@@ -194,13 +203,20 @@
           // Load summary data with proper timezone conversion
           const fromUTC = new Date(`${fromDate}T00:00:00`).toISOString();
           const toUTC = new Date(`${toDate}T23:59:59`).toISOString();
+          console.log(`DEBUG: Converted date range - from: ${fromUTC}, to: ${toUTC}`);
+          
           const summaryUrl = `${API.summary}?frm=${fromUTC}&to=${toUTC}`;
+          console.log(`DEBUG: Fetching summary from URL: ${summaryUrl}`);
+          
           const summaryResponse = await fetch(summaryUrl, {
             headers: authHeaders()
           });
           
+          console.log(`DEBUG: Summary API response status: ${summaryResponse.status}`);
+          
           if (!summaryResponse.ok) {
             if (summaryResponse.status === 401) {
+              console.log("DEBUG: Authentication failed, logging out");
               logout();
               return;
             }
@@ -208,29 +224,43 @@
           }
           
           const summaryData = await summaryResponse.json();
+          console.log(`DEBUG: Received summary data with ${summaryData.days.length} days`);
           
           // Load meals data for the same period
           const mealsUrl = `${API.meals}?frm=${fromUTC}&to=${toUTC}&limit=100`;
+          console.log(`DEBUG: Fetching meals from URL: ${mealsUrl}`);
+          
           const mealsResponse = await fetch(mealsUrl, {
             headers: authHeaders()
           });
+          
+          console.log(`DEBUG: Meals API response status: ${mealsResponse.status}`);
           
           if (!mealsResponse.ok) {
             throw new Error('Failed to load meals data');
           }
           
           const mealsData = await mealsResponse.json();
+          console.log(`DEBUG: Received ${mealsData.length} meals for metrics`);
+          
+          // Log meal IDs for debugging
+          if (mealsData.length > 0) {
+            console.log("DEBUG: Meal IDs for metrics:", mealsData.map(m => m.id).join(", "));
+          }
           
           // Update charts and metrics
           updateMetrics(summaryData, mealsData);
         } catch (error) {
           console.error('Error loading metrics:', error);
+          console.log(`DEBUG: Metrics error details: ${error.message}`);
           alert(`Error loading metrics: ${error.message}`);
         }
       }
       
       // Update all charts and metrics
       async function updateMetrics(summaryData, mealsData) {
+        console.log(`DEBUG: Updating metrics with ${summaryData.days.length} days and ${mealsData.length} meals`);
+        
         // Calculate summary statistics
         let totalCalories = 0;
         let maxCalories = 0;
@@ -242,9 +272,11 @@
           totalMeals += day.meals;
         });
         
-        const avgCalories = summaryData.days.length > 0 
-          ? Math.round(totalCalories / summaryData.days.length) 
+        const avgCalories = summaryData.days.length > 0
+          ? Math.round(totalCalories / summaryData.days.length)
           : 0;
+        
+        console.log(`DEBUG: Calculated metrics - avgCalories: ${avgCalories}, totalCalories: ${totalCalories}, maxCalories: ${maxCalories}, totalMeals: ${totalMeals}`);
         
         // Update summary cards
         document.getElementById('avgCalories').textContent = avgCalories;
@@ -252,16 +284,33 @@
         document.getElementById('maxCalories').textContent = maxCalories;
         document.getElementById('totalMeals').textContent = totalMeals;
         
+        // Track which meal IDs we've seen to avoid duplicates
+        const processedMealIds = new Set();
+        
+        // Filter out any potential duplicate or invalid meals
+        const validMeals = mealsData.filter(meal => {
+          if (!meal.id || processedMealIds.has(meal.id)) {
+            console.log(`DEBUG: Skipping duplicate or invalid meal ID in metrics: ${meal.id}`);
+            return false;
+          }
+          processedMealIds.add(meal.id);
+          return true;
+        });
+        
+        console.log(`DEBUG: Filtered down to ${validMeals.length} valid meals for metrics`);
+        
         // Calculate macronutrient totals
         let totalProtein = 0;
         let totalFat = 0;
         let totalCarbs = 0;
         
-        mealsData.forEach(meal => {
+        validMeals.forEach(meal => {
           totalProtein += meal.protein || 0;
           totalFat += meal.fat || 0;
           totalCarbs += meal.carbs || 0;
         });
+        
+        console.log(`DEBUG: Calculated macros - protein: ${totalProtein}g, fat: ${totalFat}g, carbs: ${totalCarbs}g`);
         
         // Calculate macronutrient percentages (by calories)
         const proteinCalories = totalProtein * 4;
@@ -281,19 +330,24 @@
         
         // Create charts
         try {
+          console.log(`DEBUG: Creating charts with filtered data`);
+          
           // Daily calorie chart
           await createDailyCalorieChart('calorieChart', summaryData);
           
           // Macronutrient distribution chart
-          await createMacronutrientChart('macroChart', mealsData);
+          await createMacronutrientChart('macroChart', validMeals);
           
           // Nutrient intake over time chart
-          await createNutrientIntakeChart('nutrientChart', mealsData);
+          await createNutrientIntakeChart('nutrientChart', validMeals);
           
           // Meals per day chart
           await createMealFrequencyChart('mealsChart', summaryData);
+          
+          console.log(`DEBUG: Charts created successfully`);
         } catch (error) {
           console.error('Error creating charts:', error);
+          console.log(`DEBUG: Chart creation error: ${error.message}`);
         }
       }
       

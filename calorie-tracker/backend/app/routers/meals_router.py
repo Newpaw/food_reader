@@ -321,13 +321,44 @@ def list_meals(
     limit: int = 50,
     offset: int = 0
 ):
+    print(f"DEBUG: Fetching meals for user_id={user.id}, frm={frm}, to={to}, limit={limit}, offset={offset}")
+    
+    # Check if there are any recently deleted meals (for debugging)
+    from sqlalchemy import text
+    deleted_check = db.execute(
+        text("SELECT id, meal_type, consumed_at FROM meals WHERE id NOT IN (SELECT id FROM meals WHERE user_id = :uid)"),
+        {"uid": user.id}
+    ).fetchall()
+    
+    if deleted_check:
+        print(f"DEBUG: Found {len(deleted_check)} meals that might be deleted but still in DB")
+        for m in deleted_check:
+            print(f"DEBUG: Potentially orphaned meal: id={m[0]}, meal_type={m[1]}, consumed_at={m[2]}")
+    
+    # Regular query
     q = db.query(models.Meal).filter(models.Meal.user_id == user.id)
+    
+    # Apply date filters
     if frm:
+        print(f"DEBUG: Filtering meals from {frm}")
         q = q.filter(models.Meal.consumed_at >= frm)
     if to:
+        print(f"DEBUG: Filtering meals to {to}")
         q = q.filter(models.Meal.consumed_at < to)
+    
+    # Get total count before pagination
+    total_count = q.count()
+    print(f"DEBUG: Total meals matching criteria before pagination: {total_count}")
+    
+    # Apply pagination
     q = q.order_by(models.Meal.consumed_at.desc()).offset(offset).limit(limit)
     meals = q.all()
+    print(f"DEBUG: Returning {len(meals)} meals after pagination")
+    
+    # Log the IDs of returned meals
+    meal_ids = [m.id for m in meals]
+    print(f"DEBUG: Meal IDs being returned: {meal_ids}")
+    
     return [
         schemas.MealOut(
             id=m.id,
@@ -352,23 +383,43 @@ def summary(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user)
 ):
+    print(f"DEBUG: Fetching summary for user_id={user.id}, frm={frm}, to={to}")
+    
     try:
         # Use our custom parser that handles 'Z' timezone designator
         from_dt = parse_iso_datetime(frm)
         to_dt = parse_iso_datetime(to)
+        print(f"DEBUG: Parsed date range: from_dt={from_dt}, to_dt={to_dt}")
     except ValueError as e:
+        print(f"DEBUG: Date parsing error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
+    
     from sqlalchemy import text
     
-    rows = db.execute(
-        text("""
-        SELECT date(consumed_at) as d, SUM(calories) as total, COUNT(*) as meals
-        FROM meals
-        WHERE user_id = :uid AND consumed_at >= :f AND consumed_at < :t
-        GROUP BY date(consumed_at)
-        ORDER BY d
-        """), {"uid": user.id, "f": from_dt, "t": to_dt}
-    ).fetchall()
+    # First check if there are any meals in this date range
+    meal_count = db.query(models.Meal).filter(
+        models.Meal.user_id == user.id,
+        models.Meal.consumed_at >= from_dt,
+        models.Meal.consumed_at < to_dt
+    ).count()
+    
+    print(f"DEBUG: Found {meal_count} meals in date range")
+    
+    # Execute the summary query
+    query = text("""
+    SELECT date(consumed_at) as d, SUM(calories) as total, COUNT(*) as meals
+    FROM meals
+    WHERE user_id = :uid AND consumed_at >= :f AND consumed_at < :t
+    GROUP BY date(consumed_at)
+    ORDER BY d
+    """)
+    
+    print(f"DEBUG: Executing summary query with params: uid={user.id}, f={from_dt}, t={to_dt}")
+    rows = db.execute(query, {"uid": user.id, "f": from_dt, "t": to_dt}).fetchall()
+    
+    print(f"DEBUG: Query returned {len(rows)} day summaries")
+    for row in rows:
+        print(f"DEBUG: Day summary: date={row[0]}, calories={row[1]}, meals={row[2]}")
 
     days = [schemas.DailySummary(date=datetime.fromisoformat(r[0]+"T00:00:00+00:00"), total_calories=r[1], meals=r[2]) for r in rows]
     return schemas.SummaryOut(from_dt=from_dt, to_dt=to_dt, days=days)
@@ -380,23 +431,88 @@ def delete_meal(
     user: models.User = Depends(get_current_user)
 ):
     """Delete a specific meal by ID"""
+    print(f"DEBUG: Attempting to delete meal_id={meal_id} for user_id={user.id}")
+    
+    # First try to find the meal with user_id filter
     meal = db.query(models.Meal).filter(
         models.Meal.id == meal_id,
         models.Meal.user_id == user.id
     ).first()
     
+    # If not found, try without user_id filter (for orphaned meals)
     if not meal:
-        raise HTTPException(status_code=404, detail="Meal not found")
+        print(f"DEBUG: Meal not found with user_id filter, trying without user_id filter")
+        meal = db.query(models.Meal).filter(
+            models.Meal.id == meal_id
+        ).first()
+        
+        if meal:
+            print(f"DEBUG: Found orphaned meal: meal_id={meal_id}, user_id={meal.user_id}")
+        else:
+            print(f"DEBUG: Meal not found: meal_id={meal_id}")
+            raise HTTPException(status_code=404, detail="Meal not found")
     
-    db.delete(meal)
-    db.commit()
+    print(f"DEBUG: Found meal to delete: meal_id={meal_id}, meal_type={meal.meal_type}, consumed_at={meal.consumed_at}")
+    
+    # Store meal info for verification and image deletion
+    meal_info = {
+        "id": meal.id,
+        "meal_type": meal.meal_type,
+        "consumed_at": meal.consumed_at,
+        "image_path": meal.image_path
+    }
+    
+    # Force delete the meal
+    try:
+        db.delete(meal)
+        db.commit()
+        print(f"DEBUG: Meal deleted from database: meal_id={meal_id}")
+    except Exception as e:
+        print(f"DEBUG: Error deleting meal: {str(e)}")
+        db.rollback()
+        
+        # Try direct SQL deletion as a fallback
+        try:
+            from sqlalchemy import text
+            db.execute(text("DELETE FROM meals WHERE id = :mid"), {"mid": meal_id})
+            db.commit()
+            print(f"DEBUG: Meal deleted using direct SQL: meal_id={meal_id}")
+        except Exception as e2:
+            print(f"DEBUG: Error with direct SQL deletion: {str(e2)}")
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Failed to delete meal: {str(e2)}")
+    
+    # Verify the meal is actually deleted
+    verification = db.query(models.Meal).filter(models.Meal.id == meal_id).first()
+    if verification:
+        print(f"DEBUG: ERROR - Meal still exists after deletion: meal_id={meal_id}")
+        
+        # Last resort: try to force delete with raw SQL again
+        try:
+            from sqlalchemy import text
+            db.execute(text("DELETE FROM meals WHERE id = :mid"), {"mid": meal_id})
+            db.commit()
+            print(f"DEBUG: Last resort deletion attempt completed")
+            
+            # Final verification
+            final_check = db.query(models.Meal).filter(models.Meal.id == meal_id).first()
+            if final_check:
+                print(f"DEBUG: CRITICAL - Meal still exists after all deletion attempts: meal_id={meal_id}")
+            else:
+                print(f"DEBUG: Last resort deletion successful: meal_id={meal_id}")
+        except Exception as e:
+            print(f"DEBUG: Last resort deletion failed: {str(e)}")
+    else:
+        print(f"DEBUG: Verified meal no longer exists in database: meal_id={meal_id}")
     
     # Try to delete the image file if it exists
     try:
-        if meal.image_path and os.path.exists(meal.image_path):
-            os.remove(meal.image_path)
+        if meal_info.get("image_path") and os.path.exists(meal_info.get("image_path")):
+            os.remove(meal_info.get("image_path"))
+            print(f"DEBUG: Deleted image file for meal_id={meal_id}")
     except Exception as e:
-        # Silently continue if image deletion fails
+        print(f"DEBUG: Failed to delete image file: {str(e)}")
+        # Continue if image deletion fails
         pass
     
     return None  # 204 No Content response

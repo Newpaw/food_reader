@@ -228,7 +228,7 @@ async def create_text_meal(
         meal_type=meal.meal_type,
         consumed_at=meal.consumed_at,
         notes=meal.notes,
-        image_url=None  # No image URL for text-only meals
+        image_url="/assets/images/text-meal-placeholder.svg"  # Default placeholder image for text-only meals
     )
 
 @router.post("/meals/{meal_id}/reanalyze", response_model=schemas.MealOut)
@@ -341,7 +341,7 @@ def list_meals(
             meal_type=m.meal_type,
             consumed_at=m.consumed_at,
             notes=m.notes,
-            image_url=f"/uploads/{user.id}/{os.path.basename(m.image_path)}" if m.image_path else None
+            image_url=f"/uploads/{user.id}/{os.path.basename(m.image_path)}" if m.image_path else "/assets/images/text-meal-placeholder.svg"
         ) for m in meals
     ]
 
@@ -437,5 +437,5 @@ def update_meal(
         meal_type=meal.meal_type,
         consumed_at=meal.consumed_at,
         notes=meal.notes,
-        image_url=f"/uploads/{user.id}/{os.path.basename(meal.image_path)}" if meal.image_path else None
+        image_url=f"/uploads/{user.id}/{os.path.basename(meal.image_path)}" if meal.image_path else "/assets/images/stackphoto_opt.svg"
     )

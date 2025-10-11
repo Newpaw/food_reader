@@ -266,7 +266,7 @@
             html += `
               <div class="meal-item" data-meal-id="${meal.id}">
                 <div class="meal-image-container" style="position: relative;">
-                  <img src="${meal.image_url}" alt="${meal.meal_type}" style="width: 100%; height: 150px; object-fit: cover; cursor: pointer;" class="view-meal-details">
+                  <img src="${meal.image_url}" alt="${meal.meal_type}" style="width: 100%; height: 150px; object-fit: cover; cursor: pointer;" class="view-meal-details" onerror="this.src='/assets/images/text-meal-placeholder.svg'">
                   <div class="meal-actions" style="position: absolute; top: 5px; right: 5px; display: flex; gap: 5px;">
                     <button class="edit-meal-btn btn-icon" data-meal-id="${meal.id}" style="background-color: var(--primary-color); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                       <span style="font-size: 14px;">✏️</span>
@@ -359,7 +359,7 @@
           <p><strong>Date:</strong> ${formattedDate}</p>
           <p><strong>Time:</strong> ${formattedTime}</p>
           <div class="text-center mb-3">
-            <img src="${meal.image_url}" alt="${meal.meal_type}" style="max-width: 100%; max-height: 300px; object-fit: contain;">
+            <img src="${meal.image_url}" alt="${meal.meal_type}" style="max-width: 100%; max-height: 300px; object-fit: contain;" onerror="this.src='/assets/images/text-meal-placeholder.svg'">
           </div>
           
           <h4>Nutritional Information</h4>

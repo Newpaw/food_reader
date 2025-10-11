@@ -628,22 +628,19 @@
           }
         }
         
-        // Display the food image if available (for image-based meals)
-        if (mealData.image_url) {
-          foodImagePreview.innerHTML = `
-            <img src="${mealData.image_url}" alt="${foodName}"
-                 class="food-thumbnail">
-          `;
-          foodImagePreview.style.display = 'block';
-          
-          // Show reanalysis section for image-based meals
+        // Display the food image
+        foodImagePreview.innerHTML = `
+          <img src="${mealData.image_url}" alt="${foodName}"
+               class="food-thumbnail" onerror="this.src='/assets/images/text-meal-placeholder.svg'">
+        `;
+        foodImagePreview.style.display = 'block';
+        
+        // Show reanalysis section only for image-based meals (not text-only meals)
+        if (mealData.image_url && !mealData.image_url.includes('text-meal-placeholder.svg')) {
           reanalysisSection.style.display = 'block';
-          
           // Store meal ID for reanalysis
           reanalysisSection.dataset.mealId = mealData.id;
         } else {
-          // Hide image preview and reanalysis section for text-only meals
-          foodImagePreview.style.display = 'none';
           reanalysisSection.style.display = 'none';
         }
         
@@ -738,7 +735,7 @@
             
             html += `
               <div class="meal-item">
-                <img src="${meal.image_url}" alt="${meal.meal_type}" style="width: 100%; height: 150px; object-fit: cover;">
+                <img src="${meal.image_url}" alt="${meal.meal_type}" style="width: 100%; height: 150px; object-fit: cover;" onerror="this.src='/assets/images/text-meal-placeholder.svg'">
                 <div class="meal-info p-2">
                   <h4>${foodName}</h4>
                   <p>${formatDate(meal.consumed_at)}</p>

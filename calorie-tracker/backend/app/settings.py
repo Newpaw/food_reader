@@ -12,5 +12,12 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "backend/uploads"
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
     LLM_MODEL: str = "gpt-4o"
+    
+    # Logging configuration
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_DIR: str = os.getenv("LOG_DIR", "logs")
+    LOG_FILE_MAX_SIZE: int = 10 * 1024 * 1024  # 10 MB
+    LOG_FILE_BACKUP_COUNT: int = 5
+    LOG_ACCESS_TO_CONSOLE: bool = False
 
 settings = Settings()

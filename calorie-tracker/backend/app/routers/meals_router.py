@@ -1,4 +1,4 @@
-import os, uuid, pytz
+import os, uuid, pytz, logging
 from datetime import datetime, date
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Body
@@ -7,6 +7,10 @@ from ..deps import get_db, get_current_user
 from ..settings import settings
 from .. import models, schemas
 from ..ai_analyzer import get_meal_data_from_image, get_meal_data_from_text
+from ..logger import get_logger, log_exception, log_execution_time
+
+# Initialize logger
+logger = get_logger(__name__)
 
 def parse_iso_datetime(iso_string: str) -> datetime:
     """
@@ -49,6 +53,7 @@ def parse_iso_datetime(iso_string: str) -> datetime:
 router = APIRouter(prefix="/me", tags=["meals"])
 
 @router.post("/meals", response_model=schemas.MealOut)
+@log_execution_time()
 async def create_meal(
     image: UploadFile = File(...),
     calories: Optional[int] = Form(None),
@@ -78,6 +83,7 @@ async def create_meal(
     if (calories is None or protein is None or fat is None or carbs is None or
         fiber is None or sugar is None or sodium is None or
         meal_type is None or consumed_at is None):
+        logger.info(f"Using AI to analyze meal image for user {user.id}")
         try:
             (ai_calories, ai_protein, ai_fat, ai_carbs, ai_fiber,
              ai_sugar, ai_sodium, ai_meal_type, ai_consumed_at, ai_notes) = get_meal_data_from_image(path)
@@ -100,6 +106,8 @@ async def create_meal(
                 else:
                     notes = f"AI Analysis: {ai_notes}"
         except Exception as e:
+            # Log the exception
+            log_exception(logger, e, "AI analysis failed for meal image")
             # Continue with default values if AI analysis fails
             calories = calories or 300  # Default value
             protein = protein or 0      # Default value
@@ -136,6 +144,7 @@ async def create_meal(
     )
 
 @router.post("/meals/text", response_model=schemas.MealOut)
+@log_execution_time()
 async def create_text_meal(
     meal_data: schemas.TextMealCreate,
     db: Session = Depends(get_db),
@@ -148,6 +157,7 @@ async def create_text_meal(
     if (meal_data.calories is None or meal_data.protein is None or meal_data.fat is None or
         meal_data.carbs is None or meal_data.fiber is None or meal_data.sugar is None or
         meal_data.sodium is None or meal_data.meal_type is None or meal_data.consumed_at is None):
+        logger.info(f"Using AI to analyze text description for user {user.id}")
         try:
             (ai_calories, ai_protein, ai_fat, ai_carbs, ai_fiber,
              ai_sugar, ai_sodium, ai_meal_type, ai_consumed_at, ai_notes) = get_meal_data_from_text(meal_data.food_description)
@@ -172,6 +182,8 @@ async def create_text_meal(
             else:
                 notes = meal_data.notes
         except Exception as e:
+            # Log the exception
+            log_exception(logger, e, "AI analysis failed for text description")
             # Continue with default values if AI analysis fails
             calories = meal_data.calories or 300  # Default value
             protein = meal_data.protein or 0      # Default value
@@ -232,6 +244,7 @@ async def create_text_meal(
     )
 
 @router.post("/meals/{meal_id}/reanalyze", response_model=schemas.MealOut)
+@log_execution_time()
 async def reanalyze_meal(
     meal_id: int,
     data: Dict[str, Any] = Body(...),
@@ -313,6 +326,7 @@ async def reanalyze_meal(
         raise HTTPException(status_code=500, detail=f"Error reanalyzing meal: {str(e)}")
 
 @router.get("/meals", response_model=List[schemas.MealOut])
+@log_execution_time(level=logging.INFO)
 def list_meals(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
@@ -321,7 +335,7 @@ def list_meals(
     limit: int = 50,
     offset: int = 0
 ):
-    print(f"DEBUG: Fetching meals for user_id={user.id}, frm={frm}, to={to}, limit={limit}, offset={offset}")
+    logger.info(f"Fetching meals for user_id={user.id}, frm={frm}, to={to}, limit={limit}, offset={offset}")
     
     # Check if there are any recently deleted meals (for debugging)
     from sqlalchemy import text
@@ -331,33 +345,33 @@ def list_meals(
     ).fetchall()
     
     if deleted_check:
-        print(f"DEBUG: Found {len(deleted_check)} meals that might be deleted but still in DB")
+        logger.warning(f"Found {len(deleted_check)} meals that might be deleted but still in DB")
         for m in deleted_check:
-            print(f"DEBUG: Potentially orphaned meal: id={m[0]}, meal_type={m[1]}, consumed_at={m[2]}")
+            logger.debug(f"Potentially orphaned meal: id={m[0]}, meal_type={m[1]}, consumed_at={m[2]}")
     
     # Regular query
     q = db.query(models.Meal).filter(models.Meal.user_id == user.id)
     
     # Apply date filters
     if frm:
-        print(f"DEBUG: Filtering meals from {frm}")
+        logger.debug(f"Filtering meals from {frm}")
         q = q.filter(models.Meal.consumed_at >= frm)
     if to:
-        print(f"DEBUG: Filtering meals to {to}")
+        logger.debug(f"Filtering meals to {to}")
         q = q.filter(models.Meal.consumed_at < to)
     
     # Get total count before pagination
     total_count = q.count()
-    print(f"DEBUG: Total meals matching criteria before pagination: {total_count}")
+    logger.debug(f"Total meals matching criteria before pagination: {total_count}")
     
     # Apply pagination
     q = q.order_by(models.Meal.consumed_at.desc()).offset(offset).limit(limit)
     meals = q.all()
-    print(f"DEBUG: Returning {len(meals)} meals after pagination")
+    logger.debug(f"Returning {len(meals)} meals after pagination")
     
     # Log the IDs of returned meals
     meal_ids = [m.id for m in meals]
-    print(f"DEBUG: Meal IDs being returned: {meal_ids}")
+    logger.debug(f"Meal IDs being returned: {meal_ids}")
     
     return [
         schemas.MealOut(
@@ -377,13 +391,14 @@ def list_meals(
     ]
 
 @router.get("/summary", response_model=schemas.SummaryOut)
+@log_execution_time(level=logging.INFO)
 def summary(
     frm: str,
     to: str,
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user)
 ):
-    print(f"DEBUG: Fetching summary for user_id={user.id}, frm={frm}, to={to}")
+    logger.info(f"Fetching summary for user_id={user.id}, frm={frm}, to={to}")
     
     try:
         # Use our custom parser that handles 'Z' timezone designator
@@ -391,7 +406,7 @@ def summary(
         to_dt = parse_iso_datetime(to)
         print(f"DEBUG: Parsed date range: from_dt={from_dt}, to_dt={to_dt}")
     except ValueError as e:
-        print(f"DEBUG: Date parsing error: {str(e)}")
+        logger.error(f"Date parsing error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Invalid date format: {str(e)}")
     
     from sqlalchemy import text
@@ -403,7 +418,7 @@ def summary(
         models.Meal.consumed_at < to_dt
     ).count()
     
-    print(f"DEBUG: Found {meal_count} meals in date range")
+    logger.debug(f"Found {meal_count} meals in date range")
     
     # Execute the summary query
     query = text("""
@@ -414,24 +429,25 @@ def summary(
     ORDER BY d
     """)
     
-    print(f"DEBUG: Executing summary query with params: uid={user.id}, f={from_dt}, t={to_dt}")
+    logger.debug(f"Executing summary query with params: uid={user.id}, f={from_dt}, t={to_dt}")
     rows = db.execute(query, {"uid": user.id, "f": from_dt, "t": to_dt}).fetchall()
     
-    print(f"DEBUG: Query returned {len(rows)} day summaries")
+    logger.debug(f"Query returned {len(rows)} day summaries")
     for row in rows:
-        print(f"DEBUG: Day summary: date={row[0]}, calories={row[1]}, meals={row[2]}")
+        logger.debug(f"Day summary: date={row[0]}, calories={row[1]}, meals={row[2]}")
 
     days = [schemas.DailySummary(date=datetime.fromisoformat(r[0]+"T00:00:00+00:00"), total_calories=r[1], meals=r[2]) for r in rows]
     return schemas.SummaryOut(from_dt=from_dt, to_dt=to_dt, days=days)
 
 @router.delete("/meals/{meal_id}", status_code=204)
+@log_execution_time()
 def delete_meal(
     meal_id: int,
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user)
 ):
     """Delete a specific meal by ID"""
-    print(f"DEBUG: Attempting to delete meal_id={meal_id} for user_id={user.id}")
+    logger.info(f"Attempting to delete meal_id={meal_id} for user_id={user.id}")
     
     # First try to find the meal with user_id filter
     meal = db.query(models.Meal).filter(
@@ -441,18 +457,18 @@ def delete_meal(
     
     # If not found, try without user_id filter (for orphaned meals)
     if not meal:
-        print(f"DEBUG: Meal not found with user_id filter, trying without user_id filter")
+        logger.warning(f"Meal not found with user_id filter, trying without user_id filter")
         meal = db.query(models.Meal).filter(
             models.Meal.id == meal_id
         ).first()
         
         if meal:
-            print(f"DEBUG: Found orphaned meal: meal_id={meal_id}, user_id={meal.user_id}")
+            logger.warning(f"Found orphaned meal: meal_id={meal_id}, user_id={meal.user_id}")
         else:
-            print(f"DEBUG: Meal not found: meal_id={meal_id}")
+            logger.error(f"Meal not found: meal_id={meal_id}")
             raise HTTPException(status_code=404, detail="Meal not found")
     
-    print(f"DEBUG: Found meal to delete: meal_id={meal_id}, meal_type={meal.meal_type}, consumed_at={meal.consumed_at}")
+    logger.info(f"Found meal to delete: meal_id={meal_id}, meal_type={meal.meal_type}, consumed_at={meal.consumed_at}")
     
     # Store meal info for verification and image deletion
     meal_info = {
@@ -466,9 +482,9 @@ def delete_meal(
     try:
         db.delete(meal)
         db.commit()
-        print(f"DEBUG: Meal deleted from database: meal_id={meal_id}")
+        logger.info(f"Meal deleted from database: meal_id={meal_id}")
     except Exception as e:
-        print(f"DEBUG: Error deleting meal: {str(e)}")
+        log_exception(logger, e, f"Error deleting meal: meal_id={meal_id}")
         db.rollback()
         
         # Try direct SQL deletion as a fallback
@@ -476,28 +492,28 @@ def delete_meal(
             from sqlalchemy import text
             db.execute(text("DELETE FROM meals WHERE id = :mid"), {"mid": meal_id})
             db.commit()
-            print(f"DEBUG: Meal deleted using direct SQL: meal_id={meal_id}")
+            logger.info(f"Meal deleted using direct SQL: meal_id={meal_id}")
         except Exception as e2:
-            print(f"DEBUG: Error with direct SQL deletion: {str(e2)}")
+            log_exception(logger, e2, f"Error with direct SQL deletion: meal_id={meal_id}")
             db.rollback()
             raise HTTPException(status_code=500, detail=f"Failed to delete meal: {str(e2)}")
     
     # Verify the meal is actually deleted
     verification = db.query(models.Meal).filter(models.Meal.id == meal_id).first()
     if verification:
-        print(f"DEBUG: ERROR - Meal still exists after deletion: meal_id={meal_id}")
+        logger.error(f"Meal still exists after deletion: meal_id={meal_id}")
         
         # Last resort: try to force delete with raw SQL again
         try:
             from sqlalchemy import text
             db.execute(text("DELETE FROM meals WHERE id = :mid"), {"mid": meal_id})
             db.commit()
-            print(f"DEBUG: Last resort deletion attempt completed")
+            logger.info(f"Last resort deletion attempt completed")
             
             # Final verification
             final_check = db.query(models.Meal).filter(models.Meal.id == meal_id).first()
             if final_check:
-                print(f"DEBUG: CRITICAL - Meal still exists after all deletion attempts: meal_id={meal_id}")
+                logger.critical(f"Meal still exists after all deletion attempts: meal_id={meal_id}")
             else:
                 print(f"DEBUG: Last resort deletion successful: meal_id={meal_id}")
         except Exception as e:

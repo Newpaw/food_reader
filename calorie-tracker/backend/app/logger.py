@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import traceback
+import asyncio
 from datetime import datetime
 from functools import wraps
 from logging.handlers import RotatingFileHandler
@@ -161,40 +162,72 @@ def get_access_logger() -> logging.Logger:
 def log_execution_time(logger: Optional[logging.Logger] = None, level: int = logging.DEBUG):
     """
     Decorator to log the execution time of a function.
+    Supports both synchronous and asynchronous functions.
     
     Args:
         logger: The logger to use. If None, a logger will be created with the function's module name.
         level: The log level to use (default: DEBUG)
     
     Returns:
-        Decorator function
+        Decorator function that works with both sync and async functions
     """
     def decorator(func: F) -> F:
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            # Get logger if not provided
-            nonlocal logger
-            if logger is None:
-                logger = get_logger(func.__module__)
-            
-            # Log function call
-            func_name = func.__qualname__
-            logger.log(level, f"Executing {func_name}")
-            
-            # Time execution
-            start_time = time.time()
-            try:
-                result = func(*args, **kwargs)
-                execution_time = (time.time() - start_time) * 1000  # Convert to ms
-                logger.log(level, f"Completed {func_name} in {execution_time:.2f}ms")
-                return result
-            except Exception as e:
-                execution_time = (time.time() - start_time) * 1000  # Convert to ms
-                logger.log(level, f"Failed {func_name} after {execution_time:.2f}ms")
-                # Re-raise the exception
-                raise
+        # Check if the function is a coroutine function (async)
+        is_async = asyncio.iscoroutinefunction(func)
         
-        return cast(F, wrapper)
+        if is_async:
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                # Get logger if not provided
+                nonlocal logger
+                if logger is None:
+                    logger = get_logger(func.__module__)
+                
+                # Log function call
+                func_name = func.__qualname__
+                logger.log(level, f"Executing async {func_name}")
+                
+                # Time execution
+                start_time = time.time()
+                try:
+                    # Await the coroutine
+                    result = await func(*args, **kwargs)
+                    execution_time = (time.time() - start_time) * 1000  # Convert to ms
+                    logger.log(level, f"Completed async {func_name} in {execution_time:.2f}ms")
+                    return result
+                except Exception as e:
+                    execution_time = (time.time() - start_time) * 1000  # Convert to ms
+                    logger.log(level, f"Failed async {func_name} after {execution_time:.2f}ms: {str(e)}")
+                    # Re-raise the exception
+                    raise
+            
+            return cast(F, async_wrapper)
+        else:
+            @wraps(func)
+            def sync_wrapper(*args, **kwargs):
+                # Get logger if not provided
+                nonlocal logger
+                if logger is None:
+                    logger = get_logger(func.__module__)
+                
+                # Log function call
+                func_name = func.__qualname__
+                logger.log(level, f"Executing {func_name}")
+                
+                # Time execution
+                start_time = time.time()
+                try:
+                    result = func(*args, **kwargs)
+                    execution_time = (time.time() - start_time) * 1000  # Convert to ms
+                    logger.log(level, f"Completed {func_name} in {execution_time:.2f}ms")
+                    return result
+                except Exception as e:
+                    execution_time = (time.time() - start_time) * 1000  # Convert to ms
+                    logger.log(level, f"Failed {func_name} after {execution_time:.2f}ms: {str(e)}")
+                    # Re-raise the exception
+                    raise
+            
+            return cast(F, sync_wrapper)
     
     return decorator
 

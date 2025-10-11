@@ -950,6 +950,46 @@ tr:hover {
   }
 }
 
+/* Filter Elements Styling */
+.filter-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.quick-select-container {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Media queries for filter elements */
+@media (max-width: 768px) {
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .filter-container .form-control {
+    width: 100%;
+  }
+  
+  .filter-container .btn {
+    width: 100%;
+    margin-top: 5px;
+  }
+  
+  .quick-select-container {
+    flex-direction: column;
+  }
+  
+  .quick-select-container .btn {
+    width: 100%;
+  }
+}
+
 /* Food thumbnail styling */
 .food-thumbnail {
   width: 300px;

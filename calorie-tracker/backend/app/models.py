@@ -18,7 +18,7 @@ class Meal(Base):
     __tablename__ = "meals"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
-    image_path = Column(String, nullable=False)
+    image_path = Column(String, nullable=True)  # Now nullable to support text-only meals
     calories = Column(Integer, nullable=False)
     protein = Column(Integer, nullable=True)  # in grams
     fat = Column(Integer, nullable=True)      # in grams
@@ -30,5 +30,6 @@ class Meal(Base):
     consumed_at = Column(DateTime, nullable=False)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(pytz.UTC))
+    is_text_only = Column(Integer, default=0, nullable=False)  # 0 = image-based, 1 = text-only
 
     user = relationship("User", back_populates="meals")

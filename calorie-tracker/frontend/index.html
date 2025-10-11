@@ -52,9 +52,16 @@
     <div class="container">
       <div class="card">
         <h2>Add New Meal</h2>
-        <p class="mb-3">Take a photo of your food and our AI will analyze its nutritional content.</p>
+        <p class="mb-3">Add your meal by uploading a photo or describing it in text.</p>
         
-        <form id="mealForm">
+        <!-- Meal Input Type Selector -->
+        <div class="meal-input-selector mb-3">
+          <button type="button" id="photoInputBtn" class="btn btn-primary active">Photo Input</button>
+          <button type="button" id="textInputBtn" class="btn btn-secondary">Text Input</button>
+        </div>
+        
+        <!-- Photo Input Form -->
+        <form id="mealForm" style="display: block;">
           <div class="form-group">
             <label class="form-label">Upload Food Image:</label>
             <p class="helper-text mb-2">Take a photo of your food or choose from your gallery. We'll analyze it automatically.</p>
@@ -112,6 +119,19 @@
           </div>
         </form>
         
+        <!-- Text Input Form -->
+        <form id="textMealForm" style="display: none;">
+          <div class="form-group">
+            <label for="foodDescription" class="form-label">Describe Your Meal:</label>
+            <p class="helper-text mb-2">Provide a detailed description of your meal (e.g., "Caesar salad with grilled chicken and XYZ brand dressing").</p>
+            <textarea id="foodDescription" class="form-control" rows="3" placeholder="Describe your meal in detail..."></textarea>
+          </div>
+          
+          <div class="form-group mt-4">
+            <button type="submit" class="btn btn-primary btn-block" style="font-size: 1.1rem; padding: 0.9rem 1.5rem; font-weight: 600;">Analyze Meal Description</button>
+          </div>
+        </form>
+        
         <p id="mealMessage" class="text-danger mt-2"></p>
       </div>
       
@@ -123,6 +143,35 @@
             <!-- Image will be inserted here -->
           </div>
           <div id="analysisContent"></div>
+          
+          <!-- Reanalysis Section (only shown for image-based meals) -->
+          <div id="reanalysisSection" class="mt-3" style="display: none;">
+            <button type="button" id="reanalysisBtn" class="btn btn-secondary">Correct Food Identification</button>
+            
+            <div id="reanalysisForm" class="mt-3" style="display: none;">
+              <h4>Correct Food Identification</h4>
+              <p class="helper-text mb-2">If the AI incorrectly identified your food, provide corrections below. This will update the current meal record.</p>
+              
+              <div class="form-group">
+                <label for="foodTypeCorrection" class="form-label">Food Type Correction:</label>
+                <input type="text" id="foodTypeCorrection" class="form-control" placeholder="e.g., This is pork, not chicken">
+              </div>
+              
+              <div class="form-group mt-3">
+                <button type="button" id="submitReanalysisBtn" class="btn btn-primary">Update with Corrections</button>
+                <button type="button" id="cancelReanalysisBtn" class="btn btn-secondary">Cancel</button>
+              </div>
+            </div>
+            
+            <!-- Reanalysis Loading Indicator -->
+            <div id="reanalysisLoading" class="mt-3" style="display: none;">
+              <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Updating nutritional information...</p>
+                <p class="loading-subtext">Applying your corrections and updating this meal record</p>
+              </div>
+            </div>
+          </div>
         </div>
         
         <div id="nutritionEditor" class="mb-4">
@@ -239,6 +288,9 @@
         loadRecentMeals();
       });
       
+      // Global submission tracking
+      let globalSubmissionInProgress = false;
+      
       // Initialize meal form
       function initMealForm() {
         const form = document.getElementById('mealForm');
@@ -251,15 +303,29 @@
         // Store the original meal data
         let originalMealData = null;
         
-        // Handle photo input selection
-        cameraInput.addEventListener('change', function() {
+        // Debounce function to prevent multiple rapid calls
+        function debounce(func, wait) {
+          let timeout;
+          return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+          };
+        }
+        
+        // Handle photo input selection with debounce
+        cameraInput.addEventListener('change', debounce(function(event) {
+          console.log("Camera input change event triggered (debounced)", event.type, event.timeStamp);
           if (this.files.length > 0) {
             galleryInput.value = ''; // Clear the other input
             console.log("Camera input change event - file selected:", this.files[0].name, "Size:", (this.files[0].size / 1024).toFixed(2) + "KB", "Type:", this.files[0].type);
+            // Call handleImageSelection to process the selected image
+            handleImageSelection(this.files[0]);
           }
-        });
+        }, 300));
         
-        galleryInput.addEventListener('change', function() {
+        galleryInput.addEventListener('change', debounce(function(event) {
+          console.log("Gallery input change event triggered (debounced)", event.type, event.timeStamp);
           if (this.files.length > 0) {
             cameraInput.value = ''; // Clear the other input
             console.log("Gallery input change event - file selected:", this.files[0].name, "Size:", (this.files[0].size / 1024).toFixed(2) + "KB", "Type:", this.files[0].type);
@@ -269,7 +335,7 @@
             document.getElementById('mealMessage').textContent = '';
             document.getElementById('mealMessage').className = '';
           }
-        });
+        }, 300));
         
         // Handle image selection and preview
         function handleImageSelection(file) {
@@ -314,22 +380,26 @@
           }
         }
         
-        // Handle camera input change
-        cameraInput.addEventListener('change', function() {
-          console.log("Camera input change event handler");
-          if (this.files.length > 0) {
-            console.log("Camera input has files, calling handleImageSelection");
-            handleImageSelection(this.files[0]);
-          }
-        });
-        
-        // Note: The gallery input change event is already handled above
+        // Note: We need to modify the camera input change handler to also call handleImageSelection
+        // Update the existing camera input handler (above) instead of having a duplicate handler here
         
         
-        // Handle form submission
-        form.addEventListener('submit', async (e) => {
+        // Handle form submission - use the 'once' option to ensure it only fires once
+        form.addEventListener('submit', async function submitHandler(e) {
           e.preventDefault();
           console.log("Form submit event triggered");
+          
+          // Global submission check
+          if (globalSubmissionInProgress) {
+            console.log("A submission is already in progress globally, ignoring this submission");
+            return;
+          }
+          
+          // Set the global submission flag
+          globalSubmissionInProgress = true;
+          
+          // Remove this event listener to prevent multiple submissions
+          form.removeEventListener('submit', submitHandler);
           
           const messageEl = document.getElementById('mealMessage');
           const uploadProgress = document.getElementById('uploadProgress');
@@ -480,6 +550,18 @@
             messageEl.textContent = error.message;
             messageEl.className = 'text-danger mt-2';
             console.error('Error uploading meal:', error);
+          } finally {
+            // Reset the global submission flag regardless of success or failure
+            setTimeout(() => {
+              globalSubmissionInProgress = false;
+              console.log("Global submission flag reset");
+              
+              // Re-add the event listener after a delay
+              setTimeout(() => {
+                form.addEventListener('submit', submitHandler);
+                console.log("Form submit event listener re-added");
+              }, 1000);
+            }, 3000);
           }
         });
         
@@ -535,6 +617,7 @@
         const analysisResult = document.getElementById('analysisResult');
         const analysisContent = document.getElementById('analysisContent');
         const foodImagePreview = document.getElementById('foodImagePreview');
+        const reanalysisSection = document.getElementById('reanalysisSection');
         
         // Extract food name from notes if available
         let foodName = mealData.meal_type.charAt(0).toUpperCase() + mealData.meal_type.slice(1);
@@ -545,11 +628,24 @@
           }
         }
         
-        // Display the food image
-        foodImagePreview.innerHTML = `
-          <img src="${mealData.image_url}" alt="${foodName}"
-               class="food-thumbnail">
-        `;
+        // Display the food image if available (for image-based meals)
+        if (mealData.image_url) {
+          foodImagePreview.innerHTML = `
+            <img src="${mealData.image_url}" alt="${foodName}"
+                 class="food-thumbnail">
+          `;
+          foodImagePreview.style.display = 'block';
+          
+          // Show reanalysis section for image-based meals
+          reanalysisSection.style.display = 'block';
+          
+          // Store meal ID for reanalysis
+          reanalysisSection.dataset.mealId = mealData.id;
+        } else {
+          // Hide image preview and reanalysis section for text-only meals
+          foodImagePreview.style.display = 'none';
+          reanalysisSection.style.display = 'none';
+        }
         
         // Display the analysis content
         analysisContent.innerHTML = `
@@ -665,6 +761,228 @@
           recentMealsEl.innerHTML = `<p class="text-danger">Error loading meals: ${error.message}</p>`;
         }
       }
+      
+      // Initialize the text meal form
+      function initTextMealForm() {
+        const form = document.getElementById('textMealForm');
+        const messageEl = document.getElementById('mealMessage');
+        
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const foodDescription = document.getElementById('foodDescription').value.trim();
+          
+          if (!foodDescription) {
+            messageEl.textContent = 'Please enter a food description';
+            messageEl.className = 'text-danger mt-2';
+            return;
+          }
+          
+          // Show loading message
+          messageEl.textContent = 'Analyzing your food description...';
+          messageEl.className = 'text-info mt-2';
+          
+          try {
+            // Create request body
+            const requestBody = {
+              food_description: foodDescription
+            };
+            
+            // Send API request
+            const response = await fetch(`${API.meals}/text`, {
+              method: 'POST',
+              headers: {
+                ...authHeaders(),
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.detail || 'Failed to analyze meal description');
+            }
+            
+            const mealData = await response.json();
+            
+            // Display success message
+            messageEl.textContent = 'Meal analyzed successfully!';
+            messageEl.className = 'text-success mt-2';
+            
+            // Display the analysis result
+            displayAnalysisResult(mealData);
+            
+            // Reset the form
+            form.reset();
+            
+            // Load recent meals
+            loadRecentMeals();
+          } catch (error) {
+            messageEl.textContent = error.message;
+            messageEl.className = 'text-danger mt-2';
+            console.error('Error analyzing meal description:', error);
+          }
+        });
+      }
+      
+      // Initialize reanalysis functionality
+      function initReanalysis() {
+        const reanalysisBtn = document.getElementById('reanalysisBtn');
+        const reanalysisForm = document.getElementById('reanalysisForm');
+        const submitReanalysisBtn = document.getElementById('submitReanalysisBtn');
+        const cancelReanalysisBtn = document.getElementById('cancelReanalysisBtn');
+        const messageEl = document.getElementById('mealMessage');
+        
+        // Show reanalysis form when button is clicked
+        reanalysisBtn.addEventListener('click', () => {
+          reanalysisForm.style.display = 'block';
+          reanalysisBtn.style.display = 'none';
+        });
+        
+        // Hide reanalysis form when cancel button is clicked
+        cancelReanalysisBtn.addEventListener('click', () => {
+          reanalysisForm.style.display = 'none';
+          reanalysisBtn.style.display = 'block';
+          document.getElementById('foodTypeCorrection').value = '';
+        });
+        
+        // Handle reanalysis submission
+        submitReanalysisBtn.addEventListener('click', async () => {
+          const mealId = document.getElementById('reanalysisSection').dataset.mealId;
+          const foodTypeCorrection = document.getElementById('foodTypeCorrection').value.trim();
+          
+          if (!foodTypeCorrection) {
+            messageEl.textContent = 'Please enter a correction';
+            messageEl.className = 'text-danger mt-2';
+            return;
+          }
+          
+          // Show loading message
+          // Hide the form and show loading indicator
+          reanalysisForm.style.display = 'none';
+          document.getElementById('reanalysisLoading').style.display = 'block';
+          
+          messageEl.textContent = 'Reanalyzing with corrections...';
+          messageEl.className = 'text-info mt-2';
+          
+          try {
+            // Create request body with corrections
+            const requestBody = {
+              corrections: {
+                food_type: foodTypeCorrection
+              }
+            };
+            
+            // Send API request
+            const response = await fetch(`${API.meals}/${mealId}/reanalyze`, {
+              method: 'POST',
+              headers: {
+                ...authHeaders(),
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+              try {
+                const errorData = await response.json();
+                console.log('Error response:', errorData);
+                throw new Error(errorData.detail || 'Failed to reanalyze meal');
+              } catch (parseError) {
+                console.error('Error parsing error response:', parseError);
+                throw new Error(`Server error (${response.status}): Failed to reanalyze meal`);
+              }
+            }
+            
+            const mealData = await response.json();
+            
+            // Display success message
+            messageEl.textContent = 'Meal updated successfully with your corrections!';
+            messageEl.className = 'text-success mt-2';
+            
+            // Hide loading indicator and reanalysis form
+            document.getElementById('reanalysisLoading').style.display = 'none';
+            reanalysisForm.style.display = 'none';
+            reanalysisBtn.style.display = 'block';
+            document.getElementById('foodTypeCorrection').value = '';
+            
+            // Display the updated analysis result
+            displayAnalysisResult(mealData);
+            
+            // Load recent meals
+            loadRecentMeals();
+          } catch (error) {
+            // Hide loading indicator and show form again on error
+            document.getElementById('reanalysisLoading').style.display = 'none';
+            reanalysisForm.style.display = 'block';
+            
+            messageEl.textContent = error.message;
+            messageEl.className = 'text-danger mt-2';
+            console.error('Error reanalyzing meal:', error);
+            
+            // Show more detailed error in console for debugging
+            if (error.stack) {
+              console.debug('Error stack:', error.stack);
+            }
+          }
+        });
+      }
+      
+      // Initialize input type selector
+      function initInputTypeSelector() {
+        const photoInputBtn = document.getElementById('photoInputBtn');
+        const textInputBtn = document.getElementById('textInputBtn');
+        const mealForm = document.getElementById('mealForm');
+        const textMealForm = document.getElementById('textMealForm');
+        
+        photoInputBtn.addEventListener('click', () => {
+          // Switch to photo input
+          photoInputBtn.classList.add('active');
+          photoInputBtn.classList.remove('btn-secondary');
+          photoInputBtn.classList.add('btn-primary');
+          
+          textInputBtn.classList.remove('active');
+          textInputBtn.classList.remove('btn-primary');
+          textInputBtn.classList.add('btn-secondary');
+          
+          mealForm.style.display = 'block';
+          textMealForm.style.display = 'none';
+          
+          // Clear message
+          document.getElementById('mealMessage').textContent = '';
+        });
+        
+        textInputBtn.addEventListener('click', () => {
+          // Switch to text input
+          textInputBtn.classList.add('active');
+          textInputBtn.classList.remove('btn-secondary');
+          textInputBtn.classList.add('btn-primary');
+          
+          photoInputBtn.classList.remove('active');
+          photoInputBtn.classList.remove('btn-primary');
+          photoInputBtn.classList.add('btn-secondary');
+          
+          mealForm.style.display = 'none';
+          textMealForm.style.display = 'block';
+          
+          // Clear message
+          document.getElementById('mealMessage').textContent = '';
+        });
+      }
+      
+      // Initialize all forms and functionality
+      document.addEventListener('DOMContentLoaded', () => {
+        if (!checkAuth()) return;
+        
+        // Initialize the forms
+        initMealForm();
+        initTextMealForm();
+        initReanalysis();
+        initInputTypeSelector();
+        
+        // Load recent meals
+        loadRecentMeals();
+      });
     </script>
   </body>
 </html>

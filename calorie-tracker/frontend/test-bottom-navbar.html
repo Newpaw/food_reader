@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Test Mobile Bottom Navigation</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Calorie Tracker App">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .test-container {
+        padding: 20px;
+        margin: 20px 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      
+      .test-section {
+        margin-bottom: 30px;
+      }
+      
+      .test-section h3 {
+        margin-bottom: 15px;
+        color: var(--primary-color);
+      }
+      
+      .test-item {
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+      }
+      
+      .success {
+        color: var(--success-color);
+      }
+      
+      .info {
+        color: var(--info-color);
+      }
+      
+      .screen-info {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        z-index: 2000;
+      }
+      
+      /* Force show both navbars for testing */
+      @media (max-width: 768px) {
+        .navbar {
+          display: block !important;
+          opacity: 0.5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Navigation (for comparison) -->
+    <div class="navbar">
+      <div class="navbar-container">
+        <button class="navbar-toggle">☰</button>
+        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
+        <ul class="navbar-menu">
+          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
+          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
+          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
+        </ul>
+        <div class="navbar-user-section navbar-user-desktop">
+          <span id="userName">Test User</span>
+          <button id="logoutBtnDesktop" class="btn btn-neutral btn-sm btn-outline">Logout</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+      <div class="mobile-bottom-nav-container">
+        <div class="mobile-nav-item">
+          <a href="index.html" class="mobile-nav-link active">
+            <span class="mobile-nav-icon">➕</span>
+            <span class="mobile-nav-label">Add Meal</span>
+          </a>
+        </div>
+        <div class="mobile-nav-item">
+          <a href="history.html" class="mobile-nav-link">
+            <span class="mobile-nav-icon">📋</span>
+            <span class="mobile-nav-label">History</span>
+          </a>
+        </div>
+        <div class="mobile-nav-item">
+          <a href="metrics.html" class="mobile-nav-link">
+            <span class="mobile-nav-icon">📊</span>
+            <span class="mobile-nav-label">Metrics</span>
+          </a>
+        </div>
+        <div class="mobile-nav-item">
+          <a href="#" class="mobile-nav-link" id="mobileLogoutBtn">
+            <span class="mobile-nav-icon">🚪</span>
+            <span class="mobile-nav-label">Logout</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+    
+    <!-- Screen Info -->
+    <div class="screen-info">
+      <div>Width: <span id="screenWidth">-</span>px</div>
+      <div>Height: <span id="screenHeight">-</span>px</div>
+      <div>Mode: <span id="viewMode">-</span></div>
+    </div>
+    
+    <div class="container">
+      <div class="card">
+        <h2>Mobile Bottom Navigation Test</h2>
+        <p>This page tests the new mobile bottom navigation bar implementation.</p>
+        
+        <div class="test-container">
+          <div class="test-section">
+            <h3>📱 Mobile View Test (≤768px)</h3>
+            <div class="test-item">
+              <p class="info">Resize your browser window to 768px or less to test mobile view.</p>
+            </div>
+            <div class="test-item">
+              <p>In mobile view, you should see:</p>
+              <ul>
+                <li>✅ Bottom navigation bar fixed at the bottom of the screen</li>
+                <li>✅ All navigation items displayed horizontally</li>
+                <li>✅ Icons and labels for each navigation item</li>
+                <li>✅ Active state highlighting on current page</li>
+                <li>✅ Top navbar hidden (shown here at 50% opacity for comparison)</li>
+                <li>✅ Body padding adjusted to prevent content overlap</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="test-section">
+            <h3>💻 Desktop View Test (>768px)</h3>
+            <div class="test-item">
+              <p class="info">Resize your browser window larger than 768px to test desktop view.</p>
+            </div>
+            <div class="test-item">
+              <p>In desktop view, you should see:</p>
+              <ul>
+                <li>✅ Traditional top navigation bar</li>
+                <li>✅ Bottom navigation hidden</li>
+                <li>✅ Horizontal menu items in top navbar</li>
+                <li>✅ User section with logout button</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="test-section">
+            <h3>🎯 Navigation Features</h3>
+            <div class="test-item">
+              <p>Test these features:</p>
+              <ul>
+                <li>Click navigation items to ensure they work</li>
+                <li>Check hover states on navigation items</li>
+                <li>Verify active state on current page</li>
+                <li>Test logout functionality</li>
+                <li>Ensure smooth transitions between views</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="test-section">
+            <h3>📐 Responsive Breakpoints</h3>
+            <div class="test-item">
+              <p>Key breakpoints to test:</p>
+              <ul>
+                <li><strong>360px</strong> - Very small mobile (adjusted font sizes)</li>
+                <li><strong>480px</strong> - Small mobile</li>
+                <li><strong>768px</strong> - Tablet/Mobile boundary</li>
+                <li><strong>1024px</strong> - Desktop</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div class="test-container" style="height: 500px; background: linear-gradient(to bottom, rgba(138, 43, 226, 0.2), rgba(65, 105, 225, 0.2));">
+          <h3>Scroll Test Area</h3>
+          <p>This area allows you to test scrolling behavior with the fixed bottom navigation.</p>
+          <p>The bottom navigation should remain fixed at the bottom while scrolling.</p>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Update screen info
+      function updateScreenInfo() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        document.getElementById('screenWidth').textContent = width;
+        document.getElementById('screenHeight').textContent = height;
+        document.getElementById('viewMode').textContent = width <= 768 ? 'Mobile' : 'Desktop';
+      }
+      
+      // Update on load and resize
+      updateScreenInfo();
+      window.addEventListener('resize', updateScreenInfo);
+      
+      // Test logout button
+      document.getElementById('mobileLogoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Logout button clicked! In the real app, this would log you out.');
+      });
+      
+      // Highlight active navigation items on hover
+      document.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.addEventListener('mouseenter', function() {
+          console.log('Hovering over:', this.querySelector('.mobile-nav-label').textContent);
+        });
+      });
+    </script>
+  </body>
+</html>

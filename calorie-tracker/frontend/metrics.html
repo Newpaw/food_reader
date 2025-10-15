@@ -48,6 +48,36 @@
         </div>
       </div>
     </div>
+    
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+      <div class="mobile-bottom-nav-container">
+        <div class="mobile-nav-item">
+          <a href="index.html" class="mobile-nav-link">
+            <span class="mobile-nav-icon">➕</span>
+            <span class="mobile-nav-label">Add Meal</span>
+          </a>
+        </div>
+        <div class="mobile-nav-item">
+          <a href="history.html" class="mobile-nav-link">
+            <span class="mobile-nav-icon">📋</span>
+            <span class="mobile-nav-label">History</span>
+          </a>
+        </div>
+        <div class="mobile-nav-item">
+          <a href="metrics.html" class="mobile-nav-link active">
+            <span class="mobile-nav-icon">📊</span>
+            <span class="mobile-nav-label">Metrics</span>
+          </a>
+        </div>
+        <div class="mobile-nav-item">
+          <a href="#" class="mobile-nav-link" id="mobileLogoutBtn">
+            <span class="mobile-nav-icon">🚪</span>
+            <span class="mobile-nav-label">Logout</span>
+          </a>
+        </div>
+      </div>
+    </nav>
 
     <div class="container">
       <div class="card">
@@ -166,6 +196,16 @@
           loadMetrics();
         } else {
           console.log("DEBUG: In testing mode, using mock data");
+          
+          // Mobile logout button handler
+          const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+          if (mobileLogoutBtn) {
+            mobileLogoutBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              logout();
+            });
+          }
+          
           // Mock data for testing
           const mockSummaryData = {
             days: [

@@ -1011,3 +1011,91 @@ tr:hover {
   justify-content: center;
   overflow: hidden;
 }
+
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--navbar-bg);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-bottom-nav-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.5rem 0;
+  max-width: 100%;
+}
+
+.mobile-nav-item {
+  flex: 1;
+  text-align: center;
+}
+
+.mobile-nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
+  color: var(--primary-color);
+}
+
+.mobile-nav-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-nav-label {
+  display: block;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  /* Hide top navbar on mobile */
+  .navbar {
+    display: none;
+  }
+  
+  /* Show bottom navigation */
+  .mobile-bottom-nav {
+    display: block;
+  }
+  
+  /* Add padding to bottom of body to account for fixed bottom nav */
+  body {
+    padding-bottom: 70px;
+  }
+  
+  /* Adjust container padding for mobile */
+  .container {
+    padding-top: 20px;
+  }
+}
+
+/* Ensure proper spacing for very small screens */
+@media (max-width: 360px) {
+  .mobile-nav-link {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.2rem;
+  }
+  
+  .mobile-nav-icon {
+    font-size: 1.3rem;
+  }
+}

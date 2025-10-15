@@ -1,8 +1,0 @@
-2025-10-12 00:09:40,632 - INFO - Request started - request_id=1760220580-fa20bc7b - method=GET - path=/test - status=0 - duration=0.00ms
-2025-10-12 00:09:40,632 - INFO - Request completed - request_id=1760220580-fa20bc7b - method=GET - path=/test - status=200 - duration=0.00ms
-2025-10-12 00:09:48,691 - INFO - Request started - request_id=1760220588-4abd82b6 - method=GET - path=/test - status=0 - duration=0.00ms
-2025-10-12 00:09:48,691 - INFO - Request completed - request_id=1760220588-4abd82b6 - method=GET - path=/test - status=200 - duration=0.00ms
-2025-10-12 00:09:49,257 - INFO - Request started - request_id=1760220589-b4246557 - method=GET - path=/test - status=0 - duration=0.00ms
-2025-10-12 00:09:49,257 - INFO - Request completed - request_id=1760220589-b4246557 - method=GET - path=/test - status=200 - duration=0.00ms
-2025-10-12 00:11:33,139 - INFO - Request started - request_id=1760220693-d71fabdf - method=GET - path=/test - status=0 - duration=0.00ms
-2025-10-12 00:11:33,140 - INFO - Request completed - request_id=1760220693-d71fabdf - method=GET - path=/test - status=200 - duration=0.00ms

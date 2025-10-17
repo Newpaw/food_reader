@@ -100,13 +100,14 @@
               <input type="date" id="fromDate" class="form-control">
               <span>to</span>
               <input type="date" id="toDate" class="form-control">
-              <button id="updateBtn" class="btn btn-primary">Update</button>
+              <button id="updateBtn" class="btn btn-primary">Apply Filters</button>
             </div>
           </div>
           
           <div class="form-group">
             <label class="form-label">Quick Select:</label>
             <div class="quick-select-container">
+              <button id="todayBtn" class="btn btn-secondary">Today</button>
               <button id="lastWeekBtn" class="btn btn-secondary">Last 7 Days</button>
               <button id="lastMonthBtn" class="btn btn-secondary">Last 30 Days</button>
               <button id="thisMonthBtn" class="btn btn-secondary">This Month</button>
@@ -243,7 +244,7 @@
           });
           
           // Close filter after quick select buttons
-          ['lastWeekBtn', 'lastMonthBtn', 'thisMonthBtn'].forEach(btnId => {
+          ['todayBtn', 'lastWeekBtn', 'lastMonthBtn', 'thisMonthBtn'].forEach(btnId => {
             const btn = document.getElementById(btnId);
             if (btn) {
               btn.addEventListener('click', () => {
@@ -472,6 +473,15 @@
       }
       
       // Date range quick select buttons
+      document.getElementById('todayBtn').addEventListener('click', () => {
+        const today = new Date();
+        
+        document.getElementById('fromDate').value = today.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMetrics();
+      });
+      
       document.getElementById('lastWeekBtn').addEventListener('click', () => {
         const today = new Date();
         const lastWeek = new Date(today);

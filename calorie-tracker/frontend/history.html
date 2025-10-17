@@ -95,13 +95,22 @@
         
         <div class="filter-content">
           <div class="form-group">
-            <label for="dateFilter" class="form-label">Filter by date range:</label>
+            <label for="dateRange" class="form-label">Date Range:</label>
             <div class="filter-container">
               <input type="date" id="fromDate" class="form-control">
               <span>to</span>
               <input type="date" id="toDate" class="form-control">
-              <button id="filterBtn" class="btn btn-primary">Filter</button>
-              <button id="resetFilterBtn" class="btn btn-secondary">Reset</button>
+              <button id="filterBtn" class="btn btn-primary">Apply Filters</button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Quick Select:</label>
+            <div class="quick-select-container">
+              <button id="todayBtn" class="btn btn-secondary">Today</button>
+              <button id="lastWeekBtn" class="btn btn-secondary">Last 7 Days</button>
+              <button id="lastMonthBtn" class="btn btn-secondary">Last 30 Days</button>
+              <button id="thisMonthBtn" class="btn btn-secondary">This Month</button>
             </div>
           </div>
         </div>
@@ -267,13 +276,15 @@
             });
           }
           
-          // Close filter after reset button is clicked
-          const resetFilterBtn = document.getElementById('resetFilterBtn');
-          if (resetFilterBtn) {
-            resetFilterBtn.addEventListener('click', () => {
-              setTimeout(closeFilter, 300);
-            });
-          }
+          // Close filter after quick select buttons
+          ['todayBtn', 'lastWeekBtn', 'lastMonthBtn', 'thisMonthBtn'].forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+              btn.addEventListener('click', () => {
+                setTimeout(closeFilter, 300);
+              });
+            }
+          });
         }
       }
       
@@ -864,6 +875,48 @@
         if (e.target === document.getElementById('deleteConfirmModal')) {
           document.getElementById('deleteConfirmModal').style.display = 'none';
         }
+      });
+      
+      // Date range quick select buttons
+      document.getElementById('todayBtn').addEventListener('click', () => {
+        const today = new Date();
+        
+        document.getElementById('fromDate').value = today.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMeals();
+      });
+      
+      document.getElementById('lastWeekBtn').addEventListener('click', () => {
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 7);
+        
+        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMeals();
+      });
+      
+      document.getElementById('lastMonthBtn').addEventListener('click', () => {
+        const today = new Date();
+        const lastMonth = new Date(today);
+        lastMonth.setDate(today.getDate() - 30);
+        
+        document.getElementById('fromDate').value = lastMonth.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMeals();
+      });
+      
+      document.getElementById('thisMonthBtn').addEventListener('click', () => {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        
+        loadMeals();
       });
     </script>
   </body>

@@ -195,17 +195,7 @@
     </div>
 
     <script src="common.js"></script>
-    <script>
-    // Helper functions for testing
-    function utcToLocal(utcDateString) {
-      return new Date(utcDateString);
-    }
-    
-    function formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    }
-    </script>
+    <!-- Removed custom date formatting functions to use the standardized ones from common.js -->
     <script>
       // Initialize date filters with today's date only and automatically load data
       document.addEventListener('DOMContentLoaded', () => {
@@ -378,7 +368,8 @@
           `;
           
           mealsByDate[date].forEach(meal => {
-            const mealTime = formatDate(meal.consumed_at);
+            // Use formatTimeShort from common.js to display only time without timezone
+            const mealTime = formatTimeShort(meal.consumed_at);
             
             html += `
               <div class="meal-item" data-meal-id="${meal.id}">
@@ -460,7 +451,8 @@
           month: 'long',
           day: 'numeric'
         });
-        const formattedTime = formatDate(meal.consumed_at);
+        // Use formatTime from common.js to display time with timezone
+        const formattedTime = formatTime(meal.consumed_at);
         
         // Extract food name from notes if available
         let foodName = meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1);

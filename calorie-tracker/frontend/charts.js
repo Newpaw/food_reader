@@ -39,7 +39,14 @@ async function createDailyCalorieChart(containerId, data) {
   // Extract dates and calorie values (convert UTC to local)
   const labels = data.days.map(day => {
     // Use the same date formatting as in other parts of the app
-    return formatDate(day.date).split(',')[0]; // Get just the date part
+    // The day object doesn't have a date property, so we need to use consumed_at if available
+    if (day.consumed_at) {
+      return formatDate(day.consumed_at).split(',')[0]; // Get just the date part
+    } else {
+      // If no consumed_at, use current date formatted to Prague time
+      const now = new Date();
+      return now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
   });
   
   const calorieValues = data.days.map(day => day.total_calories);
@@ -184,7 +191,14 @@ async function createMealFrequencyChart(containerId, data) {
   // Extract dates and meal counts (convert UTC to local)
   const labels = data.days.map(day => {
     // Use the same date formatting as in other parts of the app
-    return formatDate(day.date).split(',')[0]; // Get just the date part
+    // The day object doesn't have a date property, so we need to use consumed_at if available
+    if (day.consumed_at) {
+      return formatDate(day.consumed_at).split(',')[0]; // Get just the date part
+    } else {
+      // If no consumed_at, use current date formatted to Prague time
+      const now = new Date();
+      return now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
   });
   
   const mealCounts = data.days.map(day => day.meals);

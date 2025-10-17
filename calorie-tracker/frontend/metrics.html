@@ -80,25 +80,37 @@
     </nav>
 
     <div class="container">
-      <div class="card">
-        <h2>Nutrition Metrics</h2>
-        
-        <div class="form-group">
-          <label for="dateRange" class="form-label">Date Range:</label>
-          <div class="filter-container">
-            <input type="date" id="fromDate" class="form-control">
-            <span>to</span>
-            <input type="date" id="toDate" class="form-control">
-            <button id="updateBtn" class="btn btn-primary">Update</button>
-          </div>
+      <!-- Mobile Filter Toggle Button -->
+      <button id="mobileFilterToggle" class="mobile-filter-toggle" aria-label="Toggle Filters">
+        <span class="filter-icon">🔍</span>
+        <span class="filter-text">Filters</span>
+        <span class="filter-badge" id="filterBadge"></span>
+      </button>
+
+      <div class="card filter-card" id="filterCard">
+        <div class="filter-header">
+          <h2>Nutrition Metrics</h2>
+          <button class="filter-close-btn" id="filterCloseBtn" aria-label="Close Filters">&times;</button>
         </div>
         
-        <div class="form-group">
-          <label class="form-label">Quick Select:</label>
-          <div class="quick-select-container">
-            <button id="lastWeekBtn" class="btn btn-secondary">Last 7 Days</button>
-            <button id="lastMonthBtn" class="btn btn-secondary">Last 30 Days</button>
-            <button id="thisMonthBtn" class="btn btn-secondary">This Month</button>
+        <div class="filter-content">
+          <div class="form-group">
+            <label for="dateRange" class="form-label">Date Range:</label>
+            <div class="filter-container">
+              <input type="date" id="fromDate" class="form-control">
+              <span>to</span>
+              <input type="date" id="toDate" class="form-control">
+              <button id="updateBtn" class="btn btn-primary">Update</button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Quick Select:</label>
+            <div class="quick-select-container">
+              <button id="lastWeekBtn" class="btn btn-secondary">Last 7 Days</button>
+              <button id="lastMonthBtn" class="btn btn-secondary">Last 30 Days</button>
+              <button id="thisMonthBtn" class="btn btn-secondary">This Month</button>
+            </div>
           </div>
         </div>
       </div>
@@ -177,8 +189,76 @@
     <script src="common.js"></script>
     <script src="charts.js"></script>
     <script>
+      // Mobile Filter Toggle Functionality
+      function initializeFilterToggle() {
+        const filterToggle = document.getElementById('mobileFilterToggle');
+        const filterCard = document.getElementById('filterCard');
+        const filterCloseBtn = document.getElementById('filterCloseBtn');
+        const filterBadge = document.getElementById('filterBadge');
+        
+        if (filterToggle && filterCard) {
+          // Toggle filter panel
+          filterToggle.addEventListener('click', () => {
+            filterCard.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+          });
+          
+          // Close filter panel
+          const closeFilter = () => {
+            filterCard.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+          };
+          
+          if (filterCloseBtn) {
+            filterCloseBtn.addEventListener('click', closeFilter);
+          }
+          
+          // Close on backdrop click
+          filterCard.addEventListener('click', (e) => {
+            if (e.target === filterCard) {
+              closeFilter();
+            }
+          });
+          
+          // Update filter badge when dates change
+          const updateFilterBadge = () => {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Show badge if not filtering by today
+            if (fromDate !== today || toDate !== today) {
+              filterBadge.textContent = '●';
+            } else {
+              filterBadge.textContent = '';
+            }
+          };
+          
+          document.getElementById('fromDate').addEventListener('change', updateFilterBadge);
+          document.getElementById('toDate').addEventListener('change', updateFilterBadge);
+          
+          // Close filter after update button is clicked
+          document.getElementById('updateBtn').addEventListener('click', () => {
+            setTimeout(closeFilter, 300); // Small delay for better UX
+          });
+          
+          // Close filter after quick select buttons
+          ['lastWeekBtn', 'lastMonthBtn', 'thisMonthBtn'].forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+              btn.addEventListener('click', () => {
+                setTimeout(closeFilter, 300);
+              });
+            }
+          });
+        }
+      }
+      
       // Initialize date range with today's date only and automatically load data
       document.addEventListener('DOMContentLoaded', () => {
+        // Initialize filter toggle functionality
+        initializeFilterToggle();
+        
         // Bypass auth check for testing
         // if (!checkAuth()) return;
         

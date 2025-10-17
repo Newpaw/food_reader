@@ -642,6 +642,36 @@ tr:hover {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fade-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(138, 43, 226, 0.7);
+  }
+}
+
+@keyframes expand-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Tooltip */
 .tooltip {
   position: relative;
@@ -812,6 +842,34 @@ tr:hover {
   /* Upload Progress */
   .upload-progress {
     margin-top: 20px;
+    transition: all 0.4s ease-in-out;
+  }
+  
+  /* Enhanced progress bar state */
+  .upload-progress.prominent {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2000;
+    background: rgba(18, 18, 18, 0.98);
+    padding: 40px 60px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    border: 2px solid rgba(138, 43, 226, 0.5);
+    min-width: 400px;
+    animation: expand-in 0.4s ease-out;
+  }
+  
+  .upload-progress.prominent .progress-bar-container {
+    height: 20px;
+    margin-bottom: 15px;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  .upload-progress.prominent .progress-status {
+    font-size: 1.1rem;
+    font-weight: 500;
   }
   
   .progress-bar-container {
@@ -837,6 +895,32 @@ tr:hover {
     text-align: center;
   }
   
+  /* Backdrop for prominent progress */
+  .progress-backdrop {
+    display: none;
+    position: fixed;
+    top: 60px; /* Below navbar - navbar is sticky with z-index 1000 */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 999; /* Below navbar (1000) but above other content */
+    backdrop-filter: blur(8px);
+    animation: fade-in 0.3s ease-out;
+  }
+  
+  .progress-backdrop.active {
+    display: block;
+  }
+  
+  /* Mobile bottom nav adjustment for backdrop */
+  @media (max-width: 768px) {
+    .progress-backdrop {
+      top: 0; /* Full screen on mobile since navbar is hidden */
+      bottom: 70px; /* Above mobile bottom nav */
+    }
+  }
+  
   /* Upload Success */
   .upload-success {
     display: flex;
@@ -860,6 +944,34 @@ tr:hover {
     color: var(--info-color);
     font-size: 0.95rem;
     margin-bottom: 15px;
+  }
+  
+  /* Fade out state for image preview */
+  .image-preview-container.fade-out {
+    animation: fade-out 0.4s ease-out forwards;
+  }
+  
+  /* Enhanced results section */
+  #analysisResult.highlight {
+    animation: slide-up 0.6s ease-out;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 10px 40px rgba(138, 43, 226, 0.4);
+  }
+  
+  #analysisResult h3 {
+    animation: fade-in 0.8s ease-out 0.2s both;
+  }
+  
+  #analysisResult .mb-3 {
+    animation: fade-in 0.8s ease-out 0.4s both;
+  }
+  
+  #analysisResult #nutritionEditor {
+    animation: fade-in 0.8s ease-out 0.6s both;
+  }
+  
+  #analysisResult #macroDistribution {
+    animation: fade-in 0.8s ease-out 0.8s both;
   }
   
   @media (max-width: 768px) {
@@ -1126,6 +1238,7 @@ tr:hover {
   object-fit: cover;
   display: block;
   margin: 0 auto;
+  animation: fade-in 0.5s ease-out;
 }
 
 /* Ensure consistent thumbnail display across the app */
@@ -1137,6 +1250,11 @@ tr:hover {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
 }
 
 /* Mobile Bottom Navigation Bar */
@@ -1224,5 +1342,30 @@ tr:hover {
   
   .mobile-nav-icon {
     font-size: 1.3rem;
+  }
+}
+
+/* Responsive progress backdrop and prominent state */
+@media (max-width: 768px) {
+  .upload-progress.prominent {
+    min-width: 90%;
+    max-width: 90%;
+    padding: 30px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-progress.prominent {
+    min-width: 95%;
+    max-width: 95%;
+    padding: 25px 15px;
+  }
+  
+  .upload-progress.prominent .progress-bar-container {
+    height: 16px;
+  }
+  
+  .upload-progress.prominent .progress-status {
+    font-size: 1rem;
   }
 }

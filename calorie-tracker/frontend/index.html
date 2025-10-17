@@ -140,6 +140,9 @@
               <div id="progressStatus" class="progress-status">Uploading... 0%</div>
             </div>
             
+            <!-- Progress Backdrop -->
+            <div id="progressBackdrop" class="progress-backdrop"></div>
+            
             <div id="uploadSuccess" class="upload-success mt-3" style="display: none;">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -401,6 +404,14 @@
               console.log("Thumbnail created successfully for:", file.name);
               imagePreview.innerHTML = `<img src="${thumbnailUrl}" alt="Selected food image">`;
               imagePreviewContainer.style.display = 'block';
+              
+              // ENHANCED UX: Auto-scroll to submit button after image preview is shown
+              setTimeout(() => {
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                  submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }, 300);
             })
             .catch(error => {
               console.error('Error creating thumbnail:', error);
@@ -410,6 +421,14 @@
               reader.onload = function(e) {
                 imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected food image">`;
                 imagePreviewContainer.style.display = 'block';
+                
+                // ENHANCED UX: Auto-scroll to submit button after image preview is shown
+                setTimeout(() => {
+                  const submitButton = form.querySelector('button[type="submit"]');
+                  if (submitButton) {
+                    submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }, 300);
               };
               reader.readAsDataURL(file);
             });
@@ -450,6 +469,8 @@
           const progressBar = document.getElementById('progressBar');
           const progressStatus = document.getElementById('progressStatus');
           const uploadSuccess = document.getElementById('uploadSuccess');
+          const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+          const progressBackdrop = document.getElementById('progressBackdrop');
           
           messageEl.textContent = '';
           analysisResult.style.display = 'none';
@@ -468,10 +489,23 @@
             return;
           }
           
-          // Show loading message and progress bar
+          // ENHANCED UX: Fade out image preview
+          if (imagePreviewContainer.style.display !== 'none') {
+            imagePreviewContainer.classList.add('fade-out');
+            await new Promise(resolve => setTimeout(resolve, 400));
+            imagePreviewContainer.style.display = 'none';
+            imagePreviewContainer.classList.remove('fade-out');
+          }
+          
+          // Show loading message and prominent progress bar
           messageEl.textContent = 'Analyzing your food image...';
           messageEl.className = 'text-info mt-2';
+          
+          // ENHANCED UX: Make progress bar prominent and centered
           uploadProgress.style.display = 'block';
+          progressBackdrop.classList.add('active');
+          await new Promise(resolve => setTimeout(resolve, 50)); // Allow display to take effect
+          uploadProgress.classList.add('prominent');
           
           try {
             // Get the selected file - ensure we're using the correct file
@@ -564,32 +598,83 @@
             const mealData = await response.json();
             originalMealData = { ...mealData };
             
-            // Hide progress bar and show success message
+            // ENHANCED UX: Smoothly hide progress bar
+            uploadProgress.classList.remove('prominent');
+            await new Promise(resolve => setTimeout(resolve, 300));
             uploadProgress.style.display = 'none';
+            progressBackdrop.classList.remove('active');
+            
             uploadSuccess.style.display = 'flex';
             
             // Display success message
             messageEl.textContent = 'Meal analyzed successfully!';
             messageEl.className = 'text-success mt-2';
             
-            // Show the analysis result
+            // Show the analysis result with enhanced highlighting
             displayAnalysisResult(mealData);
             
-            // Reset the form and both inputs
+            // ENHANCED UX: Scroll results into view and highlight
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Store scroll position before any potential layout changes
+            const scrollTarget = analysisResult.getBoundingClientRect().top + window.pageYOffset;
+            
+            analysisResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            analysisResult.classList.add('highlight');
+            
+            // Remove highlight class after animation completes
             setTimeout(() => {
+              analysisResult.classList.remove('highlight');
+            }, 3000);
+            
+            // Reset the form and both inputs - delay to avoid scroll disruption
+            setTimeout(() => {
+              // Save current scroll position
+              const currentScroll = window.pageYOffset;
+              
               form.reset();
               cameraInput.value = '';
               galleryInput.value = '';
-              document.getElementById('imagePreviewContainer').style.display = 'none';
-              uploadSuccess.style.display = 'none';
+              
+              // Hide image preview without triggering layout shift
+              const imgPreview = document.getElementById('imagePreviewContainer');
+              if (imgPreview.style.display !== 'none') {
+                imgPreview.style.visibility = 'hidden';
+                imgPreview.style.height = '0';
+                imgPreview.style.overflow = 'hidden';
+                imgPreview.style.margin = '0';
+                imgPreview.style.padding = '0';
+                setTimeout(() => {
+                  imgPreview.style.display = 'none';
+                  imgPreview.style.visibility = '';
+                  imgPreview.style.height = '';
+                  imgPreview.style.overflow = '';
+                  imgPreview.style.margin = '';
+                  imgPreview.style.padding = '';
+                }, 100);
+              }
+              
+              // Keep uploadSuccess visible to maintain user attention on results
+              // uploadSuccess.style.display = 'none'; // Removed to persist success message
+              
+              // Restore scroll position if it shifted
+              requestAnimationFrame(() => {
+                if (Math.abs(window.pageYOffset - currentScroll) > 5) {
+                  window.scrollTo({ top: currentScroll, behavior: 'instant' });
+                }
+              });
+              
               console.log("Form reset after successful submission");
             }, 3000);
             
             // Load recent meals
             loadRecentMeals();
           } catch (error) {
-            // Hide progress bar
+            // ENHANCED UX: Hide progress bar and backdrop on error
+            uploadProgress.classList.remove('prominent');
+            await new Promise(resolve => setTimeout(resolve, 300));
             uploadProgress.style.display = 'none';
+            progressBackdrop.classList.remove('active');
             
             messageEl.textContent = error.message;
             messageEl.className = 'text-danger mt-2';

@@ -640,18 +640,6 @@
       // Filter button click handler
       document.getElementById('filterBtn').addEventListener('click', loadMeals);
       
-      // Reset filter button click handler
-      document.getElementById('resetFilterBtn').addEventListener('click', () => {
-        const today = new Date();
-        const lastWeek = new Date(today);
-        lastWeek.setDate(today.getDate() - 7);
-        
-        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMeals();
-      });
-      
       // Show edit meal form
       function showEditMealForm(meal) {
         // Populate form with meal data

@@ -434,7 +434,11 @@
           processedMealIds.add(meal.id);
           
           const localDate = utcToLocal(meal.consumed_at);
-          const date = localDate.toLocaleDateString();
+          // Use ISO date format (YYYY-MM-DD) as key for reliable parsing across locales
+          const year = localDate.getFullYear();
+          const month = String(localDate.getMonth() + 1).padStart(2, '0');
+          const day = String(localDate.getDate()).padStart(2, '0');
+          const date = `${year}-${month}-${day}`;
           if (!mealsByDate[date]) {
             mealsByDate[date] = [];
           }
@@ -448,7 +452,8 @@
         let html = '';
         
         sortedDates.forEach(date => {
-          const formattedDate = new Date(date).toLocaleDateString('en-US', {
+          // Parse ISO date string (YYYY-MM-DD) which works reliably
+          const formattedDate = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',

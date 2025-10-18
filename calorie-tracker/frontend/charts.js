@@ -38,12 +38,13 @@ async function createDailyCalorieChart(containerId, data) {
   
   // Extract dates and calorie values (convert UTC to local)
   const labels = data.days.map(day => {
-    // Use the same date formatting as in other parts of the app
-    // The day object doesn't have a date property, so we need to use consumed_at if available
-    if (day.consumed_at) {
-      return formatDate(day.consumed_at).split(',')[0]; // Get just the date part
+    // Use the date field from DailySummary schema
+    // The date already includes timezone info (ends with 'Z'), so parse it directly
+    if (day.date) {
+      const date = new Date(day.date);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } else {
-      // If no consumed_at, use current date formatted to Prague time
+      // Fallback to current date if date is missing
       const now = new Date();
       return now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
@@ -190,12 +191,13 @@ async function createMealFrequencyChart(containerId, data) {
   
   // Extract dates and meal counts (convert UTC to local)
   const labels = data.days.map(day => {
-    // Use the same date formatting as in other parts of the app
-    // The day object doesn't have a date property, so we need to use consumed_at if available
-    if (day.consumed_at) {
-      return formatDate(day.consumed_at).split(',')[0]; // Get just the date part
+    // Use the date field from DailySummary schema (not consumed_at)
+    // The date already includes timezone info (ends with 'Z'), so parse it directly
+    if (day.date) {
+      const date = new Date(day.date);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } else {
-      // If no consumed_at, use current date formatted to Prague time
+      // Fallback to current date if date is missing
       const now = new Date();
       return now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }

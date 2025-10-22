@@ -513,15 +513,16 @@ img:hover {
 }
 
 .loading-spinner {
-  width: 40px;
+  width: 80px;
   height: 40px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  border-top: 4px solid var(--primary-color);
-  animation: spin 1s linear infinite;
+  background-image: url('assets/favicon/infinite-spinner.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   margin-bottom: 15px;
 }
 
+/* Fallback spinner animation for browsers that don't support SVG animations */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }

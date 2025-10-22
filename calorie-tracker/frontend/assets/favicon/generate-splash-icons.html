@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generate Splash Screen Icons</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #4CAF50;
+      margin-top: 0;
+    }
+    .instructions {
+      background: #e8f5e9;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border-left: 4px solid #4CAF50;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    canvas {
+      border: 1px solid #ddd;
+      margin: 10px;
+      display: none;
+    }
+    .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .preview-item {
+      text-align: center;
+    }
+    .preview-item img {
+      border: 1px solid #ddd;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Generate Splash Screen Icons</h1>
+    
+    <div class="instructions">
+      <h3>📝 Instructions:</h3>
+      <ol>
+        <li>Click "Generate PNG Icons" below</li>
+        <li>Right-click each generated image and select "Save image as..."</li>
+        <li>Save them to the <code>calorie-tracker/frontend/assets/favicon/</code> directory</li>
+        <li>Update your <code>site.webmanifest</code> to include these icons</li>
+      </ol>
+    </div>
+
+    <button id="generateBtn" onclick="generateIcons()">Generate PNG Icons</button>
+    
+    <div id="status"></div>
+    
+    <div id="preview" class="preview-container"></div>
+    
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <canvas id="canvas512" width="512" height="512"></canvas>
+    <canvas id="canvas1024" width="1024" height="1024"></canvas>
+  </div>
+
+  <script>
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">
+  <path fill="none" stroke="#4CAF50" stroke-width="15" stroke-linecap="round" stroke-dasharray="300 385" stroke-dashoffset="0" d="M275 75c0 31-27 50-50 50-58 0-92-100-150-100-28 0-50 22-50 50s23 50 50 50c58 0 92-100 150-100 24 0 50 19 50 50Z">
+    <animate attributeName="stroke-dashoffset" calcMode="spline" dur="2" values="685;-685" keySplines="0 0 1 1" repeatCount="indefinite"/>
+  </path>
+</svg>`;
+
+    const sizes = [
+      { size: 192, canvasId: 'canvas192', name: 'splash-192x192.png' },
+      { size: 512, canvasId: 'canvas512', name: 'splash-512x512.png' },
+      { size: 1024, canvasId: 'canvas1024', name: 'splash-1024x1024.png' }
+    ];
+
+    function showStatus(message, type = 'info') {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+    }
+
+    async function generateIcons() {
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      showStatus('Generating icons...', 'info');
+      
+      const preview = document.getElementById('preview');
+      preview.innerHTML = '';
+
+      try {
+        for (const config of sizes) {
+          await generateIcon(config);
+        }
+        
+        showStatus('✓ All icons generated! Right-click each image below to save.', 'success');
+      } catch (error) {
+        showStatus('Error generating icons: ' + error.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function generateIcon(config) {
+      return new Promise((resolve, reject) => {
+        const canvas = document.getElementById(config.canvasId);
+        const ctx = canvas.getContext('2d');
+        
+        // Fill white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, config.size, config.size);
+        
+        // Create SVG blob
+        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        
+        const img = new Image();
+        img.onload = function() {
+          // Calculate scaling to fit SVG in square canvas
+          const svgAspect = 300 / 150; // viewBox width/height
+          const scale = config.size / 300;
+          const scaledHeight = 150 * scale;
+          const yOffset = (config.size - scaledHeight) / 2;
+          
+          ctx.drawImage(img, 0, yOffset, config.size, scaledHeight);
+          
+          // Convert to PNG and create download link
+          canvas.toBlob(function(blob) {
+            const pngUrl = URL.createObjectURL(blob);
+            
+            const previewItem = document.createElement('div');
+            previewItem.className = 'preview-item';
+            previewItem.innerHTML = `
+              <img src="${pngUrl}" width="128" alt="${config.name}">
+              <p><strong>${config.name}</strong></p>
+              <p>${config.size}x${config.size}px</p>
+              <a href="${pngUrl}" download="${config.name}">
+                <button>Download ${config.name}</button>
+              </a>
+            `;
+            
+            document.getElementById('preview').appendChild(previewItem);
+            URL.revokeObjectURL(url);
+            resolve();
+          }, 'image/png');
+        };
+        
+        img.onerror = function() {
+          reject(new Error(`Failed to load SVG for ${config.name}`));
+        };
+        
+        img.src = url;
+      });
+    }
+  </script>
+</body>
+</html>

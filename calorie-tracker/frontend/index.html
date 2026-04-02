@@ -19,87 +19,126 @@
           <a class="brand" href="index.html">
             <span class="brand-mark">FR</span>
             <span class="brand-copy">
-              <strong>Food Reader</strong>
-              <small>mobile nutrition log</small>
+              <strong data-i18n="brand.name">Food Reader</strong>
+              <small data-i18n="brand.tagline">mobile nutrition log</small>
             </span>
           </a>
           <nav class="desktop-nav" aria-label="Primary">
-            <a href="index.html" data-nav="add">Add Meal</a>
-            <a href="history.html" data-nav="history">History</a>
-            <a href="metrics.html" data-nav="metrics">Metrics</a>
-            <a href="profile.html" data-nav="profile">Profile</a>
+            <a href="index.html" data-nav="add" data-i18n="nav.add">Add Meal</a>
+            <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+            <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+            <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
           </nav>
           <div class="topbar-actions">
-            <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+            <label class="language-picker">
+              <span class="sr-only" data-i18n="label.language">Language</span>
+              <select data-language-select aria-label="Language">
+                <option value="en">EN</option>
+                <option value="cs">CZ</option>
+              </select>
+            </label>
+            <button class="btn btn-ghost btn-small" data-install-button hidden data-i18n="button.install">Install</button>
             <span class="user-chip"><span data-user-greeting>You</span></span>
-            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+            <button class="btn btn-ghost btn-small" data-logout data-i18n="button.logout">Log out</button>
           </div>
         </div>
       </header>
 
       <main class="page">
-        <section class="page-hero">
-          <p class="eyebrow">Capture fast, correct later</p>
-          <h1>Log meals in seconds without losing control of the numbers.</h1>
-          <p>Use a photo when you want speed, or type the meal when a camera is inconvenient. Every entry opens into a review panel so you can clean up the estimate before moving on.</p>
-        </section>
-
-        <div class="dashboard-grid">
-          <section class="panel">
+        <div class="home-primary-layout">
+          <section class="panel primary-capture-panel">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">New entry</p>
-                <h2>Add a meal</h2>
+                <p class="eyebrow" data-i18n="home.captureEyebrow">New entry</p>
+                <h2 data-i18n="home.captureHeading">Add a meal</h2>
               </div>
             </div>
 
             <div class="segmented-control" role="tablist" aria-label="Meal input mode">
-              <button type="button" class="active" data-capture-mode="photo">Photo</button>
-              <button type="button" data-capture-mode="text">Text</button>
+              <button type="button" class="active" data-capture-mode="photo" data-i18n="home.capturePhoto">Photo</button>
+              <button type="button" data-capture-mode="text" data-i18n="home.captureText">Text</button>
             </div>
 
             <form id="photoMealForm" data-mode-panel="photo" class="stack">
-              <input id="mealImage" class="sr-only" type="file" accept="image/*" capture="environment">
+              <input id="mealCameraInput" class="sr-only" type="file" accept="image/*" capture="environment">
+              <input id="mealImage" class="sr-only" type="file" accept="image/*">
               <div class="upload-card">
+                <div class="camera-priority" data-mobile-camera-only hidden>
+                  <button type="button" id="takePhotoButton" class="btn btn-primary btn-block mobile-camera-button" data-i18n="button.takePhoto">Take photo now</button>
+                  <p class="panel-note camera-priority-note" data-i18n="home.mobileCameraHint">Open the camera directly on your phone, then review the estimate before saving.</p>
+                </div>
                 <div class="upload-preview">
-                  <p id="selectedImageEmpty">Use the camera for a quick capture or choose a saved image.</p>
+                  <p id="selectedImageEmpty" data-i18n="home.uploadHint">Use the camera for a quick capture or choose a saved image.</p>
                   <img id="selectedImagePreview" hidden alt="Selected meal preview">
                 </div>
                 <div class="upload-actions">
-                  <label class="btn btn-primary" for="mealImage">Choose photo</label>
+                  <label class="btn btn-secondary" for="mealImage" data-mobile-camera-only hidden data-i18n="button.useSavedPhoto">Use saved photo</label>
+                  <label class="btn btn-primary" for="mealImage" data-desktop-photo-only data-i18n="button.choosePhoto">Choose photo</label>
                 </div>
               </div>
-              <button type="submit" class="btn btn-primary btn-block">Analyze meal photo</button>
+              <button type="submit" class="btn btn-primary btn-block" data-i18n="button.analyzePhoto">Analyze meal photo</button>
             </form>
 
             <form id="textMealForm" data-mode-panel="text" class="stack" hidden>
               <label class="field">
-                <span>Describe the meal</span>
-                <textarea name="foodDescription" rows="5" placeholder="Example: chicken shawarma bowl with rice, pickles, tahini, and cucumber salad"></textarea>
+                <span data-i18n="label.describeMeal">Describe the meal</span>
+                <textarea
+                  name="foodDescription"
+                  rows="5"
+                  data-i18n-placeholder="text.placeholder"
+                  placeholder="Example: chicken shawarma bowl with rice, pickles, tahini, and cucumber salad"
+                ></textarea>
               </label>
-              <button type="submit" class="btn btn-primary btn-block">Analyze meal text</button>
+              <div class="inline-actions">
+                <button id="voiceInputButton" type="button" class="btn btn-secondary btn-small" data-i18n="button.startVoice">Start voice input</button>
+                <span class="panel-note" data-i18n="home.voiceHint">Dictate a meal and then review the estimate before saving.</span>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block" data-i18n="button.analyzeText">Analyze meal text</button>
             </form>
 
             <p id="captureStatus" class="status" hidden></p>
           </section>
 
+          <section class="panel secondary-feed-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow" data-i18n="home.recentEyebrow">Keep moving</p>
+                <h2 data-i18n="home.recentHeading">Recent meals</h2>
+              </div>
+              <a href="history.html" class="btn btn-secondary btn-small" data-i18n="button.openHistory">Open history</a>
+            </div>
+            <div id="recentMeals" class="stack"></div>
+          </section>
+        </div>
+
+        <div class="dashboard-grid dashboard-secondary-grid">
           <section class="panel">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Keep moving</p>
-                <h2>Recent meals</h2>
+                <p class="eyebrow" data-i18n="home.todayEyebrow">Today</p>
+                <h2 data-i18n="home.todayHeading">Daily dashboard</h2>
               </div>
-              <a href="history.html" class="btn btn-secondary btn-small">Open history</a>
+              <button id="syncQueueButton" type="button" class="btn btn-secondary btn-small" hidden data-i18n="button.syncQueue">Sync queue</button>
             </div>
-            <div id="recentMeals" class="stack"></div>
+            <div id="todayDashboard" class="stack"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow" data-i18n="home.templatesEyebrow">Quick reuse</p>
+                <h2 data-i18n="home.templatesHeading">Favorites and templates</h2>
+              </div>
+            </div>
+            <div id="templateList" class="stack"></div>
           </section>
         </div>
 
         <section id="analysisPanel" class="panel" hidden>
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Review</p>
-              <h2>Adjust the nutrition draft</h2>
+              <p class="eyebrow" data-i18n="home.reviewEyebrow">Review</p>
+              <h2 data-i18n="home.reviewHeading">Adjust the nutrition draft</h2>
             </div>
           </div>
 
@@ -107,64 +146,65 @@
 
           <div class="form-grid">
             <label class="field">
-              <span>Calories</span>
+              <span data-i18n="label.calories">Calories</span>
               <input id="analysisCalories" type="number" min="0">
             </label>
             <label class="field">
-              <span>Protein (g)</span>
+              <span data-i18n="label.protein">Protein (g)</span>
               <input id="analysisProtein" type="number" min="0">
             </label>
             <label class="field">
-              <span>Fat (g)</span>
+              <span data-i18n="label.fat">Fat (g)</span>
               <input id="analysisFat" type="number" min="0">
             </label>
             <label class="field">
-              <span>Carbs (g)</span>
+              <span data-i18n="label.carbs">Carbs (g)</span>
               <input id="analysisCarbs" type="number" min="0">
             </label>
             <label class="field">
-              <span>Fiber (g)</span>
+              <span data-i18n="label.fiber">Fiber (g)</span>
               <input id="analysisFiber" type="number" min="0">
             </label>
             <label class="field">
-              <span>Sugar (g)</span>
+              <span data-i18n="label.sugar">Sugar (g)</span>
               <input id="analysisSugar" type="number" min="0">
             </label>
             <label class="field">
-              <span>Sodium (mg)</span>
+              <span data-i18n="label.sodium">Sodium (mg)</span>
               <input id="analysisSodium" type="number" min="0">
             </label>
             <label class="field">
-              <span>Meal type</span>
+              <span data-i18n="label.mealType">Meal type</span>
               <select id="analysisMealType">
-                <option value="breakfast">Breakfast</option>
-                <option value="lunch">Lunch</option>
-                <option value="dinner">Dinner</option>
-                <option value="snack">Snack</option>
+                <option value="breakfast" data-i18n="option.breakfast">Breakfast</option>
+                <option value="lunch" data-i18n="option.lunch">Lunch</option>
+                <option value="dinner" data-i18n="option.dinner">Dinner</option>
+                <option value="snack" data-i18n="option.snack">Snack</option>
               </select>
             </label>
             <label class="field">
-              <span>Consumed at</span>
+              <span data-i18n="label.consumedAt">Consumed at</span>
               <input id="analysisConsumedAt" type="datetime-local">
             </label>
           </div>
 
           <label class="field">
-            <span>Notes</span>
+            <span data-i18n="label.notes">Notes</span>
             <textarea id="analysisNotes" rows="4"></textarea>
           </label>
 
           <div class="button-row">
-            <button type="button" id="saveAnalysisButton" class="btn btn-primary">Save changes</button>
-            <button type="button" id="resetAnalysisButton" class="btn btn-secondary">Reset</button>
+            <button type="button" id="saveAnalysisButton" class="btn btn-primary" data-i18n="button.saveChanges">Save changes</button>
+            <button type="button" id="saveTemplateButton" class="btn btn-secondary" data-i18n="button.saveFavorite">Save as favorite</button>
+            <button type="button" id="resetAnalysisButton" class="btn btn-secondary" data-i18n="button.reset">Reset</button>
           </div>
 
           <div id="reanalysisBlock" class="subtle-panel" hidden>
             <label class="field">
-              <span>Correct the AI identification</span>
-              <textarea id="reanalysisCorrections" rows="3" placeholder="Example: this was grilled pork, not chicken"></textarea>
+              <span data-i18n="home.correctionHeading">Correct the AI identification</span>
+              <textarea id="reanalysisCorrections" rows="3" data-i18n-placeholder="home.correctionPlaceholder" placeholder="Example: this was grilled pork, not chicken"></textarea>
             </label>
-            <button type="button" id="reanalyzeButton" class="btn btn-secondary">Re-run analysis</button>
+            <button type="button" id="reanalyzeButton" class="btn btn-secondary" data-i18n="button.rerunAnalysis">Re-run analysis</button>
           </div>
 
           <p id="analysisStatus" class="status" hidden></p>
@@ -172,10 +212,10 @@
       </main>
 
       <nav class="bottom-nav" aria-label="Mobile">
-        <a href="index.html" data-nav="add">Add</a>
-        <a href="history.html" data-nav="history">History</a>
-        <a href="metrics.html" data-nav="metrics">Metrics</a>
-        <a href="profile.html" data-nav="profile">Profile</a>
+        <a href="index.html" data-nav="add" data-i18n="nav.addShort">Add</a>
+        <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+        <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+        <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
       </nav>
     </div>
 

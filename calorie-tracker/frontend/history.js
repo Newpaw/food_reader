@@ -14,14 +14,37 @@ import {
   resolveAssetUrl,
   setupPage,
   showStatus,
+  t,
   toggleModal,
   toDateTimeInputValue,
 } from './common.js';
 
-
 let historyMeals = [];
 let activeMeal = null;
 
+function formatRangeLabel(from, to) {
+  if (!from || !to) {
+    return '';
+  }
+  const format = (value) =>
+    new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
+      day: 'numeric',
+      month: 'short',
+    }).format(new Date(`${value}T00:00:00`));
+  return `${format(from)} - ${format(to)}`;
+}
+
+function updateHistoryRangeLabel() {
+  const from = document.getElementById('historyFrom').value;
+  const to = document.getElementById('historyTo').value;
+  document.getElementById('historyRangeLabel').textContent = formatRangeLabel(from, to);
+}
+
+function toggleHistoryCustomRange(forceOpen = null) {
+  const form = document.getElementById('historyFilters');
+  const nextState = forceOpen === null ? form.hidden : !forceOpen;
+  form.hidden = nextState;
+}
 
 export function groupMealsByDay(meals) {
   const grouped = meals.reduce((collection, meal) => {
@@ -41,24 +64,22 @@ export function groupMealsByDay(meals) {
     }));
 }
 
-
 function renderSummary(meals) {
   const target = document.getElementById('historySummary');
   const totalCalories = meals.reduce((sum, meal) => sum + meal.calories, 0);
   const averageCalories = meals.length ? Math.round(totalCalories / meals.length) : 0;
 
   target.innerHTML = `
-    <article class="stat-card"><span>Total meals</span><strong>${meals.length}</strong></article>
-    <article class="stat-card"><span>Total calories</span><strong>${totalCalories}</strong></article>
-    <article class="stat-card"><span>Avg per meal</span><strong>${averageCalories}</strong></article>
+    <article class="stat-card"><span>${t('history.summary.totalMeals')}</span><strong>${meals.length}</strong></article>
+    <article class="stat-card"><span>${t('history.summary.totalCalories')}</span><strong>${totalCalories}</strong></article>
+    <article class="stat-card"><span>${t('history.summary.avgPerMeal')}</span><strong>${averageCalories}</strong></article>
   `;
 }
-
 
 function renderHistory(meals) {
   const target = document.getElementById('historyList');
   if (!meals.length) {
-    target.innerHTML = '<p class="empty-state">No meals matched this range.</p>';
+    target.innerHTML = `<p class="empty-state">${t('history.empty')}</p>`;
     renderSummary([]);
     return;
   }
@@ -71,7 +92,7 @@ function renderHistory(meals) {
         <section class="day-section">
           <header class="day-section-header">
             <h2>${formatDayLabel(day.date)}</h2>
-            <span>${day.meals.length} meals</span>
+            <span>${day.meals.length} ${t('history.mealsLabel')}</span>
           </header>
           <div class="meal-grid">
             ${day.meals
@@ -85,11 +106,11 @@ function renderHistory(meals) {
                         <span>${formatTime(meal.consumed_at)}</span>
                       </div>
                       <p class="meal-card-metric">${meal.calories} kcal</p>
-                      <p class="meal-card-note">${meal.notes || 'No notes yet.'}</p>
+                      <p class="meal-card-note">${meal.notes || t('history.noNotes')}</p>
                       <div class="meal-card-actions">
-                        <button class="btn btn-secondary btn-small" data-open-meal="${meal.id}">View</button>
-                        <button class="btn btn-ghost btn-small" data-edit-meal="${meal.id}">Edit</button>
-                        <button class="btn btn-danger btn-small" data-delete-meal="${meal.id}">Delete</button>
+                        <button class="btn btn-secondary btn-small" data-open-meal="${meal.id}">${t('button.view')}</button>
+                        <button class="btn btn-ghost btn-small" data-edit-meal="${meal.id}">${t('button.editMeal')}</button>
+                        <button class="btn btn-danger btn-small" data-delete-meal="${meal.id}">${t('button.delete')}</button>
                       </div>
                     </div>
                   </article>
@@ -113,7 +134,6 @@ function renderHistory(meals) {
   });
 }
 
-
 async function loadMeals() {
   const status = document.getElementById('historyStatus');
   const { from, to } = localDateRangeToUtc(
@@ -121,7 +141,7 @@ async function loadMeals() {
     document.getElementById('historyTo').value,
   );
 
-  showStatus(status, 'Loading meal history...', 'info');
+  showStatus(status, t('history.loading'), 'info');
 
   try {
     const search = new URLSearchParams({ limit: '100' });
@@ -141,7 +161,6 @@ async function loadMeals() {
   }
 }
 
-
 function openMealModal(mealId, editMode = false) {
   activeMeal = historyMeals.find((meal) => meal.id === mealId) || null;
   if (!activeMeal) {
@@ -152,7 +171,7 @@ function openMealModal(mealId, editMode = false) {
   document.getElementById('modalMealImage').src = resolveAssetUrl(activeMeal.image_url);
   document.getElementById('modalMealTitle').textContent = `${mealName} · ${activeMeal.calories} kcal`;
   document.getElementById('modalMealMeta').textContent = formatDateTime(activeMeal.consumed_at);
-  document.getElementById('modalMealNotes').textContent = activeMeal.notes || 'No notes yet.';
+  document.getElementById('modalMealNotes').textContent = activeMeal.notes || t('history.noNotes');
 
   document.getElementById('editMealType').value = activeMeal.meal_type;
   document.getElementById('editCalories').value = activeMeal.calories;
@@ -170,13 +189,11 @@ function openMealModal(mealId, editMode = false) {
   toggleModal(document.getElementById('mealModal'), true);
 }
 
-
 function closeMealModal() {
   toggleModal(document.getElementById('mealModal'), false);
   activeMeal = null;
   showStatus(document.getElementById('mealModalStatus'), '', 'info');
 }
-
 
 async function saveMealEdits(event) {
   event.preventDefault();
@@ -186,7 +203,7 @@ async function saveMealEdits(event) {
 
   const form = event.currentTarget;
   const status = document.getElementById('mealModalStatus');
-  showStatus(status, 'Saving changes...', 'info');
+  showStatus(status, t('history.saving'), 'info');
 
   try {
     const response = await apiFetch(`${API.meals}/${activeMeal.id}`, {
@@ -209,20 +226,19 @@ async function saveMealEdits(event) {
     historyMeals = historyMeals.map((meal) => (meal.id === updatedMeal.id ? updatedMeal : meal));
     renderHistory(historyMeals);
     openMealModal(updatedMeal.id);
-    showStatus(status, 'Meal updated.', 'success');
+    showStatus(status, t('history.saved'), 'success');
   } catch (error) {
     showStatus(status, error.message, 'danger');
   }
 }
 
-
 async function deleteMeal(mealId) {
-  if (!window.confirm('Delete this meal permanently?')) {
+  if (!window.confirm(t('history.deleteConfirm'))) {
     return;
   }
 
   const status = document.getElementById('historyStatus');
-  showStatus(status, 'Deleting meal...', 'info');
+  showStatus(status, t('history.deleting'), 'info');
 
   try {
     const response = await apiFetch(`${API.meals}/${mealId}`, { method: 'DELETE' });
@@ -234,12 +250,11 @@ async function deleteMeal(mealId) {
     historyMeals = historyMeals.filter((meal) => meal.id !== mealId);
     renderHistory(historyMeals);
     closeMealModal();
-    showStatus(status, 'Meal deleted.', 'success');
+    showStatus(status, t('history.deleted'), 'success');
   } catch (error) {
     showStatus(status, error.message, 'danger');
   }
 }
-
 
 document.addEventListener('DOMContentLoaded', async () => {
   await setupPage();
@@ -247,10 +262,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const range = getDefaultDateRange(6);
   document.getElementById('historyFrom').value = range.from;
   document.getElementById('historyTo').value = range.to;
+  updateHistoryRangeLabel();
 
   document.getElementById('historyFilters').addEventListener('submit', (event) => {
     event.preventDefault();
+    updateHistoryRangeLabel();
+    toggleHistoryCustomRange(false);
     loadMeals();
+  });
+  document.getElementById('historyToggleCustomRange').addEventListener('click', () => {
+    toggleHistoryCustomRange();
   });
   document.getElementById('closeMealModal').addEventListener('click', closeMealModal);
   document.getElementById('mealModal').addEventListener('click', (event) => {
@@ -268,7 +289,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindQuickRangeButtons(Array.from(document.querySelectorAll('[data-days]')), ({ from, to }) => {
     document.getElementById('historyFrom').value = from;
     document.getElementById('historyTo').value = to;
+    updateHistoryRangeLabel();
+    toggleHistoryCustomRange(false);
     loadMeals();
+  });
+
+  window.addEventListener('food-reader:localechange', () => {
+    updateHistoryRangeLabel();
+    renderHistory(historyMeals);
+    if (activeMeal) {
+      openMealModal(activeMeal.id, document.getElementById('mealEditForm').hidden === false);
+    }
   });
 
   await loadMeals();

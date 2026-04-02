@@ -19,59 +19,85 @@
           <a class="brand" href="index.html">
             <span class="brand-mark">FR</span>
             <span class="brand-copy">
-              <strong>Food Reader</strong>
-              <small>mobile nutrition log</small>
+              <strong data-i18n="brand.name">Food Reader</strong>
+              <small data-i18n="brand.tagline">mobile nutrition log</small>
             </span>
           </a>
           <nav class="desktop-nav" aria-label="Primary">
-            <a href="index.html" data-nav="add">Add Meal</a>
-            <a href="history.html" data-nav="history">History</a>
-            <a href="metrics.html" data-nav="metrics">Metrics</a>
-            <a href="profile.html" data-nav="profile">Profile</a>
+            <a href="index.html" data-nav="add" data-i18n="nav.add">Add Meal</a>
+            <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+            <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+            <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
           </nav>
           <div class="topbar-actions">
-            <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+            <label class="language-picker">
+              <span class="sr-only" data-i18n="label.language">Language</span>
+              <select data-language-select aria-label="Language">
+                <option value="en">EN</option>
+                <option value="cs">CZ</option>
+              </select>
+            </label>
+            <button class="btn btn-ghost btn-small" data-install-button hidden data-i18n="button.install">Install</button>
             <span class="user-chip"><span data-user-greeting>You</span></span>
-            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+            <button class="btn btn-ghost btn-small" data-logout data-i18n="button.logout">Log out</button>
           </div>
         </div>
       </header>
 
       <main class="page">
-        <section class="page-hero">
-          <p class="eyebrow">Metrics</p>
-          <h1>See whether your daily pattern is moving toward the target.</h1>
-          <p>The dashboard stays readable on narrow screens, but expands into a denser command view on larger layouts.</p>
-        </section>
+        <section id="todayGoalPanel" class="panel metrics-today-panel"></section>
 
-        <section class="panel">
-          <form id="metricsFilters" class="filter-grid">
+        <section class="panel metrics-filter-panel filter-panel">
+          <div class="filter-header">
+            <div>
+              <p class="eyebrow" data-i18n="metrics.filterEyebrow">Range</p>
+              <h2 data-i18n="metrics.filterHeading">Filter analysis</h2>
+            </div>
+            <button id="metricsToggleCustomRange" type="button" class="btn btn-secondary btn-small" data-i18n="button.customDates">Custom dates</button>
+          </div>
+          <div class="active-range-chip">
+            <span data-i18n="filter.activeRange">Active range</span>
+            <strong id="metricsRangeLabel"></strong>
+          </div>
+          <div class="button-row quick-row">
+            <button type="button" class="btn btn-secondary btn-small" data-days="0" data-i18n="button.today">Today</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="6" data-i18n="button.last7">Last 7 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="29" data-i18n="button.last30">Last 30 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="89" data-i18n="button.last90">Last 90 days</button>
+          </div>
+          <form id="metricsFilters" class="filter-grid compact-filter-form" hidden>
             <label class="field">
-              <span>From</span>
+              <span data-i18n="label.from">From</span>
               <input id="metricsFrom" type="date" required>
             </label>
             <label class="field">
-              <span>To</span>
+              <span data-i18n="label.to">To</span>
               <input id="metricsTo" type="date" required>
             </label>
-            <button type="submit" class="btn btn-primary">Refresh metrics</button>
+            <button type="submit" class="btn btn-primary" data-i18n="button.refreshMetrics">Refresh metrics</button>
           </form>
-          <div class="button-row quick-row">
-            <button type="button" class="btn btn-secondary btn-small" data-days="0">Today</button>
-            <button type="button" class="btn btn-secondary btn-small" data-days="6">Last 7 days</button>
-            <button type="button" class="btn btn-secondary btn-small" data-days="29">Last 30 days</button>
-            <button type="button" class="btn btn-secondary btn-small" data-days="89">Last 90 days</button>
-          </div>
+          <p class="panel-note metrics-filter-note" data-i18n="metrics.filterNote">This filter controls everything below. The today card above always shows today only.</p>
           <p id="metricsStatus" class="status" hidden></p>
         </section>
 
-        <section id="targetPanel" class="panel"></section>
-        <section id="metricsStats" class="stat-grid"></section>
+        <div class="dashboard-grid metrics-overview-grid">
+          <section id="targetPanel" class="panel"></section>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow" data-i18n="metrics.rangeEyebrow">Selected range</p>
+                <h2 data-i18n="metrics.rangeHeading">Range summary</h2>
+              </div>
+            </div>
+            <div id="metricsStats" class="stat-grid"></div>
+          </section>
+        </div>
+
         <section class="panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Progress</p>
-              <h2>Average intake versus target</h2>
+              <p class="eyebrow" data-i18n="metrics.progressEyebrow">Progress</p>
+              <h2 data-i18n="metrics.progressHeading">Average intake versus target</h2>
             </div>
           </div>
           <div id="progressPanel" class="stack"></div>
@@ -81,8 +107,8 @@
           <section class="panel">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Daily calories</p>
-                <h2>Bar view</h2>
+                <p class="eyebrow" data-i18n="metrics.dailyEyebrow">Daily calories</p>
+                <h2 data-i18n="metrics.dailyHeading">Bar view</h2>
               </div>
             </div>
             <div id="calorieBars" class="mini-chart"></div>
@@ -91,8 +117,8 @@
           <section class="panel">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Macro balance</p>
-                <h2>Distribution</h2>
+                <p class="eyebrow" data-i18n="metrics.macroEyebrow">Macro balance</p>
+                <h2 data-i18n="metrics.macroHeading">Distribution</h2>
               </div>
             </div>
             <div id="macroRing" class="macro-panel"></div>
@@ -102,8 +128,8 @@
         <section class="panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Day by day</p>
-              <h2>Summary list</h2>
+              <p class="eyebrow" data-i18n="metrics.dayByDayEyebrow">Day by day</p>
+              <h2 data-i18n="metrics.dayByDayHeading">Summary list</h2>
             </div>
           </div>
           <div id="dailyList" class="stack"></div>
@@ -111,10 +137,10 @@
       </main>
 
       <nav class="bottom-nav" aria-label="Mobile">
-        <a href="index.html" data-nav="add">Add</a>
-        <a href="history.html" data-nav="history">History</a>
-        <a href="metrics.html" data-nav="metrics">Metrics</a>
-        <a href="profile.html" data-nav="profile">Profile</a>
+        <a href="index.html" data-nav="add" data-i18n="nav.addShort">Add</a>
+        <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+        <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+        <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
       </nav>
     </div>
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { summarizeMeals } from '../metrics.js';
+import { summarizeMeals, summarizeTodayGoal } from '../metrics.js';
 
 
 describe('metrics summarizer', () => {
@@ -14,5 +14,20 @@ describe('metrics summarizer', () => {
     expect(summary.carbs).toBe(90);
     expect(summary.fat).toBe(30);
     expect(summary.averageProtein).toBe(35);
+  });
+
+  it('summarizes today against the daily calorie target', () => {
+    const summary = summarizeTodayGoal(
+      [
+        { calories: 700, protein: 45, carbs: 50, fat: 20, fiber: 8 },
+        { calories: 650, protein: 30, carbs: 60, fat: 18, fiber: 6 },
+      ],
+      { calories: 2200 },
+    );
+
+    expect(summary.calories).toBe(1350);
+    expect(summary.mealCount).toBe(2);
+    expect(summary.remainingCalories).toBe(850);
+    expect(summary.tone).toBe('success');
   });
 });

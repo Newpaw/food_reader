@@ -5,6 +5,7 @@ import {
   normalizeOptionalNumber,
   setupPage,
   showStatus,
+  t,
 } from './common.js';
 
 
@@ -50,22 +51,22 @@ function fillForm(profile) {
 function renderTargets(targets) {
   const target = document.getElementById('profileTargets');
   if (!targets) {
-    target.innerHTML = '<p class="empty-state compact">Targets will appear after you save a complete profile.</p>';
+    target.innerHTML = `<p class="empty-state compact">${t('profile.targetsEmpty')}</p>`;
     return;
   }
 
   target.innerHTML = `
     <div class="stat-grid">
-      <article class="stat-card"><span>Calories</span><strong>${targets.calories}</strong></article>
-      <article class="stat-card"><span>Protein</span><strong>${targets.protein_g}g</strong></article>
-      <article class="stat-card"><span>Carbs</span><strong>${targets.carbs_g}g</strong></article>
-      <article class="stat-card"><span>Fat</span><strong>${targets.fats_g}g</strong></article>
-      <article class="stat-card"><span>Fiber</span><strong>${targets.fiber_g}g</strong></article>
+      <article class="stat-card"><span>${t('profile.calories')}</span><strong>${targets.calories}</strong></article>
+      <article class="stat-card"><span>${t('profile.protein')}</span><strong>${targets.protein_g}g</strong></article>
+      <article class="stat-card"><span>${t('profile.carbs')}</span><strong>${targets.carbs_g}g</strong></article>
+      <article class="stat-card"><span>${t('profile.fat')}</span><strong>${targets.fats_g}g</strong></article>
+      <article class="stat-card"><span>${t('profile.fiber')}</span><strong>${targets.fiber_g}g</strong></article>
     </div>
     <div class="detail-list">
-      <div><strong>BMR</strong><span>${targets.bmr ? Math.round(targets.bmr) : '-'}</span></div>
-      <div><strong>TDEE</strong><span>${targets.tdee ? Math.round(targets.tdee) : '-'}</span></div>
-      <div><strong>Method</strong><span>${targets.calculation_method}</span></div>
+      <div><strong>${t('profile.bmr')}</strong><span>${targets.bmr ? Math.round(targets.bmr) : '-'}</span></div>
+      <div><strong>${t('profile.tdee')}</strong><span>${targets.tdee ? Math.round(targets.tdee) : '-'}</span></div>
+      <div><strong>${t('profile.method')}</strong><span>${targets.calculation_method}</span></div>
     </div>
   `;
 }
@@ -103,7 +104,7 @@ async function saveProfile(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const status = document.getElementById('profileStatus');
-  showStatus(status, 'Saving profile...', 'info');
+  showStatus(status, t('profile.saving'), 'info');
 
   try {
     const response = await apiFetch(API.profile, {
@@ -114,7 +115,7 @@ async function saveProfile(event) {
     profileExists = true;
     fillForm(cachedProfile);
     await loadTargets();
-    showStatus(status, 'Profile saved.', 'success');
+    showStatus(status, t('profile.saved'), 'success');
   } catch (error) {
     showStatus(status, error.message, 'danger');
   }
@@ -128,4 +129,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('resetProfileButton').addEventListener('click', () => fillForm(cachedProfile));
 
   await loadProfile();
+
+  window.addEventListener('food-reader:localechange', loadTargets);
 });

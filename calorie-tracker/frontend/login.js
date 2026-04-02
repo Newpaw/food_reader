@@ -6,6 +6,7 @@ import {
   setAuthToken,
   setupPage,
   showStatus,
+  t,
 } from './common.js';
 
 
@@ -15,7 +16,7 @@ async function handleLoginSubmit(event) {
   const status = document.getElementById('loginStatus');
   const submitButton = form.querySelector('button[type="submit"]');
   submitButton.disabled = true;
-  showStatus(status, 'Signing you in...', 'info');
+  showStatus(status, t('login.signingIn'), 'info');
 
   try {
     const response = await apiFetch(API.login, {
@@ -42,7 +43,7 @@ async function handleRegisterSubmit(event) {
   const status = document.getElementById('registerStatus');
   const submitButton = form.querySelector('button[type="submit"]');
   submitButton.disabled = true;
-  showStatus(status, 'Creating your account...', 'info');
+  showStatus(status, t('login.registering'), 'info');
 
   try {
     const response = await apiFetch(API.register, {
@@ -56,7 +57,7 @@ async function handleRegisterSubmit(event) {
     });
     await getJsonOrThrow(response, 'Unable to register');
     form.reset();
-    showStatus(status, 'Account created. You can sign in now.', 'success');
+    showStatus(status, t('login.registered'), 'success');
   } catch (error) {
     showStatus(status, error.message, 'danger');
   } finally {

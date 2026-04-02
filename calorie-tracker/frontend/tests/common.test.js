@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getMealDisplayName,
+  getLocale,
   localDateRangeToUtc,
   normalizeOptionalNumber,
+  setLocale,
   shouldUseSplitLocalApi,
+  t,
 } from '../common.js';
 
 
@@ -55,5 +58,14 @@ describe('common helpers', () => {
         notes: 'Unknown food. Could not analyze the image properly.',
       }),
     ).toBe('Snack');
+  });
+
+  it('switches translations when locale changes', () => {
+    setLocale('cs');
+
+    expect(getLocale()).toBe('cs');
+    expect(t('nav.metrics')).toBe('Přehled');
+
+    setLocale('en');
   });
 });

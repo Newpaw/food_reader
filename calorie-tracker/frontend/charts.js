@@ -1,3 +1,5 @@
+import { t } from './common.js';
+
 export function calculateMacroTotals(meals) {
   return meals.reduce(
     (totals, meal) => {
@@ -31,7 +33,7 @@ export function renderCalorieBars(container, days, targetCalories = null) {
   }
 
   if (!days.length) {
-    container.innerHTML = '<p class="empty-state compact">No meals matched this range.</p>';
+    container.innerHTML = `<p class="empty-state compact">${t('history.empty')}</p>`;
     return;
   }
 
@@ -73,7 +75,7 @@ export function renderMacroRing(container, totals) {
   const total = proteinCalories + carbsCalories + fatCalories;
 
   if (!total) {
-    container.innerHTML = '<p class="empty-state compact">Macro distribution will appear after you log meals.</p>';
+    container.innerHTML = `<p class="empty-state compact">${t('metrics.noMacroData')}</p>`;
     return;
   }
 
@@ -84,13 +86,13 @@ export function renderMacroRing(container, totals) {
     <div class="macro-ring" style="background: conic-gradient(var(--accent) 0deg ${proteinAngle}deg, var(--sage) ${proteinAngle}deg ${carbAngle}deg, var(--ink) ${carbAngle}deg 360deg);">
       <div class="macro-ring-center">
         <strong>${total}</strong>
-        <span>macro kcal</span>
+        <span>${t('metrics.macroKcal')}</span>
       </div>
     </div>
     <div class="macro-legend">
-      <div><span class="legend-swatch protein"></span>Protein ${totals.protein}g</div>
-      <div><span class="legend-swatch carbs"></span>Carbs ${totals.carbs}g</div>
-      <div><span class="legend-swatch fats"></span>Fat ${totals.fat}g</div>
+      <div><span class="legend-swatch protein"></span>${t('metrics.protein')} ${totals.protein}g</div>
+      <div><span class="legend-swatch carbs"></span>${t('metrics.carbs')} ${totals.carbs}g</div>
+      <div><span class="legend-swatch fats"></span>${t('metrics.fat')} ${totals.fat}g</div>
     </div>
   `;
 }

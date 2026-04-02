@@ -19,123 +19,130 @@
           <a class="brand" href="index.html">
             <span class="brand-mark">FR</span>
             <span class="brand-copy">
-              <strong>Food Reader</strong>
-              <small>mobile nutrition log</small>
+              <strong data-i18n="brand.name">Food Reader</strong>
+              <small data-i18n="brand.tagline">mobile nutrition log</small>
             </span>
           </a>
           <nav class="desktop-nav" aria-label="Primary">
-            <a href="index.html" data-nav="add">Add Meal</a>
-            <a href="history.html" data-nav="history">History</a>
-            <a href="metrics.html" data-nav="metrics">Metrics</a>
-            <a href="profile.html" data-nav="profile">Profile</a>
+            <a href="index.html" data-nav="add" data-i18n="nav.add">Add Meal</a>
+            <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+            <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+            <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
           </nav>
           <div class="topbar-actions">
-            <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+            <label class="language-picker">
+              <span class="sr-only" data-i18n="label.language">Language</span>
+              <select data-language-select aria-label="Language">
+                <option value="en">EN</option>
+                <option value="cs">CZ</option>
+              </select>
+            </label>
+            <button class="btn btn-ghost btn-small" data-install-button hidden data-i18n="button.install">Install</button>
             <span class="user-chip"><span data-user-greeting>You</span></span>
-            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+            <button class="btn btn-ghost btn-small" data-logout data-i18n="button.logout">Log out</button>
           </div>
         </div>
       </header>
 
       <main class="page">
         <section class="page-hero">
-          <p class="eyebrow">Profile</p>
-          <h1>Store the context that makes the dashboard useful.</h1>
-          <p>Save baseline body data, activity level, and optional custom targets so the app can compare intake against something real.</p>
+          <p class="eyebrow" data-i18n="profile.heroEyebrow">Profile</p>
+          <h1 data-i18n="profile.heroTitle">Store the context that makes the dashboard useful.</h1>
+          <p data-i18n="profile.heroBody">Save baseline body data, activity level, and optional custom targets so the app can compare intake against something real.</p>
         </section>
 
         <div class="dashboard-grid">
           <section class="panel">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Inputs</p>
-                <h2>Personal settings</h2>
+                <p class="eyebrow" data-i18n="profile.inputsEyebrow">Inputs</p>
+                <h2 data-i18n="profile.inputsHeading">Personal settings</h2>
               </div>
             </div>
 
             <form id="profileForm" class="stack">
               <div class="form-grid">
                 <label class="field">
-                  <span>Height (cm)</span>
+                  <span data-i18n="label.height">Height (cm)</span>
                   <input id="height" name="height" type="number" min="50" max="300" step="0.1">
                 </label>
                 <label class="field">
-                  <span>Weight (kg)</span>
+                  <span data-i18n="label.weight">Weight (kg)</span>
                   <input id="weight" name="weight" type="number" min="20" max="500" step="0.1">
                 </label>
                 <label class="field">
-                  <span>Age</span>
+                  <span data-i18n="label.age">Age</span>
                   <input id="age" name="age" type="number" min="10" max="120">
                 </label>
                 <label class="field">
-                  <span>Gender</span>
+                  <span data-i18n="label.gender">Gender</span>
                   <select id="gender" name="gender">
-                    <option value="">Choose</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="" data-i18n="option.choose">Choose</option>
+                    <option value="male" data-i18n="option.male">Male</option>
+                    <option value="female" data-i18n="option.female">Female</option>
+                    <option value="other" data-i18n="option.other">Other</option>
                   </select>
                 </label>
                 <label class="field">
-                  <span>Activity level</span>
+                  <span data-i18n="label.activity">Activity level</span>
                   <select id="activityLevel" name="activityLevel">
-                    <option value="sedentary">Sedentary</option>
-                    <option value="lightly_active">Lightly active</option>
-                    <option value="moderately_active">Moderately active</option>
-                    <option value="very_active">Very active</option>
-                    <option value="extremely_active">Extremely active</option>
+                    <option value="sedentary" data-i18n="option.sedentary">Sedentary</option>
+                    <option value="lightly_active" data-i18n="option.lightly_active">Lightly active</option>
+                    <option value="moderately_active" data-i18n="option.moderately_active">Moderately active</option>
+                    <option value="very_active" data-i18n="option.very_active">Very active</option>
+                    <option value="extremely_active" data-i18n="option.extremely_active">Extremely active</option>
                   </select>
                 </label>
                 <label class="field">
-                  <span>Goal</span>
+                  <span data-i18n="label.goal">Goal</span>
                   <select id="goal" name="goal">
-                    <option value="weight_loss">Weight loss</option>
-                    <option value="maintenance">Maintenance</option>
-                    <option value="muscle_gain">Muscle gain</option>
+                    <option value="weight_loss" data-i18n="option.weight_loss">Weight loss</option>
+                    <option value="maintenance" data-i18n="option.maintenance">Maintenance</option>
+                    <option value="muscle_gain" data-i18n="option.muscle_gain">Muscle gain</option>
                   </select>
                 </label>
                 <label class="field">
-                  <span>Diet preference</span>
+                  <span data-i18n="label.diet">Diet preference</span>
                   <select id="dietaryPreference" name="dietaryPreference">
-                    <option value="none">Balanced</option>
-                    <option value="high_protein">High protein</option>
-                    <option value="low_carb">Low carb</option>
-                    <option value="keto">Keto</option>
-                    <option value="vegetarian">Vegetarian</option>
-                    <option value="vegan">Vegan</option>
+                    <option value="none" data-i18n="option.none">Balanced</option>
+                    <option value="high_protein" data-i18n="option.high_protein">High protein</option>
+                    <option value="low_carb" data-i18n="option.low_carb">Low carb</option>
+                    <option value="keto" data-i18n="option.keto">Keto</option>
+                    <option value="vegetarian" data-i18n="option.vegetarian">Vegetarian</option>
+                    <option value="vegan" data-i18n="option.vegan">Vegan</option>
                   </select>
                 </label>
               </div>
 
               <div class="subtle-panel">
-                <p class="eyebrow">Optional overrides</p>
+                <p class="eyebrow" data-i18n="profile.overridesEyebrow">Optional overrides</p>
                 <div class="form-grid">
                   <label class="field">
-                    <span>Custom calories</span>
+                    <span data-i18n="label.customCalories">Custom calories</span>
                     <input id="customCalories" name="customCalories" type="number" min="0">
                   </label>
                   <label class="field">
-                    <span>Custom protein</span>
+                    <span data-i18n="label.customProtein">Custom protein</span>
                     <input id="customProtein" name="customProtein" type="number" min="0">
                   </label>
                   <label class="field">
-                    <span>Custom carbs</span>
+                    <span data-i18n="label.customCarbs">Custom carbs</span>
                     <input id="customCarbs" name="customCarbs" type="number" min="0">
                   </label>
                   <label class="field">
-                    <span>Custom fat</span>
+                    <span data-i18n="label.customFat">Custom fat</span>
                     <input id="customFats" name="customFats" type="number" min="0">
                   </label>
                   <label class="field">
-                    <span>Custom fiber</span>
+                    <span data-i18n="label.customFiber">Custom fiber</span>
                     <input id="customFiber" name="customFiber" type="number" min="0">
                   </label>
                 </div>
               </div>
 
               <div class="button-row">
-                <button type="submit" class="btn btn-primary">Save profile</button>
-                <button id="resetProfileButton" type="button" class="btn btn-secondary">Reset form</button>
+                <button type="submit" class="btn btn-primary" data-i18n="button.saveProfile">Save profile</button>
+                <button id="resetProfileButton" type="button" class="btn btn-secondary" data-i18n="button.resetForm">Reset form</button>
               </div>
             </form>
 
@@ -145,8 +152,8 @@
           <section class="panel sticky-panel">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Outputs</p>
-                <h2>Current targets</h2>
+                <p class="eyebrow" data-i18n="profile.outputsEyebrow">Outputs</p>
+                <h2 data-i18n="profile.outputsHeading">Current targets</h2>
               </div>
             </div>
             <div id="profileTargets" class="stack"></div>
@@ -155,10 +162,10 @@
       </main>
 
       <nav class="bottom-nav" aria-label="Mobile">
-        <a href="index.html" data-nav="add">Add</a>
-        <a href="history.html" data-nav="history">History</a>
-        <a href="metrics.html" data-nav="metrics">Metrics</a>
-        <a href="profile.html" data-nav="profile">Profile</a>
+        <a href="index.html" data-nav="add" data-i18n="nav.addShort">Add</a>
+        <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+        <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+        <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
       </nav>
     </div>
 

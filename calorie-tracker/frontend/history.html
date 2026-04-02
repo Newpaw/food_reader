@@ -19,49 +19,61 @@
           <a class="brand" href="index.html">
             <span class="brand-mark">FR</span>
             <span class="brand-copy">
-              <strong>Food Reader</strong>
-              <small>mobile nutrition log</small>
+              <strong data-i18n="brand.name">Food Reader</strong>
+              <small data-i18n="brand.tagline">mobile nutrition log</small>
             </span>
           </a>
           <nav class="desktop-nav" aria-label="Primary">
-            <a href="index.html" data-nav="add">Add Meal</a>
-            <a href="history.html" data-nav="history">History</a>
-            <a href="metrics.html" data-nav="metrics">Metrics</a>
-            <a href="profile.html" data-nav="profile">Profile</a>
+            <a href="index.html" data-nav="add" data-i18n="nav.add">Add Meal</a>
+            <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+            <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+            <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
           </nav>
           <div class="topbar-actions">
-            <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+            <label class="language-picker">
+              <span class="sr-only" data-i18n="label.language">Language</span>
+              <select data-language-select aria-label="Language">
+                <option value="en">EN</option>
+                <option value="cs">CZ</option>
+              </select>
+            </label>
+            <button class="btn btn-ghost btn-small" data-install-button hidden data-i18n="button.install">Install</button>
             <span class="user-chip"><span data-user-greeting>You</span></span>
-            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+            <button class="btn btn-ghost btn-small" data-logout data-i18n="button.logout">Log out</button>
           </div>
         </div>
       </header>
 
       <main class="page">
-        <section class="page-hero">
-          <p class="eyebrow">History</p>
-          <h1>Review the full log, grouped in a way that still works on a phone.</h1>
-          <p>Filter a date range, spot outliers quickly, and adjust entries without leaving the history screen.</p>
-        </section>
-
-        <section class="panel">
-          <form id="historyFilters" class="filter-grid">
+        <section class="panel filter-panel">
+          <div class="filter-header">
+            <div>
+              <p class="eyebrow" data-i18n="history.filterEyebrow">Range</p>
+              <h2 data-i18n="history.filterHeading">Filter history</h2>
+            </div>
+            <button id="historyToggleCustomRange" type="button" class="btn btn-secondary btn-small" data-i18n="button.customDates">Custom dates</button>
+          </div>
+          <div class="active-range-chip">
+            <span data-i18n="filter.activeRange">Active range</span>
+            <strong id="historyRangeLabel"></strong>
+          </div>
+          <div class="button-row quick-row">
+            <button type="button" class="btn btn-secondary btn-small" data-days="0" data-i18n="button.today">Today</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="6" data-i18n="button.last7">Last 7 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="29" data-i18n="button.last30">Last 30 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="89" data-i18n="button.last90">Last 90 days</button>
+          </div>
+          <form id="historyFilters" class="filter-grid compact-filter-form" hidden>
             <label class="field">
-              <span>From</span>
+              <span data-i18n="label.from">From</span>
               <input id="historyFrom" type="date" required>
             </label>
             <label class="field">
-              <span>To</span>
+              <span data-i18n="label.to">To</span>
               <input id="historyTo" type="date" required>
             </label>
-            <button type="submit" class="btn btn-primary">Apply range</button>
+            <button type="submit" class="btn btn-primary" data-i18n="button.applyRange">Apply range</button>
           </form>
-          <div class="button-row quick-row">
-            <button type="button" class="btn btn-secondary btn-small" data-days="0">Today</button>
-            <button type="button" class="btn btn-secondary btn-small" data-days="6">Last 7 days</button>
-            <button type="button" class="btn btn-secondary btn-small" data-days="29">Last 30 days</button>
-            <button type="button" class="btn btn-secondary btn-small" data-days="89">Last 90 days</button>
-          </div>
           <p id="historyStatus" class="status" hidden></p>
         </section>
 
@@ -70,16 +82,16 @@
       </main>
 
       <nav class="bottom-nav" aria-label="Mobile">
-        <a href="index.html" data-nav="add">Add</a>
-        <a href="history.html" data-nav="history">History</a>
-        <a href="metrics.html" data-nav="metrics">Metrics</a>
-        <a href="profile.html" data-nav="profile">Profile</a>
+        <a href="index.html" data-nav="add" data-i18n="nav.addShort">Add</a>
+        <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+        <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+        <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
       </nav>
     </div>
 
     <div id="mealModal" class="modal" hidden>
       <div class="modal-card">
-        <button id="closeMealModal" class="modal-close" type="button" aria-label="Close meal details">×</button>
+        <button id="closeMealModal" class="modal-close" type="button" aria-label="Close meal details" data-i18n-aria-label="button.close">×</button>
         <div id="mealModalBody" class="stack">
           <img id="modalMealImage" class="modal-image" alt="Meal preview">
           <div>
@@ -87,58 +99,58 @@
             <p id="modalMealMeta" class="panel-note"></p>
           </div>
           <p id="modalMealNotes"></p>
-          <button id="openMealEdit" type="button" class="btn btn-secondary">Edit meal</button>
+          <button id="openMealEdit" type="button" class="btn btn-secondary" data-i18n="button.editMeal">Edit meal</button>
         </div>
 
         <form id="mealEditForm" class="stack" hidden>
           <div class="form-grid">
             <label class="field">
-              <span>Meal type</span>
+              <span data-i18n="label.mealType">Meal type</span>
               <select id="editMealType" name="mealType">
-                <option value="breakfast">Breakfast</option>
-                <option value="lunch">Lunch</option>
-                <option value="dinner">Dinner</option>
-                <option value="snack">Snack</option>
+                <option value="breakfast" data-i18n="option.breakfast">Breakfast</option>
+                <option value="lunch" data-i18n="option.lunch">Lunch</option>
+                <option value="dinner" data-i18n="option.dinner">Dinner</option>
+                <option value="snack" data-i18n="option.snack">Snack</option>
               </select>
             </label>
             <label class="field">
-              <span>Calories</span>
+              <span data-i18n="label.calories">Calories</span>
               <input id="editCalories" name="calories" type="number" min="0" required>
             </label>
             <label class="field">
-              <span>Protein</span>
+              <span data-i18n="label.protein">Protein</span>
               <input id="editProtein" name="protein" type="number" min="0">
             </label>
             <label class="field">
-              <span>Fat</span>
+              <span data-i18n="label.fat">Fat</span>
               <input id="editFat" name="fat" type="number" min="0">
             </label>
             <label class="field">
-              <span>Carbs</span>
+              <span data-i18n="label.carbs">Carbs</span>
               <input id="editCarbs" name="carbs" type="number" min="0">
             </label>
             <label class="field">
-              <span>Fiber</span>
+              <span data-i18n="label.fiber">Fiber</span>
               <input id="editFiber" name="fiber" type="number" min="0">
             </label>
             <label class="field">
-              <span>Sugar</span>
+              <span data-i18n="label.sugar">Sugar</span>
               <input id="editSugar" name="sugar" type="number" min="0">
             </label>
             <label class="field">
-              <span>Sodium</span>
+              <span data-i18n="label.sodium">Sodium</span>
               <input id="editSodium" name="sodium" type="number" min="0">
             </label>
             <label class="field">
-              <span>Consumed at</span>
+              <span data-i18n="label.consumedAt">Consumed at</span>
               <input id="editConsumedAt" name="consumedAt" type="datetime-local" required>
             </label>
           </div>
           <label class="field">
-            <span>Notes</span>
+            <span data-i18n="label.notes">Notes</span>
             <textarea id="editNotes" name="notes" rows="4"></textarea>
           </label>
-          <button type="submit" class="btn btn-primary">Save meal</button>
+          <button type="submit" class="btn btn-primary" data-i18n="button.saveMeal">Save meal</button>
         </form>
 
         <p id="mealModalStatus" class="status" hidden></p>

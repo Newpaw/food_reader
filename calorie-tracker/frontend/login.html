@@ -19,39 +19,48 @@
           <a class="brand" href="login.html">
             <span class="brand-mark">FR</span>
             <span class="brand-copy">
-              <strong>Food Reader</strong>
-              <small>mobile nutrition log</small>
+              <strong data-i18n="brand.name">Food Reader</strong>
+              <small data-i18n="brand.tagline">mobile nutrition log</small>
             </span>
           </a>
-          <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+          <div class="topbar-actions">
+            <label class="language-picker">
+              <span class="sr-only" data-i18n="label.language">Language</span>
+              <select data-language-select aria-label="Language">
+                <option value="en">EN</option>
+                <option value="cs">CZ</option>
+              </select>
+            </label>
+            <button class="btn btn-ghost btn-small" data-install-button hidden data-i18n="button.install">Install</button>
+          </div>
         </div>
       </header>
 
       <main class="auth-page">
         <section class="page-hero auth-hero">
-          <p class="eyebrow">Built for real phones</p>
-          <h1>Track meals fast, then install the app and keep it on your home screen.</h1>
-          <p>The interface is tuned for quick one-handed logging, clear review states, and clean historical reporting.</p>
+          <p class="eyebrow" data-i18n="login.heroEyebrow">Built for real phones</p>
+          <h1 data-i18n="login.heroTitle">Track meals fast, then install the app and keep it on your home screen.</h1>
+          <p data-i18n="login.heroBody">The interface is tuned for quick one-handed logging, clear review states, and clean historical reporting.</p>
         </section>
 
         <div class="auth-grid">
           <section class="panel auth-panel">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Welcome back</p>
-                <h2>Sign in</h2>
+                <p class="eyebrow" data-i18n="login.welcomeBack">Welcome back</p>
+                <h2 data-i18n="login.signInHeading">Sign in</h2>
               </div>
             </div>
             <form id="loginForm" class="stack">
               <label class="field">
-                <span>Email</span>
+                <span data-i18n="label.email">Email</span>
                 <input type="email" name="email" required autocomplete="email">
               </label>
               <label class="field">
-                <span>Password</span>
+                <span data-i18n="label.password">Password</span>
                 <input type="password" name="password" required autocomplete="current-password">
               </label>
-              <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+              <button type="submit" class="btn btn-primary btn-block" data-i18n="button.signIn">Sign in</button>
             </form>
             <p id="loginStatus" class="status" hidden></p>
           </section>
@@ -59,24 +68,24 @@
           <section class="panel auth-panel">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">New account</p>
-                <h2>Create access</h2>
+                <p class="eyebrow" data-i18n="login.newAccount">New account</p>
+                <h2 data-i18n="login.createAccess">Create access</h2>
               </div>
             </div>
             <form id="registerForm" class="stack">
               <label class="field">
-                <span>Name</span>
+                <span data-i18n="label.name">Name</span>
                 <input type="text" name="name" required autocomplete="name">
               </label>
               <label class="field">
-                <span>Email</span>
+                <span data-i18n="label.email">Email</span>
                 <input type="email" name="email" required autocomplete="email">
               </label>
               <label class="field">
-                <span>Password</span>
+                <span data-i18n="label.password">Password</span>
                 <input type="password" name="password" required minlength="6" autocomplete="new-password">
               </label>
-              <button type="submit" class="btn btn-secondary btn-block">Create account</button>
+              <button type="submit" class="btn btn-secondary btn-block" data-i18n="button.createAccount">Create account</button>
             </form>
             <p id="registerStatus" class="status" hidden></p>
           </section>

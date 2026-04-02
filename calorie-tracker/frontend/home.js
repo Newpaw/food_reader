@@ -246,8 +246,35 @@ function buildTemplateFromMeal(meal, extra = {}) {
   };
 }
 
+function scrollToAnalysisPanel() {
+  const panel = document.getElementById('analysisPanel');
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
 
-function renderMealEditor(meal) {
+
+function hideMealEditor() {
+  currentMeal = null;
+  originalMeal = null;
+  const panel = document.getElementById('analysisPanel');
+  const status = document.getElementById('analysisStatus');
+  const reanalysis = document.getElementById('reanalysisCorrections');
+  if (panel) {
+    panel.hidden = true;
+  }
+  if (status) {
+    showStatus(status, '', 'info');
+  }
+  if (reanalysis) {
+    reanalysis.value = '';
+  }
+}
+
+
+function renderMealEditor(meal, { scroll = true } = {}) {
   currentMeal = meal;
   originalMeal = { ...meal };
   const imageUrl = resolveAssetUrl(meal.image_url);
@@ -279,7 +306,9 @@ function renderMealEditor(meal) {
   `;
 
   document.getElementById('reanalysisBlock').hidden = meal.image_url === '/assets/images/text-meal-placeholder.svg';
-  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (scroll) {
+    scrollToAnalysisPanel();
+  }
 }
 
 
@@ -664,9 +693,9 @@ async function submitTemplateMeal(template) {
   try {
     showStatus(status, t('home.textAnalyzing'), 'info');
     const meal = await createTextMeal(payload);
+    await loadHomeData();
     showStatus(status, t('home.mealAdded'), 'success');
     renderMealEditor(meal);
-    await loadHomeData();
   } catch (error) {
     if (isOfflineLike(error)) {
       await queueTextLikeMeal(payload, template.title);
@@ -712,10 +741,10 @@ async function handlePhotoMealSubmit(event) {
       body: formData,
     });
     const meal = await getJsonOrThrow(response, 'Unable to add meal from photo');
-    showStatus(status, t('home.mealAdded'), 'success');
-    renderMealEditor(meal);
     clearPhotoSelection();
     await loadHomeData();
+    showStatus(status, t('home.mealAdded'), 'success');
+    renderMealEditor(meal);
   } catch (error) {
     if (isOfflineLike(error)) {
       const queuedFile = await optimizePhotoForUpload(file);
@@ -757,10 +786,10 @@ async function handleTextMealSubmit(event) {
 
   try {
     const meal = await createTextMeal(payload);
+    await loadHomeData();
     showStatus(status, t('home.mealAdded'), 'success');
     renderMealEditor(meal);
     form.reset();
-    await loadHomeData();
   } catch (error) {
     if (isOfflineLike(error)) {
       await queueTextLikeMeal(payload, description);
@@ -800,9 +829,33 @@ async function handleSaveMealChanges() {
     });
     currentMeal = await getJsonOrThrow(response, 'Unable to save meal changes');
     originalMeal = { ...currentMeal };
+    await loadHomeData();
     renderMealEditor(currentMeal);
     showStatus(status, t('home.mealUpdated'), 'success');
+  } catch (error) {
+    showStatus(status, error.message, 'danger');
+  }
+}
+
+
+async function handleDeleteMeal() {
+  if (!currentMeal || !window.confirm(t('home.deleteConfirm'))) {
+    return;
+  }
+
+  const status = document.getElementById('analysisStatus');
+  showStatus(status, t('button.delete'), 'info');
+
+  try {
+    const response = await apiFetch(`${API.meals}/${currentMeal.id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      await getJsonOrThrow(response, 'Unable to delete meal');
+    }
+    hideMealEditor();
     await loadHomeData();
+    showStatus(getCaptureStatus(), t('home.mealDeleted'), 'success');
   } catch (error) {
     showStatus(status, error.message, 'danger');
   }
@@ -851,10 +904,10 @@ async function handleReanalyze() {
     });
     currentMeal = await getJsonOrThrow(response, 'Unable to reanalyze meal');
     originalMeal = { ...currentMeal };
+    await loadHomeData();
     renderMealEditor(currentMeal);
     document.getElementById('reanalysisCorrections').value = '';
     showStatus(status, t('home.reanalysisUpdated'), 'success');
-    await loadHomeData();
   } catch (error) {
     showStatus(status, error.message, 'danger');
   }
@@ -1036,6 +1089,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('saveAnalysisButton').addEventListener('click', handleSaveMealChanges);
   document.getElementById('saveTemplateButton').addEventListener('click', saveCurrentMealAsTemplate);
   document.getElementById('resetAnalysisButton').addEventListener('click', resetMealChanges);
+  document.getElementById('deleteAnalysisButton').addEventListener('click', handleDeleteMeal);
   document.getElementById('reanalyzeButton').addEventListener('click', handleReanalyze);
   document.getElementById('syncQueueButton').addEventListener('click', syncPendingQueue);
 

@@ -9,6 +9,28 @@ from openai import OpenAI
 
 from .settings import settings
 
+IMAGE_ANALYSIS_PROMPT = """
+Analyze this food image and return only minified JSON with exactly these keys:
+food_description, estimated_calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, notes.
+Rules:
+- meal_type must be one of breakfast, lunch, dinner, snack
+- estimated_calories and all macro values must be integers
+- keep food_description short and practical
+- keep notes very short
+- no markdown, no explanation, no extra keys
+""".strip()
+
+TEXT_ANALYSIS_PROMPT = """
+Analyze this food description and return only minified JSON with exactly these keys:
+food_description, estimated_calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, notes.
+Rules:
+- meal_type must be one of breakfast, lunch, dinner, snack
+- estimated_calories and all macro values must be integers
+- keep food_description short and practical
+- keep notes very short
+- no markdown, no explanation, no extra keys
+""".strip()
+
 
 @lru_cache(maxsize=1)
 def get_openai_client() -> OpenAI | None:
@@ -62,11 +84,7 @@ def analyze_food_image(image_path: str, corrections: dict[str, str] | None = Non
         }
 
     base64_image = encode_image_to_base64(image_path)
-    prompt = """
-    Analyze this food image and return valid JSON with:
-    food_description, estimated_calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, notes.
-    meal_type must be one of breakfast, lunch, dinner, or snack.
-    """
+    prompt = IMAGE_ANALYSIS_PROMPT
 
     if corrections:
         prompt += "\nApply these user corrections before answering:\n"
@@ -97,7 +115,8 @@ def analyze_food_image(image_path: str, corrections: dict[str, str] | None = Non
                     ],
                 }
             ],
-            max_tokens=900,
+            temperature=0,
+            max_tokens=220,
         )
         response_text = response.choices[0].message.content or ""
         return _parse_ai_response(response_text, fallback)
@@ -122,13 +141,7 @@ def analyze_food_text(food_description: str) -> dict[str, Any]:
             "notes": "OpenAI API key is not configured.",
         }
 
-    prompt = f"""
-    Analyze this food description and return valid JSON with:
-    food_description, estimated_calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, notes.
-
-    Food description: "{food_description}"
-    meal_type must be one of breakfast, lunch, dinner, or snack.
-    """
+    prompt = f'{TEXT_ANALYSIS_PROMPT}\n\nFood description: "{food_description}"'
 
     fallback = {
         "food_description": food_description,
@@ -147,7 +160,8 @@ def analyze_food_text(food_description: str) -> dict[str, Any]:
         response = client.chat.completions.create(
             model=settings.LLM_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=700,
+            temperature=0,
+            max_tokens=180,
         )
         response_text = response.choices[0].message.content or ""
         return _parse_ai_response(response_text, fallback)

@@ -338,3 +338,17 @@
 2026-04-02 20:05:15,865 - backend.app.main - INFO - [main.py:21] - Application started
 2026-04-02 20:05:16,669 - backend.app.main - INFO - [main.py:21] - Application started
 2026-04-02 20:05:17,083 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 22:10:25,812 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 22:10:26,205 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 22:10:26,615 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 22:10:27,008 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 22:10:27,422 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 22:10:27,423 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.17ms
+2026-04-02 22:10:27,426 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 22:10:27,427 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.85ms
+2026-04-02 22:10:27,441 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 22:10:27,442 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.86ms
+2026-04-02 22:10:27,450 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 22:10:27,864 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 22:10:28,665 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 22:10:29,092 - backend.app.main - INFO - [main.py:21] - Application started

@@ -68,4 +68,5 @@ def test_profile_targets_disappear_when_required_biometrics_are_removed(client, 
     assert clear_response.json()["target_calories"] is None
 
     targets_response = client.get("/profile/targets", headers=headers)
-    assert targets_response.status_code == 404
+    assert targets_response.status_code == 200
+    assert targets_response.json() is None

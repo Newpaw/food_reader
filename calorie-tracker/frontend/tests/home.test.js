@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildMealUpdatePayload, shouldPreferMobileCamera, summarizeTodayState } from '../home.js';
+import { buildMealUpdatePayload, planPhotoOptimization, shouldPreferMobileCamera, summarizeTodayState } from '../home.js';
 
 
 describe('meal payload builder', () => {
@@ -73,5 +73,21 @@ describe('mobile camera preference', () => {
         navigator: { maxTouchPoints: 0, userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' },
       }),
     ).toBe(false);
+  });
+});
+
+describe('photo optimization plan', () => {
+  it('shrinks large mobile photos before upload', () => {
+    const plan = planPhotoOptimization({
+      type: 'image/jpeg',
+      size: 5_200_000,
+      width: 4032,
+      height: 3024,
+    });
+
+    expect(plan.shouldOptimize).toBe(true);
+    expect(plan.shouldResize).toBe(true);
+    expect(plan.targetWidth).toBe(1600);
+    expect(plan.targetHeight).toBe(1200);
   });
 });

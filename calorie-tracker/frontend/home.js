@@ -30,6 +30,11 @@ let voiceRecognition = null;
 let isListening = false;
 let syncInProgress = false;
 let currentPreviewUrl = null;
+let photoSubmissionInProgress = false;
+
+const MAX_UPLOAD_DIMENSION = 1600;
+const MAX_UPLOAD_BYTES = 1_800_000;
+const UPLOAD_QUALITY = 0.82;
 
 
 export function buildMealUpdatePayload(draft) {
@@ -95,6 +100,30 @@ export function shouldPreferMobileCamera(environment = globalThis) {
 }
 
 
+export function planPhotoOptimization(fileLike, options = {}) {
+  const maxDimension = options.maxDimension ?? MAX_UPLOAD_DIMENSION;
+  const maxBytes = options.maxBytes ?? MAX_UPLOAD_BYTES;
+  const quality = options.quality ?? UPLOAD_QUALITY;
+  const width = Number(fileLike?.width || 0);
+  const height = Number(fileLike?.height || 0);
+  const largestSide = Math.max(width, height);
+  const scale = largestSide > maxDimension ? maxDimension / largestSide : 1;
+
+  return {
+    maxDimension,
+    maxBytes,
+    quality,
+    targetWidth: width ? Math.max(1, Math.round(width * scale)) : 0,
+    targetHeight: height ? Math.max(1, Math.round(height * scale)) : 0,
+    shouldResize: largestSide > maxDimension,
+    shouldOptimize:
+      (fileLike?.type || '').startsWith('image/') &&
+      fileLike?.type !== 'image/svg+xml' &&
+      (Number(fileLike?.size || 0) > maxBytes || largestSide > maxDimension),
+  };
+}
+
+
 function getAnalysisFields() {
   return {
     calories: document.getElementById('analysisCalories'),
@@ -152,6 +181,11 @@ function clearPhotoSelection() {
     libraryInput.value = '';
   }
   clearPhotoPreview();
+}
+
+
+function getPhotoCaptureForm() {
+  return document.getElementById('photoMealForm');
 }
 
 
@@ -425,6 +459,15 @@ function handleFileSelection(event) {
   preview.src = currentPreviewUrl;
   preview.hidden = false;
   emptyState.hidden = true;
+
+  if (event.target === cameraInput && shouldPreferMobileCamera(window)) {
+    const form = getPhotoCaptureForm();
+    window.setTimeout(() => {
+      if (form && getSelectedPhotoFile()) {
+        form.requestSubmit();
+      }
+    }, 50);
+  }
 }
 
 
@@ -447,6 +490,116 @@ function dataUrlToBlob(dataUrl) {
     array[index] = bytes.charCodeAt(index);
   }
   return new Blob([array], { type: mimeType });
+}
+
+
+function getImageCanvas(width, height) {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    return new OffscreenCanvas(width, height);
+  }
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  return canvas;
+}
+
+
+async function loadImageBitmapOrElement(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      return await createImageBitmap(file);
+    } catch (error) {
+      // Fall back to an HTMLImageElement when bitmap decoding is unavailable.
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Unable to decode the photo.'));
+    };
+    image.src = objectUrl;
+  });
+}
+
+
+async function canvasToBlob(canvas, type, quality) {
+  if ('convertToBlob' in canvas) {
+    return canvas.convertToBlob({ type, quality });
+  }
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+      reject(new Error('Unable to optimize the photo.'));
+    }, type, quality);
+  });
+}
+
+
+function renameAsJpeg(filename) {
+  return (filename || 'meal-photo').replace(/\.[a-z0-9]+$/i, '') + '.jpg';
+}
+
+
+async function optimizePhotoForUpload(file) {
+  const plan = planPhotoOptimization(file);
+  if (!plan.shouldOptimize) {
+    return file;
+  }
+
+  try {
+    const source = await loadImageBitmapOrElement(file);
+    const sourceWidth = source.width || source.naturalWidth;
+    const sourceHeight = source.height || source.naturalHeight;
+    const sizedPlan = planPhotoOptimization({
+      ...file,
+      width: sourceWidth,
+      height: sourceHeight,
+    });
+
+    if (!sizedPlan.shouldOptimize) {
+      return file;
+    }
+
+    const canvas = getImageCanvas(sizedPlan.targetWidth, sizedPlan.targetHeight);
+    if (!canvas) {
+      return file;
+    }
+    const context = canvas.getContext('2d', { alpha: false });
+    if (!context) {
+      return file;
+    }
+
+    context.drawImage(source, 0, 0, sizedPlan.targetWidth, sizedPlan.targetHeight);
+    if (typeof source.close === 'function') {
+      source.close();
+    }
+
+    const blob = await canvasToBlob(canvas, 'image/jpeg', sizedPlan.quality);
+    if (!blob || blob.size >= file.size) {
+      return file;
+    }
+
+    return new File([blob], renameAsJpeg(file.name), {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  } catch (error) {
+    return file;
+  }
 }
 
 
@@ -522,6 +675,9 @@ async function submitTemplateMeal(template) {
 
 async function handlePhotoMealSubmit(event) {
   event.preventDefault();
+  if (photoSubmissionInProgress) {
+    return;
+  }
   const file = getSelectedPhotoFile();
   const status = getCaptureStatus();
 
@@ -530,18 +686,22 @@ async function handlePhotoMealSubmit(event) {
     return;
   }
 
-  if (!navigator.onLine) {
-    await queuePhotoMeal(file);
-    clearPhotoSelection();
-    showStatus(status, t('home.queueAddedPhoto'), 'info');
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('image', file);
-  showStatus(status, t('home.photoAnalyzing'), 'info');
-
   try {
+    photoSubmissionInProgress = true;
+    showStatus(status, t('home.photoPreparing'), 'info');
+    const optimizedFile = await optimizePhotoForUpload(file);
+
+    if (!navigator.onLine) {
+      await queuePhotoMeal(optimizedFile);
+      clearPhotoSelection();
+      showStatus(status, t('home.queueAddedPhoto'), 'info');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', optimizedFile);
+    showStatus(status, t('home.photoAnalyzing'), 'info');
+
     const response = await apiFetch(API.meals, {
       method: 'POST',
       body: formData,
@@ -553,12 +713,15 @@ async function handlePhotoMealSubmit(event) {
     await loadHomeData();
   } catch (error) {
     if (isOfflineLike(error)) {
-      await queuePhotoMeal(file);
+      const queuedFile = await optimizePhotoForUpload(file);
+      await queuePhotoMeal(queuedFile);
       clearPhotoSelection();
       showStatus(status, t('home.queueAddedPhoto'), 'info');
       return;
     }
     showStatus(status, error.message, 'danger');
+  } finally {
+    photoSubmissionInProgress = false;
   }
 }
 

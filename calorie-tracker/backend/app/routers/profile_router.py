@@ -64,18 +64,12 @@ async def delete_profile(
     return None
 
 
-@router.get("/targets", response_model=schemas.NutritionTargets)
+@router.get("/targets", response_model=schemas.NutritionTargets | None)
 async def get_nutrition_targets(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    targets = crud.get_nutrition_targets(db, current_user.id)
-    if not targets:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No profile found or insufficient data to calculate targets. Please complete your profile with height, weight, age, and gender.",
-        )
-    return targets
+    return crud.get_nutrition_targets(db, current_user.id)
 
 
 @router.get("/activity-levels")

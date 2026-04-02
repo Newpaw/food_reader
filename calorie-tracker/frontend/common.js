@@ -29,10 +29,10 @@ const TRANSLATIONS = {
     'nav.profile': 'Profile',
     'button.install': 'Install',
     'button.logout': 'Log out',
-    'button.takePhoto': 'Take photo now',
-    'button.useSavedPhoto': 'Use saved photo',
+    'button.takePhoto': 'Take photo',
+    'button.useSavedPhoto': 'Choose from gallery',
     'button.choosePhoto': 'Choose photo',
-    'button.analyzePhoto': 'Analyze meal photo',
+    'button.analyzePhoto': 'Analyze meal',
     'button.analyzeText': 'Analyze meal text',
     'button.applyRange': 'Apply range',
     'button.refreshMetrics': 'Refresh metrics',
@@ -138,7 +138,7 @@ const TRANSLATIONS = {
     'home.capturePhoto': 'Photo',
     'home.captureText': 'Text',
     'home.mobileCameraHint': 'Open the camera directly on your phone, then review the estimate before saving.',
-    'home.uploadHint': 'Use the camera for a quick capture or choose a saved image.',
+    'home.uploadHint': 'Take or upload a meal photo',
     'home.analysisLoadingTitle': 'Analyzing your meal',
     'home.analysisLoadingBody': 'This can take a few seconds.',
     'home.voiceHint': 'Dictate a meal and then review the estimate before saving.',
@@ -293,10 +293,10 @@ const TRANSLATIONS = {
     'nav.profile': 'Profil',
     'button.install': 'Instalovat',
     'button.logout': 'Odhlásit',
-    'button.takePhoto': 'Vyfotit hned',
-    'button.useSavedPhoto': 'Použít uloženou fotku',
+    'button.takePhoto': 'Vyfotit',
+    'button.useSavedPhoto': 'Vybrat z galerie',
     'button.choosePhoto': 'Vybrat fotku',
-    'button.analyzePhoto': 'Analyzovat fotku jídla',
+    'button.analyzePhoto': 'Analyzovat jídlo',
     'button.analyzeText': 'Analyzovat text jídla',
     'button.applyRange': 'Použít rozsah',
     'button.refreshMetrics': 'Obnovit přehled',
@@ -402,7 +402,7 @@ const TRANSLATIONS = {
     'home.capturePhoto': 'Fotka',
     'home.captureText': 'Text',
     'home.mobileCameraHint': 'Otevřete rovnou fotoaparát v telefonu a před uložením výsledek zkontrolujte.',
-    'home.uploadHint': 'Použijte fotoaparát pro rychlé zachycení nebo vyberte uložený obrázek.',
+    'home.uploadHint': 'Vyfoťte nebo nahrajte fotku jídla',
     'home.analysisLoadingTitle': 'Analyzuji vaše jídlo',
     'home.analysisLoadingBody': 'To může trvat několik sekund.',
     'home.voiceHint': 'Nadiktujte jídlo a potom odhad zkontrolujte před uložením.',
@@ -1061,7 +1061,7 @@ export async function registerServiceWorker() {
   }
 
   try {
-    await navigator.serviceWorker.register('/service-worker.js?v=20260402-3');
+    await navigator.serviceWorker.register('/service-worker.js?v=20260403-1');
   } catch (error) {
     console.error('Service worker registration failed:', error);
   }

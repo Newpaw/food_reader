@@ -17,7 +17,7 @@ import {
   showToast,
   t,
   toDateTimeInputValue,
-} from './common.js?v=20260402-3';
+} from './common.js?v=20260403-1';
 
 
 let currentMeal = null;
@@ -160,6 +160,22 @@ function setCaptureLoading(active, message = '') {
   }
 
   loading.hidden = !active;
+  const analyzeButton = document.getElementById('analyzePhotoButton');
+  const takePhotoButton = document.getElementById('takePhotoButton');
+  const chooseGalleryButton = document.getElementById('chooseGalleryButton');
+  const uploadPreviewButton = document.getElementById('uploadPreviewButton');
+  if (analyzeButton) {
+    analyzeButton.disabled = active || !getSelectedPhotoFile();
+  }
+  if (takePhotoButton) {
+    takePhotoButton.disabled = active;
+  }
+  if (chooseGalleryButton) {
+    chooseGalleryButton.disabled = active;
+  }
+  if (uploadPreviewButton) {
+    uploadPreviewButton.disabled = active;
+  }
 }
 
 
@@ -177,6 +193,31 @@ function getSelectedPhotoFile() {
 }
 
 
+function updatePhotoSubmitState() {
+  const analyzeButton = document.getElementById('analyzePhotoButton');
+  if (!analyzeButton) {
+    return;
+  }
+
+  analyzeButton.disabled = photoSubmissionInProgress || !getSelectedPhotoFile();
+}
+
+
+function openPrimaryPhotoPicker() {
+  const { cameraInput, libraryInput } = getPhotoInputs();
+  cameraInput?.click();
+  if (!cameraInput) {
+    libraryInput?.click();
+  }
+}
+
+
+function openGalleryPicker() {
+  const { libraryInput } = getPhotoInputs();
+  libraryInput?.click();
+}
+
+
 function clearPhotoPreview() {
   const preview = document.getElementById('selectedImagePreview');
   const emptyState = document.getElementById('selectedImageEmpty');
@@ -187,6 +228,7 @@ function clearPhotoPreview() {
   preview.removeAttribute('src');
   preview.hidden = true;
   emptyState.hidden = false;
+  updatePhotoSubmitState();
 }
 
 
@@ -199,11 +241,6 @@ function clearPhotoSelection() {
     libraryInput.value = '';
   }
   clearPhotoPreview();
-}
-
-
-function getPhotoCaptureForm() {
-  return document.getElementById('photoMealForm');
 }
 
 
@@ -467,15 +504,7 @@ function handleFileSelection(event) {
   preview.src = currentPreviewUrl;
   preview.hidden = false;
   emptyState.hidden = true;
-
-  if (event.target === cameraInput && shouldPreferMobileCamera(window)) {
-    const form = getPhotoCaptureForm();
-    window.setTimeout(() => {
-      if (form && getSelectedPhotoFile()) {
-        form.requestSubmit();
-      }
-    }, 50);
-  }
+  updatePhotoSubmitState();
 }
 
 
@@ -734,8 +763,9 @@ async function handlePhotoMealSubmit(event) {
     }
     showStatus(status, error.message, 'danger');
   } finally {
-    setCaptureLoading(false);
     photoSubmissionInProgress = false;
+    setCaptureLoading(false);
+    updatePhotoSubmitState();
   }
 }
 
@@ -912,28 +942,24 @@ function initializeModeSwitch() {
 
 
 function updateCaptureAccessUi() {
-  const preferMobileCamera = shouldPreferMobileCamera(window);
-  document.body.classList.toggle('mobile-camera-preferred', preferMobileCamera);
-  document.querySelectorAll('[data-mobile-camera-only]').forEach((element) => {
-    element.hidden = !preferMobileCamera;
-  });
-  document.querySelectorAll('[data-desktop-photo-only]').forEach((element) => {
-    element.hidden = preferMobileCamera;
-  });
+  document.body.classList.toggle('mobile-camera-preferred', shouldPreferMobileCamera(window));
 }
 
 
 function initializePhotoCapture() {
   const { cameraInput, libraryInput } = getPhotoInputs();
   const takePhotoButton = document.getElementById('takePhotoButton');
+  const uploadPreviewButton = document.getElementById('uploadPreviewButton');
+  const chooseGalleryButton = document.getElementById('chooseGalleryButton');
 
   cameraInput?.addEventListener('change', handleFileSelection);
   libraryInput?.addEventListener('change', handleFileSelection);
-  takePhotoButton?.addEventListener('click', () => {
-    cameraInput?.click();
-  });
+  takePhotoButton?.addEventListener('click', openPrimaryPhotoPicker);
+  uploadPreviewButton?.addEventListener('click', openPrimaryPhotoPicker);
+  chooseGalleryButton?.addEventListener('click', openGalleryPicker);
 
   updateCaptureAccessUi();
+  updatePhotoSubmitState();
   window.addEventListener('resize', updateCaptureAccessUi);
 }
 

@@ -1,4 +1,4 @@
-import { t } from './common.js?v=20260402-3';
+import { t } from './common.js?v=20260403-1';
 
 export function calculateMacroTotals(meals) {
   return meals.reduce(

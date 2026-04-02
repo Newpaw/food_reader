@@ -6,8 +6,8 @@
     <title>Food Reader | Add Meal</title>
     <meta name="description" content="Capture food quickly, review the AI estimate, and keep a clean nutrition log from any phone.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260402-3">
-    <link rel="manifest" href="manifest.webmanifest?v=20260402-3">
+    <link rel="stylesheet" href="styles.css?v=20260403-1">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-1">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
@@ -63,20 +63,21 @@
               <input id="mealCameraInput" class="sr-only" type="file" accept="image/*" capture="environment">
               <input id="mealImage" class="sr-only" type="file" accept="image/*">
               <div class="upload-card">
-                <div class="camera-priority" data-mobile-camera-only hidden>
-                  <button type="button" id="takePhotoButton" class="btn btn-primary btn-block mobile-camera-button" data-i18n="button.takePhoto">Take photo now</button>
-                  <p class="panel-note camera-priority-note" data-i18n="home.mobileCameraHint">Open the camera directly on your phone, then review the estimate before saving.</p>
+                <div class="camera-priority">
+                  <button type="button" id="takePhotoButton" class="btn btn-primary btn-block mobile-camera-button" data-i18n="button.takePhoto">Take photo</button>
                 </div>
-                <div class="upload-preview">
-                  <p id="selectedImageEmpty" data-i18n="home.uploadHint">Use the camera for a quick capture or choose a saved image.</p>
+                <button type="button" id="uploadPreviewButton" class="upload-preview interactive-upload-preview">
+                  <div id="selectedImageEmpty" class="upload-preview-empty">
+                    <span class="upload-preview-icon" aria-hidden="true"><span class="upload-preview-icon-lens"></span></span>
+                    <p data-i18n="home.uploadHint">Take or upload a meal photo</p>
+                  </div>
                   <img id="selectedImagePreview" hidden alt="Selected meal preview">
-                </div>
+                </button>
                 <div class="upload-actions">
-                  <label class="btn btn-secondary" for="mealImage" data-mobile-camera-only hidden data-i18n="button.useSavedPhoto">Use saved photo</label>
-                  <label class="btn btn-primary" for="mealImage" data-desktop-photo-only data-i18n="button.choosePhoto">Choose photo</label>
+                  <button type="button" id="chooseGalleryButton" class="btn btn-ghost btn-small upload-link-button" data-i18n="button.useSavedPhoto">Choose from gallery</button>
                 </div>
               </div>
-              <button type="submit" class="btn btn-primary btn-block" data-i18n="button.analyzePhoto">Analyze meal photo</button>
+              <button id="analyzePhotoButton" type="submit" class="btn btn-primary btn-block" data-i18n="button.analyzePhoto" disabled>Analyze meal</button>
             </form>
 
             <form id="textMealForm" data-mode-panel="text" class="stack" hidden>
@@ -216,6 +217,6 @@
       </nav>
     </div>
 
-    <script type="module" src="home.js?v=20260402-3"></script>
+    <script type="module" src="home.js?v=20260403-1"></script>
   </body>
 </html>

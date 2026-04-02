@@ -1,4 +1,6 @@
-const CACHE_NAME = 'food-reader-v2';
+const CACHE_NAME = 'food-reader-v3';
+const ASSET_VERSION = '20260402-2';
+const withVersion = (path) => `${path}?v=${ASSET_VERSION}`;
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -7,15 +9,15 @@ const APP_SHELL = [
   '/metrics.html',
   '/profile.html',
   '/offline.html',
-  '/styles.css',
-  '/common.js',
-  '/home.js',
-  '/login.js',
-  '/history.js',
-  '/metrics.js',
-  '/profile.js',
-  '/charts.js',
-  '/manifest.webmanifest',
+  withVersion('/styles.css'),
+  withVersion('/common.js'),
+  withVersion('/home.js'),
+  withVersion('/login.js'),
+  withVersion('/history.js'),
+  withVersion('/metrics.js'),
+  withVersion('/profile.js'),
+  withVersion('/charts.js'),
+  withVersion('/manifest.webmanifest'),
   '/assets/favicon/apple-touch-icon.png',
   '/assets/favicon/favicon-32x32.png',
   '/assets/favicon/favicon-16x16.png',

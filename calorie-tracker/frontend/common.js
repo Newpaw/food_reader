@@ -1051,7 +1051,7 @@ export async function registerServiceWorker() {
   }
 
   try {
-    await navigator.serviceWorker.register('/service-worker.js');
+    await navigator.serviceWorker.register('/service-worker.js?v=20260402-2');
   } catch (error) {
     console.error('Service worker registration failed:', error);
   }

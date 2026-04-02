@@ -18,12 +18,15 @@ def test_profile_create_update_and_targets(client, register_and_login):
     profile = create_response.json()
     assert profile["target_calories"] is not None
     assert profile["target_protein_g"] is not None
+    assert profile["created_at"].endswith("Z")
+    assert profile["updated_at"].endswith("Z")
 
     targets_response = client.get("/profile/targets", headers=headers)
     assert targets_response.status_code == 200
     targets = targets_response.json()
     assert targets["calories"] > 0
     assert "Calculated using Mifflin-St Jeor equation" in targets["calculation_method"]
+    assert targets["last_updated"].endswith("Z")
 
     custom_response = client.put(
         "/profile",

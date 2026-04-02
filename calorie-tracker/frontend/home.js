@@ -17,7 +17,7 @@ import {
   showToast,
   t,
   toDateTimeInputValue,
-} from './common.js?v=20260403-2';
+} from './common.js?v=20260403-3';
 
 
 let currentMeal = null;

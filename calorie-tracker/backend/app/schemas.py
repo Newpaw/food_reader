@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, EmailStr, Field
 
 
 MealType = Literal["breakfast", "lunch", "dinner", "snack"]
@@ -52,7 +52,7 @@ class MealBase(BaseModel):
     sugar: int | None = Field(None, ge=0)
     sodium: int | None = Field(None, ge=0)
     meal_type: MealType
-    consumed_at: datetime = Field(..., description="Timestamp with timezone info")
+    consumed_at: AwareDatetime = Field(..., description="UTC timestamp with timezone info")
     notes: str | None = None
 
 
@@ -69,7 +69,7 @@ class MealUpdate(BaseModel):
     sugar: int | None = Field(None, ge=0)
     sodium: int | None = Field(None, ge=0)
     meal_type: MealType | None = None
-    consumed_at: datetime | None = Field(None, description="Timestamp with timezone info")
+    consumed_at: AwareDatetime | None = Field(None, description="UTC timestamp with timezone info")
     notes: str | None = None
 
 
@@ -83,7 +83,7 @@ class MealOut(ORMModel):
     sugar: int | None = None
     sodium: int | None = None
     meal_type: str
-    consumed_at: datetime = Field(..., description="Timestamp with timezone info")
+    consumed_at: AwareDatetime = Field(..., description="UTC timestamp with timezone info")
     notes: str | None = None
     image_url: str | None = None
 
@@ -98,7 +98,7 @@ class TextMealCreate(BaseModel):
     sugar: int | None = Field(None, ge=0)
     sodium: int | None = Field(None, ge=0)
     meal_type: MealType | None = None
-    consumed_at: datetime | None = Field(None, description="Timestamp with timezone info")
+    consumed_at: AwareDatetime | None = Field(None, description="UTC timestamp with timezone info")
     notes: str | None = None
 
 
@@ -113,8 +113,8 @@ class DailySummary(BaseModel):
 
 
 class SummaryOut(BaseModel):
-    from_dt: datetime = Field(..., description="From datetime with timezone info")
-    to_dt: datetime = Field(..., description="To datetime with timezone info")
+    from_dt: AwareDatetime = Field(..., description="From datetime with timezone info")
+    to_dt: AwareDatetime = Field(..., description="To datetime with timezone info")
     days: list[DailySummary]
 
 
@@ -165,8 +165,8 @@ class UserProfileOut(ORMModel):
     target_carbs_g: int | None
     target_fats_g: int | None
     target_fiber_g: int | None
-    created_at: datetime
-    updated_at: datetime
+    created_at: AwareDatetime
+    updated_at: AwareDatetime
 
 
 class NutritionTargets(BaseModel):
@@ -178,4 +178,4 @@ class NutritionTargets(BaseModel):
     calculation_method: str = Field(..., description="Method used for calculation")
     bmr: float | None = Field(None, description="Basal Metabolic Rate")
     tdee: float | None = Field(None, description="Total Daily Energy Expenditure")
-    last_updated: datetime = Field(..., description="When profile was last updated")
+    last_updated: AwareDatetime = Field(..., description="When profile was last updated")

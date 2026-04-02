@@ -1,10 +1,11 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from .database import Base
+from .sql_types import UTCDateTime
 
 
 class ActivityLevel(str, enum.Enum):
@@ -43,7 +44,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     password_hash = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     meals = relationship("Meal", back_populates="user", cascade="all, delete-orphan")
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
@@ -78,9 +79,9 @@ class UserProfile(Base):
     target_fats_g = Column(Integer, nullable=True)
     target_fiber_g = Column(Integer, nullable=True)
 
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(
-        DateTime(timezone=True),
+        UTCDateTime(),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
@@ -103,9 +104,9 @@ class Meal(Base):
     sugar = Column(Integer, nullable=True)
     sodium = Column(Integer, nullable=True)
     meal_type = Column(String, nullable=False)
-    consumed_at = Column(DateTime(timezone=True), nullable=False)
+    consumed_at = Column(UTCDateTime(), nullable=False)
     notes = Column(String, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
     is_text_only = Column(Boolean, default=False, nullable=False)
 
     user = relationship("User", back_populates="meals")

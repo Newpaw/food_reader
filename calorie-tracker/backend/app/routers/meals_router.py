@@ -3,8 +3,10 @@ import os
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
+from pydantic import AwareDatetime
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
@@ -22,8 +24,8 @@ TEXT_MEAL_PLACEHOLDER = "/assets/images/text-meal-placeholder.svg"
 def _normalize_datetime(value: datetime | None) -> datetime:
     if value is None:
         return datetime.now(timezone.utc)
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("Timezone-aware datetime is required.")
     return value.astimezone(timezone.utc)
 
 
@@ -44,7 +46,7 @@ def _meal_to_schema(meal: models.Meal, user_id: int) -> schemas.MealOut:
         sugar=meal.sugar,
         sodium=meal.sodium,
         meal_type=meal.meal_type,
-        consumed_at=meal.consumed_at,
+        consumed_at=_normalize_datetime(meal.consumed_at),
         notes=meal.notes,
         image_url=_meal_image_url(user_id, meal.image_path),
     )
@@ -62,7 +64,7 @@ async def create_meal(
     sugar: int | None = Form(None),
     sodium: int | None = Form(None),
     meal_type: str | None = Form(None),
-    consumed_at: datetime | None = Form(None),
+    consumed_at: AwareDatetime | None = Form(None),
     notes: str | None = Form(None),
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
@@ -275,8 +277,8 @@ async def reanalyze_meal(
 def list_meals(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
-    frm: datetime | None = Query(None),
-    to: datetime | None = Query(None),
+    frm: AwareDatetime | None = Query(None),
+    to: AwareDatetime | None = Query(None),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ):
@@ -293,8 +295,9 @@ def list_meals(
 @router.get("/summary", response_model=schemas.SummaryOut)
 @log_execution_time(level=logging.INFO)
 def summary(
-    frm: datetime,
-    to: datetime,
+    frm: AwareDatetime,
+    to: AwareDatetime,
+    tz_name: str | None = Query(None, min_length=1, max_length=64),
     tz_offset_minutes: int = Query(0, ge=-840, le=840),
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
@@ -310,9 +313,20 @@ def summary(
         models.Meal.consumed_at < to_dt,
     ).all()
 
+    timezone_info = None
+    if tz_name:
+        try:
+            timezone_info = ZoneInfo(tz_name)
+        except ZoneInfoNotFoundError as exc:
+            raise HTTPException(status_code=400, detail="Invalid timezone name") from exc
+
     grouped: dict[datetime.date, dict[str, int]] = defaultdict(lambda: {"total_calories": 0, "meals": 0})
     for meal in meals:
-        local_day = (_normalize_datetime(meal.consumed_at) - timedelta(minutes=tz_offset_minutes)).date()
+        normalized = _normalize_datetime(meal.consumed_at)
+        if timezone_info is not None:
+            local_day = normalized.astimezone(timezone_info).date()
+        else:
+            local_day = (normalized - timedelta(minutes=tz_offset_minutes)).date()
         grouped[local_day]["total_calories"] += meal.calories
         grouped[local_day]["meals"] += 1
 

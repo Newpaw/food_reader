@@ -997,6 +997,19 @@ export function formatDayLabel(value) {
   }).format(new Date(value));
 }
 
+export function parseDateInputValue(value) {
+  if (!value) {
+    return null;
+  }
+
+  const [year, month, day] = value.split('-').map(Number);
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day);
+}
+
 export function getLocalDateKey(value) {
   const date = new Date(value);
   const year = date.getFullYear();
@@ -1034,8 +1047,8 @@ export function toDateTimeInputValue(value) {
 }
 
 export function localDateRangeToUtc(fromDate, toDate) {
-  const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
-  const to = toDate ? new Date(`${toDate}T00:00:00`) : null;
+  const from = parseDateInputValue(fromDate);
+  const to = parseDateInputValue(toDate);
 
   if (to) {
     to.setDate(to.getDate() + 1);
@@ -1045,6 +1058,14 @@ export function localDateRangeToUtc(fromDate, toDate) {
     from: from ? from.toISOString() : null,
     to: to ? to.toISOString() : null,
   };
+}
+
+export function getBrowserTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
 }
 
 export function normalizeOptionalNumber(value) {
@@ -1087,7 +1108,7 @@ export async function registerServiceWorker() {
   }
 
   try {
-    await navigator.serviceWorker.register('/service-worker.js?v=20260403-2');
+    await navigator.serviceWorker.register('/service-worker.js?v=20260403-3');
   } catch (error) {
     console.error('Service worker registration failed:', error);
   }

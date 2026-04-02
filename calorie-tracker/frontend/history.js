@@ -11,13 +11,14 @@ import {
   getLocalDateKey,
   localDateRangeToUtc,
   normalizeOptionalNumber,
+  parseDateInputValue,
   resolveAssetUrl,
   setupPage,
   showStatus,
   t,
   toggleModal,
   toDateTimeInputValue,
-} from './common.js?v=20260403-2';
+} from './common.js?v=20260403-3';
 
 let historyMeals = [];
 let activeMeal = null;
@@ -30,7 +31,7 @@ function formatRangeLabel(from, to) {
     new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
       day: 'numeric',
       month: 'short',
-    }).format(new Date(`${value}T00:00:00`));
+    }).format(parseDateInputValue(value));
   return `${format(from)} - ${format(to)}`;
 }
 

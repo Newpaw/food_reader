@@ -2,19 +2,22 @@ import {
   API,
   apiFetch,
   bindQuickRangeButtons,
+  getBrowserTimeZone,
   getDefaultDateRange,
+  getLocalDateKey,
   getJsonOrThrow,
   localDateRangeToUtc,
+  parseDateInputValue,
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-2';
+} from './common.js?v=20260403-3';
 import {
   buildDailyAverages,
   calculateMacroTotals,
   renderCalorieBars,
   renderMacroRing,
-} from './charts.js?v=20260403-2';
+} from './charts.js?v=20260403-3';
 
 let cachedTargets = null;
 let cachedSummaryDays = [];
@@ -29,7 +32,7 @@ function formatRangeLabel(from, to) {
     new Intl.DateTimeFormat(document.documentElement.lang || undefined, {
       day: 'numeric',
       month: 'short',
-    }).format(new Date(`${value}T00:00:00`));
+    }).format(parseDateInputValue(value));
   return `${format(from)} - ${format(to)}`;
 }
 
@@ -47,7 +50,7 @@ function toggleMetricsCustomRange(forceOpen = null) {
 
 export function summarizeMeals(meals) {
   const totals = calculateMacroTotals(meals);
-  const daysWithMeals = new Set(meals.map((meal) => meal.consumed_at.slice(0, 10))).size || 1;
+  const daysWithMeals = new Set(meals.map((meal) => getLocalDateKey(meal.consumed_at))).size || 1;
 
   return {
     ...totals,
@@ -361,7 +364,7 @@ async function loadMetrics() {
 
     const [targetsResponse, summaryResponse, mealsResponse, todayMealsResponse] = await Promise.all([
       apiFetch(`${API.profile}/targets`),
-      apiFetch(`${API.summary}?${params.toString()}&tz_offset_minutes=${new Date().getTimezoneOffset()}`),
+      apiFetch(`${API.summary}?${params.toString()}&tz_name=${encodeURIComponent(getBrowserTimeZone())}`),
       apiFetch(`${API.meals}?limit=200&${params.toString()}`),
       apiFetch(`${API.meals}?limit=100&${todayParams.toString()}`),
     ]);

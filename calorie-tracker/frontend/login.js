@@ -7,7 +7,7 @@ import {
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-1';
+} from './common.js?v=20260403-2';
 
 async function handleLoginSubmit(event) {
   event.preventDefault();

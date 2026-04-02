@@ -6,8 +6,8 @@
     <title>Food Reader | Add Meal</title>
     <meta name="description" content="Capture food quickly, review the AI estimate, and keep a clean nutrition log from any phone.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260403-1">
-    <link rel="manifest" href="manifest.webmanifest?v=20260403-1">
+    <link rel="stylesheet" href="styles.css?v=20260403-2">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-2">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
@@ -131,78 +131,91 @@
           </section>
         </div>
 
-        <section id="analysisPanel" class="panel" hidden>
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow" data-i18n="home.reviewEyebrow">Review</p>
-              <h2 data-i18n="home.reviewHeading">Adjust the nutrition draft</h2>
-            </div>
-          </div>
-
+        <section id="analysisPanel" class="panel analysis-panel" hidden>
           <div id="analysisPreview" class="analysis-preview"></div>
 
-          <div class="form-grid">
-            <label class="field">
-              <span data-i18n="label.calories">Calories</span>
-              <input id="analysisCalories" type="number" min="0">
-            </label>
-            <label class="field">
-              <span data-i18n="label.protein">Protein (g)</span>
-              <input id="analysisProtein" type="number" min="0">
-            </label>
-            <label class="field">
-              <span data-i18n="label.fat">Fat (g)</span>
-              <input id="analysisFat" type="number" min="0">
-            </label>
-            <label class="field">
-              <span data-i18n="label.carbs">Carbs (g)</span>
-              <input id="analysisCarbs" type="number" min="0">
-            </label>
-            <label class="field">
-              <span data-i18n="label.fiber">Fiber (g)</span>
-              <input id="analysisFiber" type="number" min="0">
-            </label>
-            <label class="field">
-              <span data-i18n="label.sugar">Sugar (g)</span>
-              <input id="analysisSugar" type="number" min="0">
-            </label>
-            <label class="field">
-              <span data-i18n="label.sodium">Sodium (mg)</span>
-              <input id="analysisSodium" type="number" min="0">
-            </label>
-            <label class="field">
-              <span data-i18n="label.mealType">Meal type</span>
-              <select id="analysisMealType">
-                <option value="breakfast" data-i18n="option.breakfast">Breakfast</option>
-                <option value="lunch" data-i18n="option.lunch">Lunch</option>
-                <option value="dinner" data-i18n="option.dinner">Dinner</option>
-                <option value="snack" data-i18n="option.snack">Snack</option>
-              </select>
-            </label>
-            <label class="field">
-              <span data-i18n="label.consumedAt">Consumed at</span>
-              <input id="analysisConsumedAt" type="datetime-local">
-            </label>
+          <div class="analysis-summary stack">
+            <div id="analysisPrimaryMetrics" class="analysis-metric-grid"></div>
+            <div id="analysisHighlight" class="analysis-highlight" hidden></div>
+            <details id="analysisNutritionDetails" class="analysis-details subtle-panel">
+              <summary>
+                <span data-i18n="home.moreDetailsHeading">More nutrition details</span>
+                <span class="analysis-details-hint" data-i18n="home.moreDetailsHint">Fiber, sugar, sodium, and meal context</span>
+              </summary>
+              <div id="analysisDetailRows" class="analysis-detail-list"></div>
+            </details>
           </div>
 
-          <label class="field">
-            <span data-i18n="label.notes">Notes</span>
-            <textarea id="analysisNotes" rows="4"></textarea>
-          </label>
-
-          <div class="button-row">
-            <button type="button" id="saveAnalysisButton" class="btn btn-primary" data-i18n="button.saveChanges">Save changes</button>
-            <button type="button" id="saveTemplateButton" class="btn btn-secondary" data-i18n="button.saveFavorite">Save as favorite</button>
-            <button type="button" id="resetAnalysisButton" class="btn btn-secondary" data-i18n="button.reset">Reset</button>
-            <button type="button" id="deleteAnalysisButton" class="btn btn-danger" data-i18n="button.delete">Delete</button>
+          <div id="analysisViewActions" class="analysis-primary-actions">
+            <button type="button" id="editAnalysisButton" class="btn btn-primary" data-i18n="button.editMeal">Edit meal</button>
+            <button type="button" id="addAnotherMealButton" class="btn btn-secondary" data-i18n="button.addAnotherMeal">Add another meal</button>
+            <button type="button" id="saveTemplateButton" class="btn btn-ghost" data-i18n="button.saveFavorite">Save as favorite</button>
           </div>
 
-          <div id="reanalysisBlock" class="subtle-panel" hidden>
+          <div id="analysisEditPanel" class="stack" hidden>
+            <div class="form-grid">
+              <label class="field">
+                <span data-i18n="label.calories">Calories</span>
+                <input id="analysisCalories" type="number" min="0">
+              </label>
+              <label class="field">
+                <span data-i18n="label.protein">Protein (g)</span>
+                <input id="analysisProtein" type="number" min="0">
+              </label>
+              <label class="field">
+                <span data-i18n="label.fat">Fat (g)</span>
+                <input id="analysisFat" type="number" min="0">
+              </label>
+              <label class="field">
+                <span data-i18n="label.carbs">Carbs (g)</span>
+                <input id="analysisCarbs" type="number" min="0">
+              </label>
+              <label class="field">
+                <span data-i18n="label.fiber">Fiber (g)</span>
+                <input id="analysisFiber" type="number" min="0">
+              </label>
+              <label class="field">
+                <span data-i18n="label.sugar">Sugar (g)</span>
+                <input id="analysisSugar" type="number" min="0">
+              </label>
+              <label class="field">
+                <span data-i18n="label.sodium">Sodium (mg)</span>
+                <input id="analysisSodium" type="number" min="0">
+              </label>
+              <label class="field">
+                <span data-i18n="label.mealType">Meal type</span>
+                <select id="analysisMealType">
+                  <option value="breakfast" data-i18n="option.breakfast">Breakfast</option>
+                  <option value="lunch" data-i18n="option.lunch">Lunch</option>
+                  <option value="dinner" data-i18n="option.dinner">Dinner</option>
+                  <option value="snack" data-i18n="option.snack">Snack</option>
+                </select>
+              </label>
+              <label class="field">
+                <span data-i18n="label.consumedAt">Consumed at</span>
+                <input id="analysisConsumedAt" type="datetime-local">
+              </label>
+            </div>
+
             <label class="field">
-              <span data-i18n="home.correctionHeading">Correct the AI identification</span>
-              <textarea id="reanalysisCorrections" rows="3" data-i18n-placeholder="home.correctionPlaceholder" placeholder="Example: this was grilled pork, not chicken"></textarea>
+              <span data-i18n="label.notes">Notes</span>
+              <textarea id="analysisNotes" rows="4"></textarea>
             </label>
-            <button type="button" id="reanalyzeButton" class="btn btn-secondary" data-i18n="button.rerunAnalysis">Re-run analysis</button>
+
+            <div class="button-row analysis-edit-actions">
+              <button type="button" id="saveAnalysisButton" class="btn btn-primary" data-i18n="button.saveChanges">Save changes</button>
+              <button type="button" id="resetAnalysisButton" class="btn btn-secondary" data-i18n="button.reset">Reset</button>
+              <button type="button" id="cancelAnalysisEditButton" class="btn btn-ghost" data-i18n="button.cancelEdit">Cancel edit</button>
+              <button type="button" id="deleteAnalysisButton" class="btn btn-danger" data-i18n="button.delete">Delete</button>
+            </div>
+
+            <div id="reanalysisBlock" class="subtle-panel" hidden>
+              <label class="field">
+                <span data-i18n="home.correctionHeading">Correct the AI identification</span>
+                <textarea id="reanalysisCorrections" rows="3" data-i18n-placeholder="home.correctionPlaceholder" placeholder="Example: this was grilled pork, not chicken"></textarea>
+              </label>
+              <button type="button" id="reanalyzeButton" class="btn btn-secondary" data-i18n="button.rerunAnalysis">Re-run analysis</button>
+            </div>
           </div>
 
           <p id="analysisStatus" class="status" hidden></p>
@@ -217,6 +230,6 @@
       </nav>
     </div>
 
-    <script type="module" src="home.js?v=20260403-1"></script>
+    <script type="module" src="home.js?v=20260403-2"></script>
   </body>
 </html>

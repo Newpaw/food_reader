@@ -17,7 +17,7 @@ import {
   showToast,
   t,
   toDateTimeInputValue,
-} from './common.js?v=20260403-1';
+} from './common.js?v=20260403-2';
 
 
 let currentMeal = null;
@@ -29,6 +29,7 @@ let isListening = false;
 let syncInProgress = false;
 let currentPreviewUrl = null;
 let photoSubmissionInProgress = false;
+let isAnalysisEditing = false;
 
 const MAX_UPLOAD_DIMENSION = 1600;
 const MAX_UPLOAD_BYTES = 1_800_000;
@@ -296,6 +297,48 @@ function buildTemplateFromMeal(meal, extra = {}) {
   };
 }
 
+function formatMetricValue(value, unit = '') {
+  const numeric = Number(value || 0);
+  const rounded = Number.isInteger(numeric) ? numeric : Math.round(numeric * 10) / 10;
+  return unit ? `${rounded} ${unit}` : `${rounded}`;
+}
+
+
+export function summarizeMealHighlight(meal) {
+  const calories = Number(meal?.calories || 0);
+  const protein = Number(meal?.protein || 0);
+  const fat = Number(meal?.fat || 0);
+  const carbs = Number(meal?.carbs || 0);
+  const fiber = Number(meal?.fiber || 0);
+
+  if (protein >= 35) {
+    return {
+      title: t('home.insightHighProteinTitle'),
+      body: t('home.insightHighProteinBody'),
+    };
+  }
+
+  if (fiber >= 8) {
+    return {
+      title: t('home.insightHighFiberTitle'),
+      body: t('home.insightHighFiberBody'),
+    };
+  }
+
+  if (calories >= 850 || (fat >= 30 && carbs >= 45)) {
+    return {
+      title: t('home.insightRichTitle'),
+      body: t('home.insightRichBody'),
+    };
+  }
+
+  return {
+    title: t('home.insightBalancedTitle'),
+    body: t('home.insightBalancedBody'),
+  };
+}
+
+
 function scrollToAnalysisPanel() {
   const panel = document.getElementById('analysisPanel');
   window.requestAnimationFrame(() => {
@@ -306,12 +349,105 @@ function scrollToAnalysisPanel() {
 }
 
 
+function scrollToCapturePanel() {
+  const panel = document.querySelector('.primary-capture-panel');
+  window.requestAnimationFrame(() => {
+    panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+
+function setAnalysisEditing(editing) {
+  isAnalysisEditing = editing;
+  const viewActions = document.getElementById('analysisViewActions');
+  const editPanel = document.getElementById('analysisEditPanel');
+
+  if (viewActions) {
+    viewActions.hidden = editing;
+  }
+  if (editPanel) {
+    editPanel.hidden = !editing;
+  }
+}
+
+
+function renderMealInsight(meal) {
+  const highlight = document.getElementById('analysisHighlight');
+  if (!highlight) {
+    return;
+  }
+
+  const insight = summarizeMealHighlight(meal);
+  highlight.hidden = false;
+  highlight.innerHTML = `
+    <p class="eyebrow">${insight.title}</p>
+    <p>${insight.body}</p>
+  `;
+}
+
+
+function renderMealSummary(meal) {
+  const primaryMetrics = document.getElementById('analysisPrimaryMetrics');
+  const detailRows = document.getElementById('analysisDetailRows');
+  const details = document.getElementById('analysisNutritionDetails');
+  if (!primaryMetrics || !detailRows || !details) {
+    return;
+  }
+
+  primaryMetrics.innerHTML = `
+    <article class="analysis-metric-card analysis-metric-card-featured">
+      <span>${t('label.calories')}</span>
+      <strong>${formatMetricValue(meal.calories)}</strong>
+      <small>kcal</small>
+    </article>
+    <article class="analysis-metric-card">
+      <span>${t('label.protein')}</span>
+      <strong>${formatMetricValue(meal.protein)}</strong>
+      <small>g</small>
+    </article>
+    <article class="analysis-metric-card">
+      <span>${t('label.carbs')}</span>
+      <strong>${formatMetricValue(meal.carbs)}</strong>
+      <small>g</small>
+    </article>
+    <article class="analysis-metric-card">
+      <span>${t('label.fat')}</span>
+      <strong>${formatMetricValue(meal.fat)}</strong>
+      <small>g</small>
+    </article>
+  `;
+
+  const secondaryRows = [
+    [t('label.fiber'), formatMetricValue(meal.fiber, 'g')],
+    [t('label.sugar'), formatMetricValue(meal.sugar, 'g')],
+    [t('label.sodium'), formatMetricValue(meal.sodium, 'mg')],
+    [t('label.mealType'), t(`option.${meal.meal_type}`)],
+    [t('label.notes'), meal.notes?.trim() || t('history.noNotes')],
+  ];
+
+  detailRows.innerHTML = secondaryRows
+    .map(
+      ([label, value]) => `
+        <div class="analysis-detail-row">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </div>
+      `,
+    )
+    .join('');
+  details.open = false;
+  renderMealInsight(meal);
+}
+
+
 function hideMealEditor() {
   currentMeal = null;
   originalMeal = null;
+  isAnalysisEditing = false;
   const panel = document.getElementById('analysisPanel');
   const status = document.getElementById('analysisStatus');
   const reanalysis = document.getElementById('reanalysisCorrections');
+  const details = document.getElementById('analysisNutritionDetails');
   if (panel) {
     panel.hidden = true;
   }
@@ -321,10 +457,14 @@ function hideMealEditor() {
   if (reanalysis) {
     reanalysis.value = '';
   }
+  if (details) {
+    details.open = false;
+  }
+  setAnalysisEditing(false);
 }
 
 
-function renderMealEditor(meal, { scroll = true } = {}) {
+function renderMealEditor(meal, { scroll = true, editing = false } = {}) {
   currentMeal = meal;
   originalMeal = { ...meal };
   const imageUrl = resolveAssetUrl(meal.image_url);
@@ -347,15 +487,19 @@ function renderMealEditor(meal, { scroll = true } = {}) {
 
   const preview = document.getElementById('analysisPreview');
   preview.innerHTML = `
-    <img src="${imageUrl}" alt="${mealName}" class="analysis-preview-image">
-    <div>
+    <div class="analysis-preview-media">
+      <img src="${imageUrl}" alt="${mealName}" class="analysis-preview-image">
+    </div>
+    <div class="analysis-preview-copy">
       <p class="eyebrow">${t('home.latestEntry')}</p>
-      <h3>${mealName}</h3>
-      <p>${formatDateTime(meal.consumed_at)}</p>
+      <h2>${mealName}</h2>
+      <p class="analysis-preview-meta">${formatDateTime(meal.consumed_at)}</p>
     </div>
   `;
 
+  renderMealSummary(meal);
   document.getElementById('reanalysisBlock').hidden = meal.image_url === '/assets/images/text-meal-placeholder.svg';
+  setAnalysisEditing(editing);
   if (scroll) {
     scrollToAnalysisPanel();
   }
@@ -888,9 +1032,34 @@ function saveCurrentMealAsTemplate() {
 
 function resetMealChanges() {
   if (originalMeal) {
-    renderMealEditor(originalMeal);
+    renderMealEditor(originalMeal, { scroll: false, editing: true });
     showStatus(document.getElementById('analysisStatus'), t('home.resetDone'), 'info');
   }
+}
+
+
+function startAnotherMeal() {
+  hideMealEditor();
+  showStatus(getCaptureStatus(), '', 'info');
+  scrollToCapturePanel();
+}
+
+
+function beginMealEditing() {
+  if (!currentMeal) {
+    return;
+  }
+
+  renderMealEditor(currentMeal, { scroll: false, editing: true });
+}
+
+
+function cancelMealEditing() {
+  if (!originalMeal) {
+    return;
+  }
+
+  renderMealEditor(originalMeal, { scroll: false, editing: false });
 }
 
 
@@ -1094,12 +1263,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('photoMealForm').addEventListener('submit', handlePhotoMealSubmit);
   document.getElementById('textMealForm').addEventListener('submit', handleTextMealSubmit);
+  document.getElementById('editAnalysisButton').addEventListener('click', beginMealEditing);
+  document.getElementById('addAnotherMealButton').addEventListener('click', startAnotherMeal);
   document.getElementById('saveAnalysisButton').addEventListener('click', handleSaveMealChanges);
   document.getElementById('saveTemplateButton').addEventListener('click', saveCurrentMealAsTemplate);
   document.getElementById('resetAnalysisButton').addEventListener('click', resetMealChanges);
+  document.getElementById('cancelAnalysisEditButton').addEventListener('click', cancelMealEditing);
   document.getElementById('deleteAnalysisButton').addEventListener('click', handleDeleteMeal);
   document.getElementById('reanalyzeButton').addEventListener('click', handleReanalyze);
   document.getElementById('syncQueueButton').addEventListener('click', syncPendingQueue);
+  document.querySelectorAll('[data-language-select]').forEach((control) => {
+    control.addEventListener('change', () => {
+      if (currentMeal) {
+        renderMealEditor(currentMeal, { scroll: false, editing: isAnalysisEditing });
+      }
+      refreshVoiceUi();
+    });
+  });
 
   window.addEventListener('food-reader:templateschange', () => {
     renderTemplates();

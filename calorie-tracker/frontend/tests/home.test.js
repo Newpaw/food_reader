@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildMealUpdatePayload, planPhotoOptimization, shouldPreferMobileCamera, summarizeTodayState } from '../home.js';
+import { buildMealUpdatePayload, planPhotoOptimization, shouldPreferMobileCamera, summarizeMealHighlight, summarizeTodayState } from '../home.js';
 
 
 describe('meal payload builder', () => {
@@ -101,5 +101,31 @@ describe('photo optimization plan', () => {
 
     expect(plan.shouldOptimize).toBe(true);
     expect(plan.shouldResize).toBe(false);
+  });
+});
+
+describe('meal highlight summary', () => {
+  it('calls out high protein meals first', () => {
+    const insight = summarizeMealHighlight({
+      calories: 680,
+      protein: 42,
+      fat: 22,
+      carbs: 40,
+      fiber: 6,
+    });
+
+    expect(insight.title).toBe('High-protein meal');
+  });
+
+  it('flags richer meals when fat and carbs both run high', () => {
+    const insight = summarizeMealHighlight({
+      calories: 910,
+      protein: 24,
+      fat: 38,
+      carbs: 62,
+      fiber: 4,
+    });
+
+    expect(insight.title).toBe('Rich, calorie-dense meal');
   });
 });

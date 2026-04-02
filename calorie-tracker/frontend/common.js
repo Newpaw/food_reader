@@ -49,6 +49,9 @@ const TRANSLATIONS = {
     'button.logAgain': 'Log again',
     'button.remove': 'Remove',
     'button.saveFavorite': 'Save as favorite',
+    'button.editMeal': 'Edit meal',
+    'button.addAnotherMeal': 'Add another meal',
+    'button.cancelEdit': 'Cancel edit',
     'button.startVoice': 'Start voice input',
     'button.stopVoice': 'Stop listening',
     'button.syncQueue': 'Sync queue',
@@ -147,8 +150,18 @@ const TRANSLATIONS = {
     'home.reviewEyebrow': 'Review',
     'home.reviewHeading': 'Adjust the nutrition draft',
     'home.latestEntry': 'Latest entry',
+    'home.moreDetailsHeading': 'More nutrition details',
+    'home.moreDetailsHint': 'Fiber, sugar, sodium, and meal context',
     'home.correctionHeading': 'Correct the AI identification',
     'home.correctionPlaceholder': 'Example: this was grilled pork, not chicken',
+    'home.insightHighProteinTitle': 'High-protein meal',
+    'home.insightHighProteinBody': 'Protein carries a strong share of this estimate, so it should keep you fuller than a lighter snack.',
+    'home.insightHighFiberTitle': 'Fiber-supportive meal',
+    'home.insightHighFiberBody': 'Fiber stands out here, which usually makes the meal feel steadier than fast calories alone.',
+    'home.insightRichTitle': 'Rich, calorie-dense meal',
+    'home.insightRichBody': 'Calories are likely being pushed up by the combination of fat and carbs.',
+    'home.insightBalancedTitle': 'Balanced estimate',
+    'home.insightBalancedBody': 'This looks like a moderate meal without one macro overwhelmingly dominating the total.',
     'home.templatesEmpty': 'Save a reviewed meal and it will appear here for one-tap logging.',
     'home.queueEmpty': 'Nothing is waiting to sync.',
     'home.queueHeading': 'Offline capture queue',
@@ -313,6 +326,9 @@ const TRANSLATIONS = {
     'button.logAgain': 'Zapsat znovu',
     'button.remove': 'Odstranit',
     'button.saveFavorite': 'Uložit do oblíbených',
+    'button.editMeal': 'Upravit jídlo',
+    'button.addAnotherMeal': 'Přidat další jídlo',
+    'button.cancelEdit': 'Zrušit úpravy',
     'button.startVoice': 'Spustit diktování',
     'button.stopVoice': 'Zastavit poslech',
     'button.syncQueue': 'Synchronizovat frontu',
@@ -411,8 +427,18 @@ const TRANSLATIONS = {
     'home.reviewEyebrow': 'Kontrola',
     'home.reviewHeading': 'Upravte návrh nutričních hodnot',
     'home.latestEntry': 'Poslední záznam',
+    'home.moreDetailsHeading': 'Další nutriční údaje',
+    'home.moreDetailsHint': 'Vláknina, cukr, sodík a kontext jídla',
     'home.correctionHeading': 'Opravte AI rozpoznání',
     'home.correctionPlaceholder': 'Například: bylo to grilované vepřové, ne kuře',
+    'home.insightHighProteinTitle': 'Jídlo s vyšším podílem bílkovin',
+    'home.insightHighProteinBody': 'Bílkoviny tvoří výraznou část odhadu, takže by jídlo mělo zasytit lépe než lehká svačina.',
+    'home.insightHighFiberTitle': 'Jídlo s dobrou vlákninou',
+    'home.insightHighFiberBody': 'Vláknina tu vystupuje nad průměr, takže by energie měla působit stabilněji.',
+    'home.insightRichTitle': 'Syté a kaloricky výrazné jídlo',
+    'home.insightRichBody': 'Kalorie tu pravděpodobně zvedá kombinace tuků a sacharidů.',
+    'home.insightBalancedTitle': 'Vyvážený odhad',
+    'home.insightBalancedBody': 'Tohle působí jako středně velké jídlo bez toho, aby jedno makro výrazně převažovalo.',
     'home.templatesEmpty': 'Uložte zkontrolované jídlo nebo produkt a objeví se zde pro jedno klepnutí.',
     'home.queueEmpty': 'Nic nečeká na synchronizaci.',
     'home.queueHeading': 'Offline fronta záznamů',
@@ -1061,7 +1087,7 @@ export async function registerServiceWorker() {
   }
 
   try {
-    await navigator.serviceWorker.register('/service-worker.js?v=20260403-1');
+    await navigator.serviceWorker.register('/service-worker.js?v=20260403-2');
   } catch (error) {
     console.error('Service worker registration failed:', error);
   }

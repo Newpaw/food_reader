@@ -1,4 +1,4 @@
-const CACHE_NAME = 'food-reader-v1';
+const CACHE_NAME = 'food-reader-v2';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -24,6 +24,16 @@ const APP_SHELL = [
 ];
 
 const API_PREFIXES = ['/auth', '/users', '/me', '/profile', '/uploads'];
+const NETWORK_FIRST_EXTENSIONS = /\.(?:html|css|js|webmanifest)$/;
+
+function shouldUseNetworkFirst(request, url) {
+  return request.mode === 'navigate' || NETWORK_FIRST_EXTENSIONS.test(url.pathname);
+}
+
+async function updateCache(cacheName, request, response) {
+  const cache = await caches.open(cacheName);
+  await cache.put(request, response.clone());
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -56,15 +66,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (request.mode === 'navigate') {
+  if (shouldUseNetworkFirst(request, url)) {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        .then(async (response) => {
+          await updateCache(CACHE_NAME, request, response);
           return response;
         })
-        .catch(async () => (await caches.match(request)) || caches.match('/offline.html')),
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) {
+            return cached;
+          }
+          return request.mode === 'navigate' ? caches.match('/offline.html') : Response.error();
+        }),
     );
     return;
   }
@@ -74,8 +89,7 @@ self.addEventListener('fetch', (event) => {
       (cached) =>
         cached ||
         fetch(request).then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          updateCache(CACHE_NAME, request, response);
           return response;
         }),
     ),

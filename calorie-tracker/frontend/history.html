@@ -1,916 +1,150 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Calorie Tracker - Meal History</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="View and manage your meal history with detailed nutritional information and filtering options">
-    <meta name="author" content="Calorie Tracker App">
-    <meta name="theme-color" content="#4CAF50">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Calorie Tracker - Meal History">
-    <meta property="og:description" content="View and manage your meal history with detailed nutritional information and filtering options">
-    <meta property="og:image" content="assets/favicon/apple-touch-icon.png">
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Calorie Tracker - Meal History">
-    <meta name="twitter:description" content="View and manage your meal history with detailed nutritional information and filtering options">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Reader | History</title>
+    <meta name="description" content="Browse, edit, and delete meal entries with a mobile-first history view grouped by day.">
+    <meta name="theme-color" content="#d96b3b">
     <link rel="stylesheet" href="styles.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
-    <link rel="manifest" href="assets/favicon/site.webmanifest">
-    <link rel="shortcut icon" href="assets/favicon/favicon.ico">
   </head>
-  <body>
-    <div class="navbar">
-      <div class="navbar-container">
-        <button class="navbar-toggle">☰</button>
-        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
-        <ul class="navbar-menu">
-          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
-          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
-          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
-          <li class="navbar-item navbar-user-menu-item">
-            <div class="navbar-user-section">
-              <span id="userName"></span>
-              <button id="logoutBtnMobile" class="btn btn-neutral btn-sm btn-outline">Logout</button>
-            </div>
-          </li>
-        </ul>
-        <div class="navbar-user-section navbar-user-desktop">
-          <span id="userName"></span>
-          <button id="logoutBtnDesktop" class="btn btn-neutral btn-sm btn-outline">Logout</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav">
-      <div class="mobile-bottom-nav-container">
-        <div class="mobile-nav-item">
-          <a href="index.html" class="mobile-nav-link">
-            <span class="mobile-nav-icon">➕</span>
-            <span class="mobile-nav-label">Add Meal</span>
+  <body data-page="history">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="index.html">
+            <span class="brand-mark">FR</span>
+            <span class="brand-copy">
+              <strong>Food Reader</strong>
+              <small>mobile nutrition log</small>
+            </span>
           </a>
-        </div>
-        <div class="mobile-nav-item">
-          <a href="history.html" class="mobile-nav-link active">
-            <span class="mobile-nav-icon">📋</span>
-            <span class="mobile-nav-label">History</span>
-          </a>
-        </div>
-        <div class="mobile-nav-item">
-          <a href="metrics.html" class="mobile-nav-link">
-            <span class="mobile-nav-icon">📊</span>
-            <span class="mobile-nav-label">Metrics</span>
-          </a>
-        </div>
-        <div class="mobile-nav-item">
-          <a href="#" class="mobile-nav-link" id="mobileLogoutBtn">
-            <span class="mobile-nav-icon">🚪</span>
-            <span class="mobile-nav-label">Logout</span>
-          </a>
-        </div>
-      </div>
-    </nav>
-
-    <div class="container">
-      <!-- Mobile Filter Toggle Button -->
-      <button id="mobileFilterToggle" class="mobile-filter-toggle" aria-label="Toggle Filters">
-        <span class="filter-icon">🔍</span>
-        <span class="filter-text">Filters</span>
-        <span class="filter-badge" id="filterBadge"></span>
-      </button>
-
-      <div class="card filter-card" id="filterCard">
-        <div class="filter-header">
-          <h2>Meal History</h2>
-          <button class="filter-close-btn" id="filterCloseBtn" aria-label="Close Filters">&times;</button>
-        </div>
-        
-        <div class="filter-content">
-          <div class="form-group">
-            <label for="dateRange" class="form-label">Date Range:</label>
-            <div class="filter-container">
-              <input type="date" id="fromDate" class="form-control">
-              <span>to</span>
-              <input type="date" id="toDate" class="form-control">
-              <button id="filterBtn" class="btn btn-primary">Apply Filters</button>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label">Quick Select:</label>
-            <div class="quick-select-container">
-              <button id="todayBtn" class="btn btn-secondary">Today</button>
-              <button id="lastWeekBtn" class="btn btn-secondary">Last 7 Days</button>
-              <button id="lastMonthBtn" class="btn btn-secondary">Last 30 Days</button>
-              <button id="thisMonthBtn" class="btn btn-secondary">This Month</button>
-            </div>
+          <nav class="desktop-nav" aria-label="Primary">
+            <a href="index.html" data-nav="add">Add Meal</a>
+            <a href="history.html" data-nav="history">History</a>
+            <a href="metrics.html" data-nav="metrics">Metrics</a>
+            <a href="profile.html" data-nav="profile">Profile</a>
+          </nav>
+          <div class="topbar-actions">
+            <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+            <span class="user-chip"><span data-user-greeting>You</span></span>
+            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
           </div>
         </div>
-      </div>
-      
-      <div class="card">
-        <div id="mealsList" class="mt-3">
-          <p>Loading meals...</p>
-        </div>
-      </div>
+      </header>
+
+      <main class="page">
+        <section class="page-hero">
+          <p class="eyebrow">History</p>
+          <h1>Review the full log, grouped in a way that still works on a phone.</h1>
+          <p>Filter a date range, spot outliers quickly, and adjust entries without leaving the history screen.</p>
+        </section>
+
+        <section class="panel">
+          <form id="historyFilters" class="filter-grid">
+            <label class="field">
+              <span>From</span>
+              <input id="historyFrom" type="date" required>
+            </label>
+            <label class="field">
+              <span>To</span>
+              <input id="historyTo" type="date" required>
+            </label>
+            <button type="submit" class="btn btn-primary">Apply range</button>
+          </form>
+          <div class="button-row quick-row">
+            <button type="button" class="btn btn-secondary btn-small" data-days="0">Today</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="6">Last 7 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="29">Last 30 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="89">Last 90 days</button>
+          </div>
+          <p id="historyStatus" class="status" hidden></p>
+        </section>
+
+        <section id="historySummary" class="stat-grid"></section>
+        <section id="historyList" class="stack"></section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Mobile">
+        <a href="index.html" data-nav="add">Add</a>
+        <a href="history.html" data-nav="history">History</a>
+        <a href="metrics.html" data-nav="metrics">Metrics</a>
+        <a href="profile.html" data-nav="profile">Profile</a>
+      </nav>
     </div>
 
-    <!-- Meal Detail Modal -->
-    <div id="mealModal" class="modal">
-      <div class="modal-content">
-        <button id="closeModal" class="modal-close">&times;</button>
-        <div id="mealModalContent"></div>
-      </div>
-    </div>
+    <div id="mealModal" class="modal" hidden>
+      <div class="modal-card">
+        <button id="closeMealModal" class="modal-close" type="button" aria-label="Close meal details">×</button>
+        <div id="mealModalBody" class="stack">
+          <img id="modalMealImage" class="modal-image" alt="Meal preview">
+          <div>
+            <h2 id="modalMealTitle"></h2>
+            <p id="modalMealMeta" class="panel-note"></p>
+          </div>
+          <p id="modalMealNotes"></p>
+          <button id="openMealEdit" type="button" class="btn btn-secondary">Edit meal</button>
+        </div>
 
-    <!-- Edit Meal Modal -->
-    <div id="editMealModal" class="modal">
-      <div class="modal-content">
-        <button id="closeEditModal" class="modal-close">&times;</button>
-        <h3>Edit Meal</h3>
-        <form id="editMealForm">
-          <input type="hidden" id="editMealId">
-          
-          <div class="form-group">
-            <label for="editMealType" class="form-label">Meal Type</label>
-            <select id="editMealType" class="form-control" required>
-              <option value="breakfast">Breakfast</option>
-              <option value="lunch">Lunch</option>
-              <option value="dinner">Dinner</option>
-              <option value="snack">Snack</option>
-            </select>
+        <form id="mealEditForm" class="stack" hidden>
+          <div class="form-grid">
+            <label class="field">
+              <span>Meal type</span>
+              <select id="editMealType" name="mealType">
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+                <option value="snack">Snack</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Calories</span>
+              <input id="editCalories" name="calories" type="number" min="0" required>
+            </label>
+            <label class="field">
+              <span>Protein</span>
+              <input id="editProtein" name="protein" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Fat</span>
+              <input id="editFat" name="fat" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Carbs</span>
+              <input id="editCarbs" name="carbs" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Fiber</span>
+              <input id="editFiber" name="fiber" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Sugar</span>
+              <input id="editSugar" name="sugar" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Sodium</span>
+              <input id="editSodium" name="sodium" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Consumed at</span>
+              <input id="editConsumedAt" name="consumedAt" type="datetime-local" required>
+            </label>
           </div>
-          
-          <div class="form-group">
-            <label for="editCalories" class="form-label">Calories</label>
-            <input type="number" id="editCalories" class="form-control" required min="0">
-          </div>
-          
-          <div class="form-group">
-            <label for="editConsumedAt" class="form-label">Consumed At</label>
-            <input type="datetime-local" id="editConsumedAt" class="form-control" required>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group col-md-4">
-              <label for="editProtein" class="form-label">Protein (g)</label>
-              <input type="number" id="editProtein" class="form-control" min="0">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="editFat" class="form-label">Fat (g)</label>
-              <input type="number" id="editFat" class="form-control" min="0">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="editCarbs" class="form-label">Carbs (g)</label>
-              <input type="number" id="editCarbs" class="form-control" min="0">
-            </div>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group col-md-4">
-              <label for="editFiber" class="form-label">Fiber (g)</label>
-              <input type="number" id="editFiber" class="form-control" min="0">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="editSugar" class="form-label">Sugar (g)</label>
-              <input type="number" id="editSugar" class="form-control" min="0">
-            </div>
-            <div class="form-group col-md-4">
-              <label for="editSodium" class="form-label">Sodium (mg)</label>
-              <input type="number" id="editSodium" class="form-control" min="0">
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label for="editNotes" class="form-label">Notes</label>
-            <textarea id="editNotes" class="form-control" rows="3"></textarea>
-          </div>
-          
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-            <button type="button" id="cancelEdit" class="btn btn-secondary">Cancel</button>
-          </div>
-          
-          <div id="editMealMessage" class="mt-3"></div>
+          <label class="field">
+            <span>Notes</span>
+            <textarea id="editNotes" name="notes" rows="4"></textarea>
+          </label>
+          <button type="submit" class="btn btn-primary">Save meal</button>
         </form>
-      </div>
-    </div>
-    
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteConfirmModal" class="modal">
-      <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <h3>Confirm Deletion</h3>
-        <p>Are you sure you want to delete this meal? This action cannot be undone.</p>
-        <input type="hidden" id="deleteMealId">
-        <div class="mt-3">
-          <button id="confirmDelete" class="btn btn-danger">Delete</button>
-          <button id="cancelDelete" class="btn btn-secondary">Cancel</button>
-        </div>
+
+        <p id="mealModalStatus" class="status" hidden></p>
       </div>
     </div>
 
-    <script src="common.js"></script>
-    <!-- Removed custom date formatting functions to use the standardized ones from common.js -->
-    <script>
-      // Mobile Filter Toggle Functionality
-      function initializeFilterToggle() {
-        const filterToggle = document.getElementById('mobileFilterToggle');
-        const filterCard = document.getElementById('filterCard');
-        const filterCloseBtn = document.getElementById('filterCloseBtn');
-        const filterBadge = document.getElementById('filterBadge');
-        
-        if (filterToggle && filterCard) {
-          // Toggle filter panel
-          filterToggle.addEventListener('click', () => {
-            filterCard.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
-          });
-          
-          // Close filter panel
-          const closeFilter = () => {
-            filterCard.classList.remove('active');
-            document.body.style.overflow = ''; // Restore scrolling
-          };
-          
-          if (filterCloseBtn) {
-            filterCloseBtn.addEventListener('click', closeFilter);
-          }
-          
-          // Close on backdrop click
-          filterCard.addEventListener('click', (e) => {
-            if (e.target === filterCard) {
-              closeFilter();
-            }
-          });
-          
-          // Update filter badge when dates change
-          const updateFilterBadge = () => {
-            const fromDate = document.getElementById('fromDate').value;
-            const toDate = document.getElementById('toDate').value;
-            const today = new Date().toISOString().split('T')[0];
-            
-            // Show badge if not filtering by today
-            if (fromDate !== today || toDate !== today) {
-              filterBadge.textContent = '●';
-            } else {
-              filterBadge.textContent = '';
-            }
-          };
-          
-          document.getElementById('fromDate').addEventListener('change', updateFilterBadge);
-          document.getElementById('toDate').addEventListener('change', updateFilterBadge);
-          
-          // Close filter after filter button is clicked
-          const filterBtn = document.getElementById('filterBtn');
-          if (filterBtn) {
-            filterBtn.addEventListener('click', () => {
-              setTimeout(closeFilter, 300); // Small delay for better UX
-            });
-          }
-          
-          // Close filter after quick select buttons
-          ['todayBtn', 'lastWeekBtn', 'lastMonthBtn', 'thisMonthBtn'].forEach(btnId => {
-            const btn = document.getElementById(btnId);
-            if (btn) {
-              btn.addEventListener('click', () => {
-                setTimeout(closeFilter, 300);
-              });
-            }
-          });
-        }
-      }
-      
-      // Initialize date filters with today's date only and automatically load data
-      document.addEventListener('DOMContentLoaded', () => {
-        // Initialize filter toggle functionality
-        initializeFilterToggle();
-        
-        // Bypass auth check for testing
-        // if (!checkAuth()) return;
-        
-        const today = new Date();
-        
-        // Set both from and to dates to today for default filtering
-        document.getElementById('fromDate').value = today.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        console.log(`DEBUG: Initialized history page with today's date: ${today.toISOString().split('T')[0]}`);
-        
-        // Automatically load meals with today's date filter
-        if (typeof API !== 'undefined') {  // Check if we're in a real environment, not testing
-          console.log("DEBUG: Automatically loading meals with today's date filter");
-          loadMeals();
-        } else {
-          console.log("DEBUG: In testing mode, using mock data");
-          
-          // Mobile logout button handler
-          const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-          if (mobileLogoutBtn) {
-            mobileLogoutBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              logout();
-            });
-          }
-          
-          // Mock data for testing
-          const mockMeals = [
-            {
-              id: 1,
-              meal_type: "breakfast",
-              calories: 450,
-              consumed_at: "2025-10-10T08:30:00Z",
-              protein: 20,
-              fat: 15,
-              carbs: 60,
-              image_url: "assets/images/text-meal-placeholder.svg",
-              notes: "AI Analysis: Oatmeal with fruits"
-            },
-            {
-              id: 2,
-              meal_type: "lunch",
-              calories: 650,
-              consumed_at: "2025-10-10T12:30:00Z",
-              protein: 35,
-              fat: 25,
-              carbs: 70,
-              image_url: "assets/images/text-meal-placeholder.svg",
-              notes: "AI Analysis: Chicken salad"
-            }
-          ];
-          
-          displayMeals(mockMeals);
-        }
-      });
-      
-      // Load meals with optional date filtering
-      async function loadMeals() {
-        console.log("DEBUG: Loading meals with date filtering");
-        const fromDate = document.getElementById('fromDate').value;
-        const toDate = document.getElementById('toDate').value;
-        
-        console.log(`DEBUG: Date range selected - from: ${fromDate}, to: ${toDate}`);
-        
-        let url = `${API.meals}?limit=50`;
-        // Convert local dates to UTC for API
-        if (fromDate) {
-          const fromUTC = new Date(`${fromDate}T00:00:00`).toISOString();
-          url += `&frm=${fromUTC}`;
-          console.log(`DEBUG: From date converted to UTC: ${fromUTC}`);
-        }
-        if (toDate) {
-          const toUTC = new Date(`${toDate}T23:59:59`).toISOString();
-          url += `&to=${toUTC}`;
-          console.log(`DEBUG: To date converted to UTC: ${toUTC}`);
-        }
-        
-        console.log(`DEBUG: Fetching meals from URL: ${url}`);
-        
-        try {
-          const response = await fetch(url, {
-            headers: authHeaders()
-          });
-          
-          console.log(`DEBUG: API response status: ${response.status}`);
-          
-          if (!response.ok) {
-            if (response.status === 401) {
-              console.log("DEBUG: Authentication failed, logging out");
-              logout();
-              return;
-            }
-            throw new Error('Failed to load meals');
-          }
-          
-          const meals = await response.json();
-          console.log(`DEBUG: Received ${meals.length} meals from API`);
-          
-          // Log meal IDs for debugging
-          if (meals.length > 0) {
-            console.log("DEBUG: Meal IDs received:", meals.map(m => m.id).join(", "));
-          }
-          
-          displayMeals(meals);
-        } catch (error) {
-          console.error('Error loading meals:', error);
-          document.getElementById('mealsList').innerHTML = `
-            <p class="text-danger">Error loading meals: ${error.message}</p>
-          `;
-        }
-      }
-      
-      // Display meals in a grid layout
-      function displayMeals(meals) {
-        const mealsListEl = document.getElementById('mealsList');
-        
-        console.log(`DEBUG: Displaying ${meals.length} meals`);
-        
-        if (meals.length === 0) {
-          mealsListEl.innerHTML = '<p>No meals found for the selected period.</p>';
-          return;
-        }
-        
-        // Track which meal IDs we've seen to avoid duplicates
-        const processedMealIds = new Set();
-        
-        // Group meals by date (in local timezone)
-        const mealsByDate = {};
-        
-        meals.forEach(meal => {
-          // Skip if this meal ID has already been processed or is null/undefined
-          if (!meal.id || processedMealIds.has(meal.id)) {
-            console.log(`DEBUG: Skipping duplicate or invalid meal ID: ${meal.id}`);
-            return;
-          }
-          
-          // Mark this meal ID as processed
-          processedMealIds.add(meal.id);
-          
-          const localDate = utcToLocal(meal.consumed_at);
-          // Use ISO date format (YYYY-MM-DD) as key for reliable parsing across locales
-          const year = localDate.getFullYear();
-          const month = String(localDate.getMonth() + 1).padStart(2, '0');
-          const day = String(localDate.getDate()).padStart(2, '0');
-          const date = `${year}-${month}-${day}`;
-          if (!mealsByDate[date]) {
-            mealsByDate[date] = [];
-          }
-          mealsByDate[date].push(meal);
-        });
-        // Sort dates in descending order
-        const sortedDates = Object.keys(mealsByDate).sort((a, b) => 
-          new Date(b) - new Date(a)
-        );
-        
-        let html = '';
-        
-        sortedDates.forEach(date => {
-          // Parse ISO date string (YYYY-MM-DD) which works reliably
-          const formattedDate = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
-          
-          html += `
-            <div class="date-group mb-4">
-              <h3 class="mb-2">${formattedDate}</h3>
-              <div class="meal-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
-          `;
-          
-          mealsByDate[date].forEach(meal => {
-            // Use formatTimeShort from common.js to display only time without timezone
-            const mealTime = formatTimeShort(meal.consumed_at);
-            
-            html += `
-              <div class="meal-item" data-meal-id="${meal.id}">
-                <div class="meal-image-container" style="position: relative;">
-                  <img src="${meal.image_url}" alt="${meal.meal_type}" style="width: 100%; height: 150px; object-fit: cover; cursor: pointer;" class="view-meal-details" onerror="this.src='/assets/images/text-meal-placeholder.svg'">
-                  <div class="meal-actions" style="position: absolute; top: 5px; right: 5px; display: flex; gap: 5px;">
-                    <button class="edit-meal-btn btn-icon" data-meal-id="${meal.id}" style="background-color: var(--primary-color); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                      <span style="font-size: 14px;">✏️</span>
-                    </button>
-                    <button class="delete-meal-btn btn-icon" data-meal-id="${meal.id}" style="background-color: var(--danger-color); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                      <span style="font-size: 14px;">🗑️</span>
-                    </button>
-                  </div>
-                </div>
-                <div class="meal-info p-2">
-                  <h4>${meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1)}</h4>
-                  <p>${mealTime} - ${meal.calories} calories</p>
-                  <div class="nutrition-bar-container" style="width: 100%; background-color: #eee; border-radius: 10px; height: 10px; overflow: hidden; margin-top: 5px;">
-                    <div class="nutrition-bar" style="width: ${Math.min(100, meal.calories / 20)}%; height: 100%; background-color: var(--primary-color);"></div>
-                  </div>
-                </div>
-              </div>
-            `;
-          });
-          
-          html += `
-              </div>
-            </div>
-          `;
-        });
-        
-        mealsListEl.innerHTML = html;
-        
-        // Add click event listeners to meal items
-        document.querySelectorAll('.view-meal-details').forEach(item => {
-          item.addEventListener('click', () => {
-            const mealId = item.closest('.meal-item').getAttribute('data-meal-id');
-            const meal = meals.find(m => m.id == mealId);
-            if (meal) {
-              showMealDetails(meal);
-            }
-          });
-        });
-        
-        // Add click event listeners to edit buttons
-        document.querySelectorAll('.edit-meal-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent triggering the meal item click
-            const mealId = btn.getAttribute('data-meal-id');
-            const meal = meals.find(m => m.id == mealId);
-            if (meal) {
-              showEditMealForm(meal);
-            }
-          });
-        });
-        
-        // Add click event listeners to delete buttons
-        document.querySelectorAll('.delete-meal-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent triggering the meal item click
-            const mealId = btn.getAttribute('data-meal-id');
-            const meal = meals.find(m => m.id == mealId);
-            if (meal) {
-              showDeleteConfirmation(meal);
-            }
-          });
-        });
-      }
-      
-      // Show meal details in modal
-      function showMealDetails(meal) {
-        const modal = document.getElementById('mealModal');
-        const modalContent = document.getElementById('mealModalContent');
-        
-        const consumedAt = utcToLocal(meal.consumed_at);
-        const formattedDate = consumedAt.toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-        // Use formatTime from common.js to display time with timezone
-        const formattedTime = formatTime(meal.consumed_at);
-        
-        // Extract food name from notes if available
-        let foodName = meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1);
-        if (meal.notes && meal.notes.includes('AI Analysis:')) {
-          const match = meal.notes.match(/AI Analysis: (.+?)($|\n)/);
-          if (match && match[1]) {
-            foodName = match[1];
-          }
-        }
-        
-        modalContent.innerHTML = `
-          <h3>${foodName}</h3>
-          <p><strong>Date:</strong> ${formattedDate}</p>
-          <p><strong>Time:</strong> ${formattedTime}</p>
-          <div class="text-center mb-3">
-            <img src="${meal.image_url}" alt="${meal.meal_type}" style="max-width: 100%; max-height: 300px; object-fit: contain;" onerror="this.src='/assets/images/text-meal-placeholder.svg'">
-          </div>
-          
-          <h4>Nutritional Information</h4>
-          <div class="nutrition-grid mb-3">
-            <div class="nutrition-card">
-              <div class="value">${meal.calories}</div>
-              <div class="label">Calories</div>
-            </div>
-            <div class="nutrition-card">
-              <div class="value">${meal.protein || 0}</div>
-              <div class="label">Protein (g)</div>
-            </div>
-            <div class="nutrition-card">
-              <div class="value">${meal.fat || 0}</div>
-              <div class="label">Fat (g)</div>
-            </div>
-            <div class="nutrition-card">
-              <div class="value">${meal.carbs || 0}</div>
-              <div class="label">Carbs (g)</div>
-            </div>
-          </div>
-          
-          <div class="nutrition-grid mb-3">
-            <div class="nutrition-card">
-              <div class="value">${meal.fiber || 0}</div>
-              <div class="label">Fiber (g)</div>
-            </div>
-            <div class="nutrition-card">
-              <div class="value">${meal.sugar || 0}</div>
-              <div class="label">Sugar (g)</div>
-            </div>
-            <div class="nutrition-card">
-              <div class="value">${meal.sodium || 0}</div>
-              <div class="label">Sodium (mg)</div>
-            </div>
-          </div>
-          
-          ${meal.notes ? `
-            <h4>Notes</h4>
-            <p>${meal.notes.replace('AI Analysis: ', '')}</p>
-          ` : ''}
-          
-          <div class="mt-4 text-center">
-            <button class="btn btn-primary edit-meal-modal-btn" data-meal-id="${meal.id}">Edit Meal</button>
-            <button class="btn btn-danger delete-meal-modal-btn" data-meal-id="${meal.id}">Delete Meal</button>
-          </div>
-        `;
-        
-        modal.style.display = 'block';
-        
-        // Add event listeners to the modal buttons
-        document.querySelector('.edit-meal-modal-btn').addEventListener('click', () => {
-          document.getElementById('mealModal').style.display = 'none';
-          showEditMealForm(meal);
-        });
-        
-        document.querySelector('.delete-meal-modal-btn').addEventListener('click', () => {
-          document.getElementById('mealModal').style.display = 'none';
-          showDeleteConfirmation(meal);
-        });
-      }
-      
-      // Close modal when clicking the close button
-      document.getElementById('closeModal').addEventListener('click', () => {
-        document.getElementById('mealModal').style.display = 'none';
-      });
-      
-      // Close modal when clicking outside the content
-      document.getElementById('mealModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('mealModal')) {
-          document.getElementById('mealModal').style.display = 'none';
-        }
-      });
-      
-      // Filter button click handler
-      document.getElementById('filterBtn').addEventListener('click', loadMeals);
-      
-      // Show edit meal form
-      function showEditMealForm(meal) {
-        // Populate form with meal data
-        document.getElementById('editMealId').value = meal.id;
-        document.getElementById('editMealType').value = meal.meal_type;
-        document.getElementById('editCalories').value = meal.calories;
-        document.getElementById('editProtein').value = meal.protein || 0;
-        document.getElementById('editFat').value = meal.fat || 0;
-        document.getElementById('editCarbs').value = meal.carbs || 0;
-        document.getElementById('editFiber').value = meal.fiber || 0;
-        document.getElementById('editSugar').value = meal.sugar || 0;
-        document.getElementById('editSodium').value = meal.sodium || 0;
-        
-        // Format datetime for the input (in local timezone)
-        document.getElementById('editConsumedAt').value = formatDateForInput(meal.consumed_at);
-        
-        // Set notes
-        document.getElementById('editNotes').value = meal.notes || '';
-        
-        // Clear any previous messages
-        document.getElementById('editMealMessage').textContent = '';
-        
-        // Show the modal
-        document.getElementById('editMealModal').style.display = 'block';
-      }
-      
-      // Show delete confirmation
-      function showDeleteConfirmation(meal) {
-        document.getElementById('deleteMealId').value = meal.id;
-        document.getElementById('deleteConfirmModal').style.display = 'block';
-      }
-      
-      // Delete meal
-      async function deleteMeal(mealId) {
-        console.log(`DEBUG: Attempting to delete meal with ID: ${mealId}`);
-        try {
-          const url = `${API.meals}/${mealId}`;
-          console.log(`DEBUG: Sending DELETE request to: ${url}`);
-          
-          const response = await fetch(url, {
-            method: 'DELETE',
-            headers: authHeaders()
-          });
-          
-          console.log(`DEBUG: Delete response status: ${response.status}`);
-          
-          if (!response.ok) {
-            if (response.status === 401) {
-              console.log("DEBUG: Authentication failed during delete, logging out");
-              logout();
-              return false;
-            }
-            throw new Error(`Failed to delete meal: ${response.status}`);
-          }
-          
-          console.log(`DEBUG: Meal successfully deleted: ${mealId}`);
-          return true;
-        } catch (error) {
-          console.error('Error deleting meal:', error);
-          console.log(`DEBUG: Delete error details: ${error.message}`);
-          return false;
-        }
-      }
-      
-      // Update meal
-      async function updateMeal(mealId, mealData) {
-        try {
-          // Convert local datetime to UTC for the API
-          if (mealData.consumed_at) {
-            mealData.consumed_at = localToUTC(new Date(mealData.consumed_at));
-          }
-          
-          const response = await fetch(`${API.meals}/${mealId}`, {
-            method: 'PUT',
-            headers: {
-              ...authHeaders(),
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(mealData)
-          });
-          
-          if (!response.ok) {
-            if (response.status === 401) {
-              logout();
-              return null;
-            }
-            throw new Error(`Failed to update meal: ${response.status}`);
-          }
-          
-          return await response.json();
-        } catch (error) {
-          console.error('Error updating meal:', error);
-          return null;
-        }
-      }
-      
-      // Event listeners for edit meal form
-      document.getElementById('editMealForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const mealId = document.getElementById('editMealId').value;
-        const mealData = {
-          meal_type: document.getElementById('editMealType').value,
-          calories: parseInt(document.getElementById('editCalories').value),
-          protein: parseInt(document.getElementById('editProtein').value),
-          fat: parseInt(document.getElementById('editFat').value),
-          carbs: parseInt(document.getElementById('editCarbs').value),
-          fiber: parseInt(document.getElementById('editFiber').value),
-          sugar: parseInt(document.getElementById('editSugar').value),
-          sodium: parseInt(document.getElementById('editSodium').value),
-          consumed_at: document.getElementById('editConsumedAt').value,
-          notes: document.getElementById('editNotes').value
-        };
-        
-        const messageEl = document.getElementById('editMealMessage');
-        messageEl.textContent = 'Updating meal...';
-        
-        const updatedMeal = await updateMeal(mealId, mealData);
-        
-        if (updatedMeal) {
-          messageEl.textContent = 'Meal updated successfully!';
-          messageEl.style.color = 'var(--success-color)';
-          
-          // Reload meals after a short delay
-          setTimeout(() => {
-            document.getElementById('editMealModal').style.display = 'none';
-            loadMeals();
-          }, 1500);
-        } else {
-          messageEl.textContent = 'Failed to update meal. Please try again.';
-          messageEl.style.color = 'var(--danger-color)';
-        }
-      });
-      
-      // Cancel edit button
-      document.getElementById('cancelEdit').addEventListener('click', () => {
-        document.getElementById('editMealModal').style.display = 'none';
-      });
-      
-      // Close edit modal when clicking the close button
-      document.getElementById('closeEditModal').addEventListener('click', () => {
-        document.getElementById('editMealModal').style.display = 'none';
-      });
-      
-      // Close edit modal when clicking outside the content
-      document.getElementById('editMealModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('editMealModal')) {
-          document.getElementById('editMealModal').style.display = 'none';
-        }
-      });
-      
-      // Confirm delete button
-      document.getElementById('confirmDelete').addEventListener('click', async () => {
-        const mealId = document.getElementById('deleteMealId').value;
-        console.log(`DEBUG: Confirming deletion of meal ID: ${mealId}`);
-        
-        const success = await deleteMeal(mealId);
-        
-        if (success) {
-          console.log(`DEBUG: Deletion confirmed successful for meal ID: ${mealId}`);
-          document.getElementById('deleteConfirmModal').style.display = 'none';
-          
-          // Immediately remove the deleted meal from the UI
-          const deletedItem = document.querySelector(`.meal-item[data-meal-id="${mealId}"]`);
-          if (deletedItem) {
-            console.log(`DEBUG: Removing meal ID ${mealId} from UI`);
-            
-            // Check if this is the last meal in its date group
-            const dateGroup = deletedItem.closest('.date-group');
-            const remainingMeals = dateGroup.querySelectorAll('.meal-item');
-            
-            if (remainingMeals.length <= 1) {
-              // This is the last meal in the date group, remove the entire group
-              console.log(`DEBUG: Removing entire date group as this was the last meal`);
-              dateGroup.remove();
-            } else {
-              // Just remove this meal item
-              deletedItem.remove();
-            }
-            
-            // Show a temporary success message
-            const mealsListEl = document.getElementById('mealsList');
-            if (mealsListEl.children.length === 0) {
-              mealsListEl.innerHTML = '<p>No meals found for the selected period.</p>';
-            } else {
-              // Add a success message that will fade out
-              const successMsg = document.createElement('div');
-              successMsg.className = 'alert alert-success';
-              successMsg.textContent = 'Meal deleted successfully!';
-              successMsg.style.position = 'fixed';
-              successMsg.style.top = '20px';
-              successMsg.style.right = '20px';
-              successMsg.style.zIndex = '1000';
-              document.body.appendChild(successMsg);
-              
-              // Remove the message after 3 seconds
-              setTimeout(() => {
-                successMsg.style.opacity = '0';
-                successMsg.style.transition = 'opacity 0.5s';
-                setTimeout(() => successMsg.remove(), 500);
-              }, 3000);
-            }
-          } else {
-            console.log(`DEBUG: Could not find meal ID ${mealId} in the UI`);
-            // Reload meals as fallback
-            loadMeals();
-          }
-        } else {
-          console.log(`DEBUG: Deletion failed for meal ID: ${mealId}`);
-          alert('Failed to delete meal. Please try again.');
-        }
-      });
-      
-      // Cancel delete button
-      document.getElementById('cancelDelete').addEventListener('click', () => {
-        document.getElementById('deleteConfirmModal').style.display = 'none';
-      });
-      
-      // Close delete modal when clicking outside the content
-      document.getElementById('deleteConfirmModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('deleteConfirmModal')) {
-          document.getElementById('deleteConfirmModal').style.display = 'none';
-        }
-      });
-      
-      // Date range quick select buttons
-      document.getElementById('todayBtn').addEventListener('click', () => {
-        const today = new Date();
-        
-        document.getElementById('fromDate').value = today.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMeals();
-      });
-      
-      document.getElementById('lastWeekBtn').addEventListener('click', () => {
-        const today = new Date();
-        const lastWeek = new Date(today);
-        lastWeek.setDate(today.getDate() - 7);
-        
-        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMeals();
-      });
-      
-      document.getElementById('lastMonthBtn').addEventListener('click', () => {
-        const today = new Date();
-        const lastMonth = new Date(today);
-        lastMonth.setDate(today.getDate() - 30);
-        
-        document.getElementById('fromDate').value = lastMonth.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMeals();
-      });
-      
-      document.getElementById('thisMonthBtn').addEventListener('click', () => {
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        
-        document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMeals();
-      });
-    </script>
+    <script type="module" src="history.js"></script>
   </body>
 </html>

@@ -1,167 +1,89 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Calorie Tracker - Login</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Sign in or register for Calorie Tracker to monitor your nutrition with AI-powered insights">
-    <meta name="author" content="Calorie Tracker App">
-    <meta name="theme-color" content="#4CAF50">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Calorie Tracker - Login">
-    <meta property="og:description" content="Sign in or register for Calorie Tracker to monitor your nutrition with AI-powered insights">
-    <meta property="og:image" content="assets/favicon/apple-touch-icon.png">
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Calorie Tracker - Login">
-    <meta name="twitter:description" content="Sign in or register for Calorie Tracker to monitor your nutrition with AI-powered insights">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Reader | Sign In</title>
+    <meta name="description" content="Sign in to Food Reader and install the mobile-friendly calorie tracking app on your device.">
+    <meta name="theme-color" content="#d96b3b">
     <link rel="stylesheet" href="styles.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
-    <link rel="manifest" href="assets/favicon/site.webmanifest">
-    <link rel="shortcut icon" href="assets/favicon/favicon.ico">
   </head>
-  <body>
-    <div class="navbar">
-      <div class="navbar-container">
-        <button class="navbar-toggle" style="visibility: hidden;">☰</button>
-        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
-      </div>
-    </div>
-    
-    <!-- Mobile Bottom Navigation for Login Page -->
-    <nav class="mobile-bottom-nav">
-      <div class="mobile-bottom-nav-container">
-        <div class="mobile-nav-item">
-          <a href="#" class="mobile-nav-link" onclick="return false;">
-            <span class="mobile-nav-icon">🔐</span>
-            <span class="mobile-nav-label">Login</span>
+  <body data-page="login">
+    <div class="auth-shell">
+      <header class="topbar auth-topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="login.html">
+            <span class="brand-mark">FR</span>
+            <span class="brand-copy">
+              <strong>Food Reader</strong>
+              <small>mobile nutrition log</small>
+            </span>
           </a>
+          <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
         </div>
-      </div>
-    </nav>
-    
-    <div class="container">
-      <div class="login-container" style="display: flex; flex-direction: column; align-items: center; margin-top: 2rem;">
-        <div style="text-align: center; margin-bottom: 2rem;">
-          <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;">
-            <span style="color: white; font-size: 2rem;">CT</span>
-          </div>
-          <h1 style="margin-bottom: 0.5rem;">Calorie Tracker</h1>
-          <p style="color: rgba(255, 255, 255, 0.7);">Track your nutrition with AI-powered insights</p>
+      </header>
+
+      <main class="auth-page">
+        <section class="page-hero auth-hero">
+          <p class="eyebrow">Built for real phones</p>
+          <h1>Track meals fast, then install the app and keep it on your home screen.</h1>
+          <p>The interface is tuned for quick one-handed logging, clear review states, and clean historical reporting.</p>
+        </section>
+
+        <div class="auth-grid">
+          <section class="panel auth-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Welcome back</p>
+                <h2>Sign in</h2>
+              </div>
+            </div>
+            <form id="loginForm" class="stack">
+              <label class="field">
+                <span>Email</span>
+                <input type="email" name="email" required autocomplete="email">
+              </label>
+              <label class="field">
+                <span>Password</span>
+                <input type="password" name="password" required autocomplete="current-password">
+              </label>
+              <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+            </form>
+            <p id="loginStatus" class="status" hidden></p>
+          </section>
+
+          <section class="panel auth-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">New account</p>
+                <h2>Create access</h2>
+              </div>
+            </div>
+            <form id="registerForm" class="stack">
+              <label class="field">
+                <span>Name</span>
+                <input type="text" name="name" required autocomplete="name">
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input type="email" name="email" required autocomplete="email">
+              </label>
+              <label class="field">
+                <span>Password</span>
+                <input type="password" name="password" required minlength="6" autocomplete="new-password">
+              </label>
+              <button type="submit" class="btn btn-secondary btn-block">Create account</button>
+            </form>
+            <p id="registerStatus" class="status" hidden></p>
+          </section>
         </div>
-      </div>
-      
-      <div class="card" style="max-width: 500px; margin: 0 auto;">
-        <h2>Login</h2>
-        <form id="loginForm">
-          <div class="form-group">
-            <label for="loginEmail" class="form-label">Email</label>
-            <input id="loginEmail" type="email" class="form-control" placeholder="Enter your email" required />
-          </div>
-          <div class="form-group">
-            <label for="loginPassword" class="form-label">Password</label>
-            <input id="loginPassword" type="password" class="form-control" placeholder="Enter your password" required />
-          </div>
-          <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Sign in</button>
-        </form>
-        <p id="loginMessage" class="text-danger mt-2"></p>
-      </div>
-      
-      <div class="card" style="max-width: 500px; margin: 2rem auto 0;">
-        <h2>Register</h2>
-        <form id="registerForm">
-          <div class="form-group">
-            <label for="registerName" class="form-label">Name</label>
-            <input id="registerName" class="form-control" placeholder="Enter your name" required />
-          </div>
-          <div class="form-group">
-            <label for="registerEmail" class="form-label">Email</label>
-            <input id="registerEmail" type="email" class="form-control" placeholder="Enter your email" required />
-          </div>
-          <div class="form-group">
-            <label for="registerPassword" class="form-label">Password</label>
-            <input id="registerPassword" type="password" class="form-control" placeholder="Choose a password" required />
-          </div>
-          <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Register</button>
-        </form>
-        <p id="registerMessage" class="text-danger mt-2"></p>
-      </div>
+      </main>
     </div>
-    
-    <script src="common.js"></script>
-    <script>
-      // Login form handler
-      document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        const messageEl = document.getElementById('loginMessage');
-        
-        messageEl.textContent = '';
-        
-        try {
-          const res = await fetch(API.login, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, name: email }) // name is required by API but not used
-          });
-          
-          if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.detail || 'Login failed');
-          }
-          
-          const data = await res.json();
-          localStorage.setItem('token', data.access_token);
-          window.location.href = 'index.html';
-        } catch (error) {
-          messageEl.textContent = error.message;
-        }
-      });
-      
-      // Registration form handler
-      document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('registerName').value;
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
-        const messageEl = document.getElementById('registerMessage');
-        
-        messageEl.textContent = '';
-        
-        try {
-          const res = await fetch(API.register, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password })
-          });
-          
-          if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.detail || 'Registration failed');
-          }
-          
-          messageEl.textContent = 'Registration successful! You can now log in.';
-          messageEl.className = 'text-success mt-2';
-          document.getElementById('registerForm').reset();
-        } catch (error) {
-          messageEl.textContent = error.message;
-          messageEl.className = 'text-danger mt-2';
-        }
-      });
-      
-      // Check if already logged in
-      document.addEventListener('DOMContentLoaded', () => {
-        if (isAuthenticated()) {
-          window.location.href = 'index.html';
-        }
-      });
-    </script>
+
+    <script type="module" src="login.js"></script>
   </body>
 </html>

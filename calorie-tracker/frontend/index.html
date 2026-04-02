@@ -1,1114 +1,184 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Calorie Tracker - Add Meal</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Track your meals and calories with our easy-to-use food tracking application">
-    <meta name="author" content="Calorie Tracker App">
-    <meta name="theme-color" content="#4CAF50">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://food-tracker.novopacky.com/" />
-    <meta property="og:title" content="Calorie Tracker - Add Meal" />
-    <meta property="og:description" content="Track your meals and calories with our easy-to-use food tracking application" />
-    <meta property="og:image" content="https://food-tracker.novopacky.com/assets/images/stackphoto_opt.png" />
-    <meta property="og:site_name" content="Calorie Tracker" />
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://food-tracker.novopacky.com/" />
-    <meta property="twitter:title" content="Calorie Tracker - Add Meal" />
-    <meta property="twitter:description" content="Track your meals and calories with our easy-to-use food tracking application" />
-    <meta property="twitter:image" content="https://food-tracker.novopacky.com/assets/images/stackphoto_opt.png" />
-    
-    <!-- Favicons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Reader | Add Meal</title>
+    <meta name="description" content="Capture food quickly, review the AI estimate, and keep a clean nutrition log from any phone.">
+    <meta name="theme-color" content="#d96b3b">
     <link rel="stylesheet" href="styles.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
-    <link rel="manifest" href="assets/favicon/site.webmanifest">
-    <link rel="shortcut icon" href="assets/favicon/favicon.ico">
   </head>
-  <body>
-    <div class="navbar">
-      <div class="navbar-container">
-        <button class="navbar-toggle">☰</button>
-        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
-        <ul class="navbar-menu">
-          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
-          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
-          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
-          <li class="navbar-item navbar-user-menu-item">
-            <div class="navbar-user-section">
-              <span id="userName"></span>
-              <button id="logoutBtnMobile" class="btn btn-neutral btn-sm btn-outline">Logout</button>
-            </div>
-          </li>
-        </ul>
-        <div class="navbar-user-section navbar-user-desktop">
-          <span id="userName"></span>
-          <button id="logoutBtnDesktop" class="btn btn-neutral btn-sm btn-outline">Logout</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav">
-      <div class="mobile-bottom-nav-container">
-        <div class="mobile-nav-item">
-          <a href="index.html" class="mobile-nav-link active">
-            <span class="mobile-nav-icon">➕</span>
-            <span class="mobile-nav-label">Add Meal</span>
+  <body data-page="add">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="index.html">
+            <span class="brand-mark">FR</span>
+            <span class="brand-copy">
+              <strong>Food Reader</strong>
+              <small>mobile nutrition log</small>
+            </span>
           </a>
+          <nav class="desktop-nav" aria-label="Primary">
+            <a href="index.html" data-nav="add">Add Meal</a>
+            <a href="history.html" data-nav="history">History</a>
+            <a href="metrics.html" data-nav="metrics">Metrics</a>
+            <a href="profile.html" data-nav="profile">Profile</a>
+          </nav>
+          <div class="topbar-actions">
+            <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+            <span class="user-chip"><span data-user-greeting>You</span></span>
+            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+          </div>
         </div>
-        <div class="mobile-nav-item">
-          <a href="history.html" class="mobile-nav-link">
-            <span class="mobile-nav-icon">📋</span>
-            <span class="mobile-nav-label">History</span>
-          </a>
-        </div>
-        <div class="mobile-nav-item">
-          <a href="metrics.html" class="mobile-nav-link">
-            <span class="mobile-nav-icon">📊</span>
-            <span class="mobile-nav-label">Metrics</span>
-          </a>
-        </div>
-        <div class="mobile-nav-item">
-          <a href="#" class="mobile-nav-link" id="mobileLogoutBtn">
-            <span class="mobile-nav-icon">🚪</span>
-            <span class="mobile-nav-label">Logout</span>
-          </a>
-        </div>
-      </div>
-    </nav>
-    
-    <div class="container">
-      <div class="card">
-        <h2>Add New Meal</h2>
-        <p class="mb-3">Add your meal by uploading a photo or describing it in text.</p>
-        
-        <!-- Meal Input Type Selector -->
-        <div class="meal-input-selector mb-3">
-          <button type="button" id="photoInputBtn" class="btn btn-primary active">Photo Input</button>
-          <button type="button" id="textInputBtn" class="btn btn-secondary">Text Input</button>
-        </div>
-        
-        <!-- Photo Input Form -->
-        <form id="mealForm" style="display: block;">
-          <div class="form-group">
-            <label class="form-label">Upload Food Image:</label>
-            <p class="helper-text mb-2">Take a photo of your food or choose from your gallery. We'll analyze it automatically.</p>
-            
-            <div class="photo-options">
-              <div class="photo-option">
-                <label for="image" class="photo-option-button camera-option">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                    <circle cx="12" cy="13" r="4"></circle>
-                  </svg>
-                  <span>📷 Take Photo</span>
-                </label>
-                <input type="file" id="image" name="image" accept="image/*" capture="environment" class="photo-input" />
-              </div>
-              <div class="photo-option">
-                <label for="gallery-image" class="photo-option-button gallery-option">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
-                  </svg>
-                  <span>🖼 Choose from Gallery</span>
-                </label>
-                <input type="file" id="gallery-image" name="image" accept="image/*" class="photo-input" />
+      </header>
+
+      <main class="page">
+        <section class="page-hero">
+          <p class="eyebrow">Capture fast, correct later</p>
+          <h1>Log meals in seconds without losing control of the numbers.</h1>
+          <p>Use a photo when you want speed, or type the meal when a camera is inconvenient. Every entry opens into a review panel so you can clean up the estimate before moving on.</p>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">New entry</p>
+                <h2>Add a meal</h2>
               </div>
             </div>
-            
-            <div id="imagePreviewContainer" class="image-preview-container mt-3" style="display: none;">
-              <div class="image-preview-header">
-                <h4>Selected Image</h4>
-                <button type="button" id="clearImageBtn" class="btn btn-sm btn-neutral">Clear</button>
-              </div>
-              <div id="imagePreview" class="image-preview"></div>
+
+            <div class="segmented-control" role="tablist" aria-label="Meal input mode">
+              <button type="button" class="active" data-capture-mode="photo">Photo</button>
+              <button type="button" data-capture-mode="text">Text</button>
             </div>
-            
-            <div id="uploadProgress" class="upload-progress mt-3" style="display: none;">
-              <div class="progress-bar-container">
-                <div id="progressBar" class="progress-bar"></div>
-              </div>
-              <div id="progressStatus" class="progress-status">Uploading... 0%</div>
-            </div>
-            
-            <!-- Progress Backdrop -->
-            <div id="progressBackdrop" class="progress-backdrop"></div>
-            
-            <div id="uploadSuccess" class="upload-success mt-3" style="display: none;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-              <span>Upload successful!</span>
-            </div>
-          </div>
-          
-          <div class="form-group mt-4">
-            <button type="submit" class="btn btn-primary btn-block" style="font-size: 1.1rem; padding: 0.9rem 1.5rem; font-weight: 600;">Analyze & Upload Meal</button>
-          </div>
-        </form>
-        
-        <!-- Text Input Form -->
-        <form id="textMealForm" style="display: none;">
-          <div class="form-group">
-            <label for="foodDescription" class="form-label">Describe Your Meal:</label>
-            <p class="helper-text mb-2">Provide a detailed description of your meal (e.g., "Caesar salad with grilled chicken and XYZ brand dressing").</p>
-            <textarea id="foodDescription" class="form-control" rows="3" placeholder="Describe your meal in detail..."></textarea>
-          </div>
-          
-          <div class="form-group mt-4">
-            <button type="submit" class="btn btn-primary btn-block" style="font-size: 1.1rem; padding: 0.9rem 1.5rem; font-weight: 600;">Analyze Meal Description</button>
-          </div>
-        </form>
-        
-        <p id="mealMessage" class="text-danger mt-2"></p>
-      </div>
-      
-      <div id="analysisResult" class="card" style="display: none; animation: fade-in 0.5s ease-out;">
-        <h3>AI Analysis Results</h3>
-        
-        <div class="mb-3">
-          <div id="foodImagePreview" class="text-center mb-3">
-            <!-- Image will be inserted here -->
-          </div>
-          <div id="analysisContent"></div>
-          
-          <!-- Reanalysis Section (only shown for image-based meals) -->
-          <div id="reanalysisSection" class="mt-3" style="display: none;">
-            <button type="button" id="reanalysisBtn" class="btn btn-secondary">Correct Food Identification</button>
-            
-            <div id="reanalysisForm" class="mt-3" style="display: none;">
-              <h4>Correct Food Identification</h4>
-              <p class="helper-text mb-2">If the AI incorrectly identified your food, provide corrections below. This will update the current meal record.</p>
-              
-              <div class="form-group">
-                <label for="foodTypeCorrection" class="form-label">Food Type Correction:</label>
-                <input type="text" id="foodTypeCorrection" class="form-control" placeholder="e.g., This is pork, not chicken">
-              </div>
-              
-              <div class="form-group mt-3">
-                <button type="button" id="submitReanalysisBtn" class="btn btn-primary">Update with Corrections</button>
-                <button type="button" id="cancelReanalysisBtn" class="btn btn-secondary">Cancel</button>
-              </div>
-            </div>
-            
-            <!-- Reanalysis Loading Indicator -->
-            <div id="reanalysisLoading" class="mt-3" style="display: none;">
-              <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <p class="loading-text">Updating nutritional information...</p>
-                <p class="loading-subtext">Applying your corrections and updating this meal record</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div id="nutritionEditor" class="mb-4">
-          <h4>Nutritional Information</h4>
-          <p class="mb-2">You can adjust these values if needed:</p>
-          
-          <div class="form-group">
-            <label for="edit-calories" class="form-label">Calories:</label>
-            <input type="number" id="edit-calories" class="form-control" min="0" />
-            <div id="calories-bar" class="mt-1"></div>
-          </div>
-          
-          <div class="nutrition-grid mt-3">
-            <div class="form-group">
-              <label for="edit-protein" class="form-label">Protein (g):</label>
-              <input type="number" id="edit-protein" class="form-control" min="0" />
-            </div>
-            
-            <div class="form-group">
-              <label for="edit-fat" class="form-label">Fat (g):</label>
-              <input type="number" id="edit-fat" class="form-control" min="0" />
-            </div>
-            
-            <div class="form-group">
-              <label for="edit-carbs" class="form-label">Carbs (g):</label>
-              <input type="number" id="edit-carbs" class="form-control" min="0" />
-            </div>
-            
-            <div class="form-group">
-              <label for="edit-fiber" class="form-label">Fiber (g):</label>
-              <input type="number" id="edit-fiber" class="form-control" min="0" />
-            </div>
-            
-            <div class="form-group">
-              <label for="edit-sugar" class="form-label">Sugar (g):</label>
-              <input type="number" id="edit-sugar" class="form-control" min="0" />
-            </div>
-            
-            <div class="form-group">
-              <label for="edit-sodium" class="form-label">Sodium (mg):</label>
-              <input type="number" id="edit-sodium" class="form-control" min="0" />
-            </div>
-          </div>
-          
-          <div class="form-group mt-3">
-            <label for="edit-meal-type" class="form-label">Meal Type:</label>
-            <select id="edit-meal-type" class="form-control">
-              <option value="breakfast">Breakfast</option>
-              <option value="lunch">Lunch</option>
-              <option value="dinner">Dinner</option>
-              <option value="snack">Snack</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="edit-consumed-at" class="form-label">Consumed At:</label>
-            <input type="datetime-local" id="edit-consumed-at" class="form-control" />
-          </div>
-          
-          <div class="form-group">
-            <label for="edit-notes" class="form-label">Notes:</label>
-            <textarea id="edit-notes" class="form-control" rows="2"></textarea>
-          </div>
-          
-          <div class="form-group mt-3">
-            <button id="saveChangesBtn" class="btn btn-primary">Save Changes</button>
-            <button id="resetChangesBtn" class="btn btn-secondary">Reset</button>
-          </div>
-        </div>
-        
-        <div id="macroDistribution" class="mb-3">
-          <h4>Macronutrient Distribution</h4>
-          <div class="nutrition-grid">
-            <div class="nutrition-card">
-              <div id="protein-percentage" class="value">0%</div>
-              <div class="label">Protein</div>
-            </div>
-            <div class="nutrition-card">
-              <div id="fat-percentage" class="value">0%</div>
-              <div class="label">Fat</div>
-            </div>
-            <div class="nutrition-card">
-              <div id="carbs-percentage" class="value">0%</div>
-              <div class="label">Carbs</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="card">
-        <h3>Recent Meals</h3>
-        <div id="recentMeals">
-          <p>Loading recent meals...</p>
-        </div>
-        <div class="text-center mt-3">
-          <a href="history.html" class="btn btn-secondary">View All Meals</a>
-        </div>
-      </div>
-    </div>
-    
-    <script src="common.js"></script>
-    <script src="imageOptimizer.js"></script>
-    <script src="charts.js"></script>
-    <script src="app.js"></script>
-    <script>
-      // Initialize the page
-      document.addEventListener('DOMContentLoaded', () => {
-        if (!checkAuth()) return;
-        
-        // Initialize the form
-        initMealForm();
-        
-        // Load recent meals
-        loadRecentMeals();
-        
-        // Mobile logout button handler
-        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-        if (mobileLogoutBtn) {
-          mobileLogoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            logout();
-          });
-        }
-      });
-      
-      // Global submission tracking
-      let globalSubmissionInProgress = false;
-      
-      // Initialize meal form
-      function initMealForm() {
-        const form = document.getElementById('mealForm');
-        const analysisResult = document.getElementById('analysisResult');
-        const saveChangesBtn = document.getElementById('saveChangesBtn');
-        const resetChangesBtn = document.getElementById('resetChangesBtn');
-        const cameraInput = document.getElementById('image');
-        const galleryInput = document.getElementById('gallery-image');
-        
-        // Store the original meal data
-        let originalMealData = null;
-        
-        // Debounce function to prevent multiple rapid calls
-        function debounce(func, wait) {
-          let timeout;
-          return function(...args) {
-            const context = this;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(context, args), wait);
-          };
-        }
-        
-        // Handle photo input selection with debounce
-        cameraInput.addEventListener('change', debounce(function(event) {
-          console.log("Camera input change event triggered (debounced)", event.type, event.timeStamp);
-          if (this.files.length > 0) {
-            galleryInput.value = ''; // Clear the other input
-            console.log("Camera input change event - file selected:", this.files[0].name, "Size:", (this.files[0].size / 1024).toFixed(2) + "KB", "Type:", this.files[0].type);
-            // Call handleImageSelection to process the selected image
-            handleImageSelection(this.files[0]);
-          }
-        }, 300));
-        
-        galleryInput.addEventListener('change', debounce(function(event) {
-          console.log("Gallery input change event triggered (debounced)", event.type, event.timeStamp);
-          if (this.files.length > 0) {
-            cameraInput.value = ''; // Clear the other input
-            console.log("Gallery input change event - file selected:", this.files[0].name, "Size:", (this.files[0].size / 1024).toFixed(2) + "KB", "Type:", this.files[0].type);
-            handleImageSelection(this.files[0]); // Handle the selected image
-            
-            // Make sure the gallery image is recognized as a valid form input
-            document.getElementById('mealMessage').textContent = '';
-            document.getElementById('mealMessage').className = '';
-          }
-        }, 300));
-        
-        // Handle image selection and preview
-        function handleImageSelection(file) {
-          console.log("handleImageSelection called with file:", file ? file.name : "null");
-          if (!file) {
-            console.error("No file provided to handleImageSelection");
-            return;
-          }
-          
-          // Show image preview
-          const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-          const imagePreview = document.getElementById('imagePreview');
-          
-          console.log("Creating thumbnail for file:", file.name);
-          
-          // Create optimized image preview using ImageOptimizer
-          ImageOptimizer.createThumbnail(file)
-            .then(thumbnailUrl => {
-              console.log("Thumbnail created successfully for:", file.name);
-              imagePreview.innerHTML = `<img src="${thumbnailUrl}" alt="Selected food image">`;
-              imagePreviewContainer.style.display = 'block';
-              
-              // ENHANCED UX: Auto-scroll to submit button after image preview is shown
-              setTimeout(() => {
-                const submitButton = form.querySelector('button[type="submit"]');
-                if (submitButton) {
-                  submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }, 300);
-            })
-            .catch(error => {
-              console.error('Error creating thumbnail:', error);
-              // Fallback to original method if optimization fails
-              console.log("Using fallback method for thumbnail creation");
-              const reader = new FileReader();
-              reader.onload = function(e) {
-                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Selected food image">`;
-                imagePreviewContainer.style.display = 'block';
-                
-                // ENHANCED UX: Auto-scroll to submit button after image preview is shown
-                setTimeout(() => {
-                  const submitButton = form.querySelector('button[type="submit"]');
-                  if (submitButton) {
-                    submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }, 300);
-              };
-              reader.readAsDataURL(file);
-            });
-          
-          // Clear the other input and ensure we're using the correct file
-          if (file === cameraInput.files[0]) {
-            galleryInput.value = '';
-            console.log("Camera file selected for preview - cleared gallery input");
-          } else {
-            cameraInput.value = '';
-            console.log("Gallery file selected for preview - cleared camera input");
-          }
-        }
-        
-        // Note: We need to modify the camera input change handler to also call handleImageSelection
-        // Update the existing camera input handler (above) instead of having a duplicate handler here
-        
-        
-        // Handle form submission - use the 'once' option to ensure it only fires once
-        form.addEventListener('submit', async function submitHandler(e) {
-          e.preventDefault();
-          console.log("Form submit event triggered");
-          
-          // Global submission check
-          if (globalSubmissionInProgress) {
-            console.log("A submission is already in progress globally, ignoring this submission");
-            return;
-          }
-          
-          // Set the global submission flag
-          globalSubmissionInProgress = true;
-          
-          // Remove this event listener to prevent multiple submissions
-          form.removeEventListener('submit', submitHandler);
-          
-          const messageEl = document.getElementById('mealMessage');
-          const uploadProgress = document.getElementById('uploadProgress');
-          const progressBar = document.getElementById('progressBar');
-          const progressStatus = document.getElementById('progressStatus');
-          const uploadSuccess = document.getElementById('uploadSuccess');
-          const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-          const progressBackdrop = document.getElementById('progressBackdrop');
-          
-          messageEl.textContent = '';
-          analysisResult.style.display = 'none';
-          uploadSuccess.style.display = 'none';
-          
-          // Check if an image was selected
-          const cameraFile = cameraInput.files[0];
-          const galleryFile = galleryInput.files[0];
-          
-          console.log("Form submission - Camera file:", cameraFile ? cameraFile.name : "none");
-          console.log("Form submission - Gallery file:", galleryFile ? galleryFile.name : "none");
-          
-          if (!cameraFile && !galleryFile) {
-            messageEl.textContent = 'Please select an image or take a photo';
-            messageEl.className = 'text-danger mt-2';
-            return;
-          }
-          
-          // ENHANCED UX: Fade out image preview
-          if (imagePreviewContainer.style.display !== 'none') {
-            imagePreviewContainer.classList.add('fade-out');
-            await new Promise(resolve => setTimeout(resolve, 400));
-            imagePreviewContainer.style.display = 'none';
-            imagePreviewContainer.classList.remove('fade-out');
-          }
-          
-          // Show loading message and prominent progress bar
-          messageEl.textContent = 'Analyzing your food image...';
-          messageEl.className = 'text-info mt-2';
-          
-          // ENHANCED UX: Make progress bar prominent and centered
-          uploadProgress.style.display = 'block';
-          progressBackdrop.classList.add('active');
-          await new Promise(resolve => setTimeout(resolve, 50)); // Allow display to take effect
-          uploadProgress.classList.add('prominent');
-          
-          try {
-            // Get the selected file - ensure we're using the correct file
-            let selectedFile = null;
-            if (cameraFile) {
-              selectedFile = cameraFile;
-              console.log("Using camera file for upload:", cameraFile.name, "Size:", (cameraFile.size / 1024).toFixed(2) + "KB", "Type:", cameraFile.type);
-            } else if (galleryFile) {
-              selectedFile = galleryFile;
-              console.log("Using gallery file for upload:", galleryFile.name, "Size:", (galleryFile.size / 1024).toFixed(2) + "KB", "Type:", galleryFile.type);
-            }
-            
-            if (!selectedFile) {
-              console.error("No file selected for upload");
-              throw new Error("No file selected");
-            }
-            
-            // Create a FormData object for the API request
-            const formData = new FormData();
-            console.log("Selected file for upload:", selectedFile.name, "Size:", (selectedFile.size / 1024).toFixed(2) + "KB", "Type:", selectedFile.type);
-            
-            // Check if the image should be optimized
-            const shouldOptimize = ImageOptimizer.shouldOptimize(selectedFile);
-            console.log("Should optimize image:", shouldOptimize);
-            
-            if (shouldOptimize) {
-              try {
-                // Show optimization status in progress message
-                messageEl.textContent = 'Optimizing and analyzing your food image...';
-                
-                // Optimize the image before uploading
-                console.log("Starting image optimization for:", selectedFile.name);
-                const optimizedImage = await ImageOptimizer.optimizeImage(selectedFile);
-                console.log("Image optimization successful, optimized size:", (optimizedImage.size / 1024).toFixed(2) + "KB");
-                
-                // Add the optimized image to the form data with the original filename
-                formData.append('image', optimizedImage, selectedFile.name);
-                console.log("Added optimized image to form data with name:", selectedFile.name);
-              } catch (optimizationError) {
-                console.warn('Image optimization failed, using original image:', optimizationError);
-                
-                // Fallback to original image if optimization fails
-                formData.append('image', selectedFile);
-                console.log("Added original image to form data (optimization failed)");
-              }
-            } else {
-              // Use original image for small files
-              formData.append('image', selectedFile);
-              console.log("Added original image to form data (small file, no optimization needed)");
-            }
-            
-            // Simulate upload progress (since fetch doesn't support progress monitoring)
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-              progress += 5;
-              if (progress > 90) {
-                clearInterval(progressInterval);
-                progress = 90; // Hold at 90% until complete
-              }
-              progressBar.style.width = `${progress}%`;
-              progressStatus.textContent = `Uploading... ${progress}%`;
-            }, 200);
-            
-            // Add a debug log to check the FormData contents
-            console.log("Sending API request to:", API.meals);
-            console.log("FormData contains image:", formData.has('image'));
-            
-            // Log all entries in the FormData
-            for (let pair of formData.entries()) {
-              console.log(`FormData entry - ${pair[0]}: ${pair[1] instanceof File ? pair[1].name : pair[1]}`);
-            }
-            
-            const response = await fetch(API.meals, {
-              method: 'POST',
-              headers: authHeaders(),
-              body: formData
-            });
-            console.log("API response status:", response.status);
-            
-            // Clear progress interval and set to 100%
-            clearInterval(progressInterval);
-            progressBar.style.width = '100%';
-            progressStatus.textContent = 'Upload complete!';
-            
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.detail || 'Failed to upload meal');
-            }
-            
-            const mealData = await response.json();
-            originalMealData = { ...mealData };
-            
-            // ENHANCED UX: Smoothly hide progress bar
-            uploadProgress.classList.remove('prominent');
-            await new Promise(resolve => setTimeout(resolve, 300));
-            uploadProgress.style.display = 'none';
-            progressBackdrop.classList.remove('active');
-            
-            uploadSuccess.style.display = 'flex';
-            
-            // Display success message
-            messageEl.textContent = 'Meal analyzed successfully!';
-            messageEl.className = 'text-success mt-2';
-            
-            // Show the analysis result with enhanced highlighting
-            displayAnalysisResult(mealData);
-            
-            // ENHANCED UX: Scroll results into view and highlight
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Store scroll position before any potential layout changes
-            const scrollTarget = analysisResult.getBoundingClientRect().top + window.pageYOffset;
-            
-            analysisResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            analysisResult.classList.add('highlight');
-            
-            // Remove highlight class after animation completes
-            setTimeout(() => {
-              analysisResult.classList.remove('highlight');
-            }, 3000);
-            
-            // Reset the form and both inputs - delay to avoid scroll disruption
-            setTimeout(() => {
-              // Save current scroll position
-              const currentScroll = window.pageYOffset;
-              
-              form.reset();
-              cameraInput.value = '';
-              galleryInput.value = '';
-              
-              // Hide image preview without triggering layout shift
-              const imgPreview = document.getElementById('imagePreviewContainer');
-              if (imgPreview.style.display !== 'none') {
-                imgPreview.style.visibility = 'hidden';
-                imgPreview.style.height = '0';
-                imgPreview.style.overflow = 'hidden';
-                imgPreview.style.margin = '0';
-                imgPreview.style.padding = '0';
-                setTimeout(() => {
-                  imgPreview.style.display = 'none';
-                  imgPreview.style.visibility = '';
-                  imgPreview.style.height = '';
-                  imgPreview.style.overflow = '';
-                  imgPreview.style.margin = '';
-                  imgPreview.style.padding = '';
-                }, 100);
-              }
-              
-              // Keep uploadSuccess visible to maintain user attention on results
-              // uploadSuccess.style.display = 'none'; // Removed to persist success message
-              
-              // Restore scroll position if it shifted
-              requestAnimationFrame(() => {
-                if (Math.abs(window.pageYOffset - currentScroll) > 5) {
-                  window.scrollTo({ top: currentScroll, behavior: 'instant' });
-                }
-              });
-              
-              console.log("Form reset after successful submission");
-            }, 3000);
-            
-            // Load recent meals
-            loadRecentMeals();
-          } catch (error) {
-            // ENHANCED UX: Hide progress bar and backdrop on error
-            uploadProgress.classList.remove('prominent');
-            await new Promise(resolve => setTimeout(resolve, 300));
-            uploadProgress.style.display = 'none';
-            progressBackdrop.classList.remove('active');
-            
-            messageEl.textContent = error.message;
-            messageEl.className = 'text-danger mt-2';
-            console.error('Error uploading meal:', error);
-          } finally {
-            // Reset the global submission flag regardless of success or failure
-            setTimeout(() => {
-              globalSubmissionInProgress = false;
-              console.log("Global submission flag reset");
-              
-              // Re-add the event listener after a delay
-              setTimeout(() => {
-                form.addEventListener('submit', submitHandler);
-                console.log("Form submit event listener re-added");
-              }, 1000);
-            }, 3000);
-          }
-        });
-        
-        // Handle save changes button
-        saveChangesBtn.addEventListener('click', () => {
-          // In a real implementation, this would send an update request to the API
-          // For now, we'll just show a success message
-          alert('Changes saved successfully!');
-          
-          // Update the original meal data with the edited values
-          originalMealData.calories = parseInt(document.getElementById('edit-calories').value) || 0;
-          originalMealData.protein = parseInt(document.getElementById('edit-protein').value) || 0;
-          originalMealData.fat = parseInt(document.getElementById('edit-fat').value) || 0;
-          originalMealData.carbs = parseInt(document.getElementById('edit-carbs').value) || 0;
-          originalMealData.fiber = parseInt(document.getElementById('edit-fiber').value) || 0;
-          originalMealData.sugar = parseInt(document.getElementById('edit-sugar').value) || 0;
-          originalMealData.sodium = parseInt(document.getElementById('edit-sodium').value) || 0;
-          originalMealData.meal_type = document.getElementById('edit-meal-type').value;
-          
-          // Convert local datetime to UTC for storage
-          const localDateTime = document.getElementById('edit-consumed-at').value;
-          originalMealData.consumed_at = localToUTC(new Date(localDateTime));
-          
-          originalMealData.notes = document.getElementById('edit-notes').value;
-          
-          // Update the display
-          updateMacroDistribution();
-        });
-        
-        // Handle reset changes button
-        resetChangesBtn.addEventListener('click', () => {
-          if (originalMealData) {
-            // Reset the form fields to the original values
-            document.getElementById('edit-calories').value = originalMealData.calories || 0;
-            document.getElementById('edit-protein').value = originalMealData.protein || 0;
-            document.getElementById('edit-fat').value = originalMealData.fat || 0;
-            document.getElementById('edit-carbs').value = originalMealData.carbs || 0;
-            document.getElementById('edit-fiber').value = originalMealData.fiber || 0;
-            document.getElementById('edit-sugar').value = originalMealData.sugar || 0;
-            document.getElementById('edit-sodium').value = originalMealData.sodium || 0;
-            document.getElementById('edit-meal-type').value = originalMealData.meal_type;
-            document.getElementById('edit-consumed-at').value = formatDateForInput(originalMealData.consumed_at);
-            document.getElementById('edit-notes').value = originalMealData.notes || '';
-            
-            // Update the display
-            updateMacroDistribution();
-          }
-        });
-      }
-      
-      // Display analysis result
-      function displayAnalysisResult(mealData) {
-        const analysisResult = document.getElementById('analysisResult');
-        const analysisContent = document.getElementById('analysisContent');
-        const foodImagePreview = document.getElementById('foodImagePreview');
-        const reanalysisSection = document.getElementById('reanalysisSection');
-        
-        // Extract food name from notes if available
-        let foodName = mealData.meal_type.charAt(0).toUpperCase() + mealData.meal_type.slice(1);
-        if (mealData.notes && mealData.notes.includes('AI Analysis:')) {
-          const match = mealData.notes.match(/AI Analysis: (.+?)($|\n)/);
-          if (match && match[1]) {
-            foodName = match[1];
-          }
-        }
-        
-        // Display the food image
-        foodImagePreview.innerHTML = `
-          <img src="${mealData.image_url}" alt="${foodName}"
-               class="food-thumbnail" onerror="this.src='/assets/images/text-meal-placeholder.svg'">
-        `;
-        foodImagePreview.style.display = 'block';
-        
-        // Show reanalysis section only for image-based meals (not text-only meals)
-        if (mealData.image_url && !mealData.image_url.includes('text-meal-placeholder.svg')) {
-          reanalysisSection.style.display = 'block';
-          // Store meal ID for reanalysis
-          reanalysisSection.dataset.mealId = mealData.id;
-        } else {
-          reanalysisSection.style.display = 'none';
-        }
-        
-        // Display the analysis content
-        analysisContent.innerHTML = `
-          <h4>${foodName}</h4>
-          <p><strong>Meal Type:</strong> ${mealData.meal_type.charAt(0).toUpperCase() + mealData.meal_type.slice(1)}</p>
-          <p><strong>Time:</strong> ${formatDate(mealData.consumed_at)}</p>
-        `;
-        
-        // Set the form values
-        document.getElementById('edit-calories').value = mealData.calories || 0;
-        document.getElementById('edit-protein').value = mealData.protein || 0;
-        document.getElementById('edit-fat').value = mealData.fat || 0;
-        document.getElementById('edit-carbs').value = mealData.carbs || 0;
-        document.getElementById('edit-fiber').value = mealData.fiber || 0;
-        document.getElementById('edit-sugar').value = mealData.sugar || 0;
-        document.getElementById('edit-sodium').value = mealData.sodium || 0;
-        document.getElementById('edit-meal-type').value = mealData.meal_type;
-        document.getElementById('edit-consumed-at').value = formatDateForInput(mealData.consumed_at);
-        document.getElementById('edit-notes').value = mealData.notes || '';
-        
-        // Create the calories progress bar
-        const caloriesBar = document.getElementById('calories-bar');
-        caloriesBar.innerHTML = createNutritionBar(mealData.calories, 2000);
-        
-        // Update macronutrient distribution
-        updateMacroDistribution();
-        
-        // Show the analysis result
-        analysisResult.style.display = 'block';
-      }
-      
-      // Update macronutrient distribution
-      function updateMacroDistribution() {
-        const protein = parseInt(document.getElementById('edit-protein').value) || 0;
-        const fat = parseInt(document.getElementById('edit-fat').value) || 0;
-        const carbs = parseInt(document.getElementById('edit-carbs').value) || 0;
-        
-        // Convert to calories (protein: 4 cal/g, fat: 9 cal/g, carbs: 4 cal/g)
-        const proteinCalories = protein * 4;
-        const fatCalories = fat * 9;
-        const carbCalories = carbs * 4;
-        const totalCalories = proteinCalories + fatCalories + carbCalories;
-        
-        // Calculate percentages
-        const proteinPercentage = totalCalories > 0 ? Math.round((proteinCalories / totalCalories) * 100) : 0;
-        const fatPercentage = totalCalories > 0 ? Math.round((fatCalories / totalCalories) * 100) : 0;
-        const carbsPercentage = totalCalories > 0 ? Math.round((carbCalories / totalCalories) * 100) : 0;
-        
-        // Update the display
-        document.getElementById('protein-percentage').textContent = `${proteinPercentage}%`;
-        document.getElementById('fat-percentage').textContent = `${fatPercentage}%`;
-        document.getElementById('carbs-percentage').textContent = `${carbsPercentage}%`;
-      }
-      
-      // Load recent meals
-      async function loadRecentMeals() {
-        const recentMealsEl = document.getElementById('recentMeals');
-        
-        try {
-          const response = await fetch(`${API.meals}?limit=3`, {
-            headers: authHeaders()
-          });
-          
-          if (!response.ok) {
-            if (response.status === 401) {
-              logout();
-              return;
-            }
-            throw new Error('Failed to load meals');
-          }
-          
-          const meals = await response.json();
-          
-          if (meals.length === 0) {
-            recentMealsEl.innerHTML = '<p>No meals found. Add your first meal above!</p>';
-            return;
-          }
-          
-          let html = '<div class="meal-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">';
-          
-          meals.forEach(meal => {
-            // Extract food name from notes if available
-            let foodName = meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1);
-            if (meal.notes && meal.notes.includes('AI Analysis:')) {
-              const match = meal.notes.match(/AI Analysis: (.+?)($|\n)/);
-              if (match && match[1]) {
-                foodName = match[1];
-              }
-            }
-            
-            html += `
-              <div class="meal-item">
-                <img src="${meal.image_url}" alt="${meal.meal_type}" style="width: 100%; height: 150px; object-fit: cover;" onerror="this.src='/assets/images/text-meal-placeholder.svg'">
-                <div class="meal-info p-2">
-                  <h4>${foodName}</h4>
-                  <p>${formatDate(meal.consumed_at)}</p>
-                  <div class="calories-display">
-                    <span class="calories-value">${meal.calories}</span>
-                    <span class="calories-label">calories</span>
-                  </div>
-                  <div class="nutrition-bar-container" style="width: 100%; background-color: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 6px; overflow: hidden; margin-top: 8px;">
-                    <div style="width: ${Math.min(100, meal.calories / 20)}%; height: 100%; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));"></div>
-                  </div>
+
+            <form id="photoMealForm" data-mode-panel="photo" class="stack">
+              <input id="mealImage" class="sr-only" type="file" accept="image/*" capture="environment">
+              <div class="upload-card">
+                <div class="upload-preview">
+                  <p id="selectedImageEmpty">Use the camera for a quick capture or choose a saved image.</p>
+                  <img id="selectedImagePreview" hidden alt="Selected meal preview">
+                </div>
+                <div class="upload-actions">
+                  <label class="btn btn-primary" for="mealImage">Choose photo</label>
                 </div>
               </div>
-            `;
-          });
-          
-          html += '</div>';
-          recentMealsEl.innerHTML = html;
-        } catch (error) {
-          console.error('Error loading meals:', error);
-          recentMealsEl.innerHTML = `<p class="text-danger">Error loading meals: ${error.message}</p>`;
-        }
-      }
-      
-      // Initialize the text meal form
-      function initTextMealForm() {
-        const form = document.getElementById('textMealForm');
-        const messageEl = document.getElementById('mealMessage');
-        
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          
-          const foodDescription = document.getElementById('foodDescription').value.trim();
-          
-          if (!foodDescription) {
-            messageEl.textContent = 'Please enter a food description';
-            messageEl.className = 'text-danger mt-2';
-            return;
-          }
-          
-          // Show loading message
-          messageEl.textContent = 'Analyzing your food description...';
-          messageEl.className = 'text-info mt-2';
-          
-          try {
-            // Create request body
-            const requestBody = {
-              food_description: foodDescription
-            };
-            
-            // Send API request
-            const response = await fetch(`${API.meals}/text`, {
-              method: 'POST',
-              headers: {
-                ...authHeaders(),
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(requestBody)
-            });
-            
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.detail || 'Failed to analyze meal description');
-            }
-            
-            const mealData = await response.json();
-            
-            // Display success message
-            messageEl.textContent = 'Meal analyzed successfully!';
-            messageEl.className = 'text-success mt-2';
-            
-            // Display the analysis result
-            displayAnalysisResult(mealData);
-            
-            // Reset the form
-            form.reset();
-            
-            // Load recent meals
-            loadRecentMeals();
-          } catch (error) {
-            messageEl.textContent = error.message;
-            messageEl.className = 'text-danger mt-2';
-            console.error('Error analyzing meal description:', error);
-          }
-        });
-      }
-      
-      // Initialize reanalysis functionality
-      function initReanalysis() {
-        const reanalysisBtn = document.getElementById('reanalysisBtn');
-        const reanalysisForm = document.getElementById('reanalysisForm');
-        const submitReanalysisBtn = document.getElementById('submitReanalysisBtn');
-        const cancelReanalysisBtn = document.getElementById('cancelReanalysisBtn');
-        const messageEl = document.getElementById('mealMessage');
-        
-        // Show reanalysis form when button is clicked
-        reanalysisBtn.addEventListener('click', () => {
-          reanalysisForm.style.display = 'block';
-          reanalysisBtn.style.display = 'none';
-        });
-        
-        // Hide reanalysis form when cancel button is clicked
-        cancelReanalysisBtn.addEventListener('click', () => {
-          reanalysisForm.style.display = 'none';
-          reanalysisBtn.style.display = 'block';
-          document.getElementById('foodTypeCorrection').value = '';
-        });
-        
-        // Handle reanalysis submission
-        submitReanalysisBtn.addEventListener('click', async () => {
-          const mealId = document.getElementById('reanalysisSection').dataset.mealId;
-          const foodTypeCorrection = document.getElementById('foodTypeCorrection').value.trim();
-          
-          if (!foodTypeCorrection) {
-            messageEl.textContent = 'Please enter a correction';
-            messageEl.className = 'text-danger mt-2';
-            return;
-          }
-          
-          // Show loading message
-          // Hide the form and show loading indicator
-          reanalysisForm.style.display = 'none';
-          document.getElementById('reanalysisLoading').style.display = 'block';
-          
-          messageEl.textContent = 'Reanalyzing with corrections...';
-          messageEl.className = 'text-info mt-2';
-          
-          try {
-            // Create request body with corrections
-            const requestBody = {
-              corrections: {
-                food_type: foodTypeCorrection
-              }
-            };
-            
-            // Send API request
-            const response = await fetch(`${API.meals}/${mealId}/reanalyze`, {
-              method: 'POST',
-              headers: {
-                ...authHeaders(),
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(requestBody)
-            });
-            
-            if (!response.ok) {
-              try {
-                const errorData = await response.json();
-                console.log('Error response:', errorData);
-                throw new Error(errorData.detail || 'Failed to reanalyze meal');
-              } catch (parseError) {
-                console.error('Error parsing error response:', parseError);
-                throw new Error(`Server error (${response.status}): Failed to reanalyze meal`);
-              }
-            }
-            
-            const mealData = await response.json();
-            
-            // Display success message
-            messageEl.textContent = 'Meal updated successfully with your corrections!';
-            messageEl.className = 'text-success mt-2';
-            
-            // Hide loading indicator and reanalysis form
-            document.getElementById('reanalysisLoading').style.display = 'none';
-            reanalysisForm.style.display = 'none';
-            reanalysisBtn.style.display = 'block';
-            document.getElementById('foodTypeCorrection').value = '';
-            
-            // Display the updated analysis result
-            displayAnalysisResult(mealData);
-            
-            // Load recent meals
-            loadRecentMeals();
-          } catch (error) {
-            // Hide loading indicator and show form again on error
-            document.getElementById('reanalysisLoading').style.display = 'none';
-            reanalysisForm.style.display = 'block';
-            
-            messageEl.textContent = error.message;
-            messageEl.className = 'text-danger mt-2';
-            console.error('Error reanalyzing meal:', error);
-            
-            // Show more detailed error in console for debugging
-            if (error.stack) {
-              console.debug('Error stack:', error.stack);
-            }
-          }
-        });
-      }
-      
-      // Initialize input type selector
-      function initInputTypeSelector() {
-        const photoInputBtn = document.getElementById('photoInputBtn');
-        const textInputBtn = document.getElementById('textInputBtn');
-        const mealForm = document.getElementById('mealForm');
-        const textMealForm = document.getElementById('textMealForm');
-        
-        photoInputBtn.addEventListener('click', () => {
-          // Switch to photo input
-          photoInputBtn.classList.add('active');
-          photoInputBtn.classList.remove('btn-secondary');
-          photoInputBtn.classList.add('btn-primary');
-          
-          textInputBtn.classList.remove('active');
-          textInputBtn.classList.remove('btn-primary');
-          textInputBtn.classList.add('btn-secondary');
-          
-          mealForm.style.display = 'block';
-          textMealForm.style.display = 'none';
-          
-          // Clear message
-          document.getElementById('mealMessage').textContent = '';
-        });
-        
-        textInputBtn.addEventListener('click', () => {
-          // Switch to text input
-          textInputBtn.classList.add('active');
-          textInputBtn.classList.remove('btn-secondary');
-          textInputBtn.classList.add('btn-primary');
-          
-          photoInputBtn.classList.remove('active');
-          photoInputBtn.classList.remove('btn-primary');
-          photoInputBtn.classList.add('btn-secondary');
-          
-          mealForm.style.display = 'none';
-          textMealForm.style.display = 'block';
-          
-          // Clear message
-          document.getElementById('mealMessage').textContent = '';
-        });
-      }
-      
-      // Initialize all forms and functionality
-      document.addEventListener('DOMContentLoaded', () => {
-        if (!checkAuth()) return;
-        
-        // Initialize the forms
-        initMealForm();
-        initTextMealForm();
-        initReanalysis();
-        initInputTypeSelector();
-        
-        // Load recent meals
-        loadRecentMeals();
-      });
-    </script>
+              <button type="submit" class="btn btn-primary btn-block">Analyze meal photo</button>
+            </form>
+
+            <form id="textMealForm" data-mode-panel="text" class="stack" hidden>
+              <label class="field">
+                <span>Describe the meal</span>
+                <textarea name="foodDescription" rows="5" placeholder="Example: chicken shawarma bowl with rice, pickles, tahini, and cucumber salad"></textarea>
+              </label>
+              <button type="submit" class="btn btn-primary btn-block">Analyze meal text</button>
+            </form>
+
+            <p id="captureStatus" class="status" hidden></p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Keep moving</p>
+                <h2>Recent meals</h2>
+              </div>
+              <a href="history.html" class="btn btn-secondary btn-small">Open history</a>
+            </div>
+            <div id="recentMeals" class="stack"></div>
+          </section>
+        </div>
+
+        <section id="analysisPanel" class="panel" hidden>
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Review</p>
+              <h2>Adjust the nutrition draft</h2>
+            </div>
+          </div>
+
+          <div id="analysisPreview" class="analysis-preview"></div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Calories</span>
+              <input id="analysisCalories" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Protein (g)</span>
+              <input id="analysisProtein" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Fat (g)</span>
+              <input id="analysisFat" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Carbs (g)</span>
+              <input id="analysisCarbs" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Fiber (g)</span>
+              <input id="analysisFiber" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Sugar (g)</span>
+              <input id="analysisSugar" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Sodium (mg)</span>
+              <input id="analysisSodium" type="number" min="0">
+            </label>
+            <label class="field">
+              <span>Meal type</span>
+              <select id="analysisMealType">
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+                <option value="snack">Snack</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Consumed at</span>
+              <input id="analysisConsumedAt" type="datetime-local">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Notes</span>
+            <textarea id="analysisNotes" rows="4"></textarea>
+          </label>
+
+          <div class="button-row">
+            <button type="button" id="saveAnalysisButton" class="btn btn-primary">Save changes</button>
+            <button type="button" id="resetAnalysisButton" class="btn btn-secondary">Reset</button>
+          </div>
+
+          <div id="reanalysisBlock" class="subtle-panel" hidden>
+            <label class="field">
+              <span>Correct the AI identification</span>
+              <textarea id="reanalysisCorrections" rows="3" placeholder="Example: this was grilled pork, not chicken"></textarea>
+            </label>
+            <button type="button" id="reanalyzeButton" class="btn btn-secondary">Re-run analysis</button>
+          </div>
+
+          <p id="analysisStatus" class="status" hidden></p>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Mobile">
+        <a href="index.html" data-nav="add">Add</a>
+        <a href="history.html" data-nav="history">History</a>
+        <a href="metrics.html" data-nav="metrics">Metrics</a>
+        <a href="profile.html" data-nav="profile">Profile</a>
+      </nav>
+    </div>
+
+    <script type="module" src="home.js"></script>
   </body>
 </html>

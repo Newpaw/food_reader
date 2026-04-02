@@ -28,8 +28,8 @@ from .settings import settings
 F = TypeVar('F', bound=Callable[..., Any])
 
 # Create logs directory if it doesn't exist
-LOGS_DIR = Path(getattr(settings, "LOG_DIR", "logs"))
-LOGS_DIR.mkdir(exist_ok=True)
+LOGS_DIR = settings.log_dir_path
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Log file paths
 APP_LOG_FILE = LOGS_DIR / "app.log"

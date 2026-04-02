@@ -1,0 +1,14 @@
+{
+  "name": "food-reader-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1",
+    "@playwright/test": "^1.54.2",
+    "vitest": "^2.1.9"
+  }
+}

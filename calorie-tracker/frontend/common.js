@@ -1,230 +1,431 @@
-// Common JavaScript functionality for all pages
-
-// Authentication helpers
-function getAuthToken() {
-  return localStorage.getItem('token');
+function normalizeBaseUrl(value) {
+  return value ? value.replace(/\/+$/, '') : '';
 }
 
-function isAuthenticated() {
-  return !!getAuthToken();
+export function shouldUseSplitLocalApi(locationLike) {
+  const port = String(locationLike?.port || '');
+  const likelyStaticDevPorts = new Set(['8080', '4173', '5173', '5500']);
+  return likelyStaticDevPorts.has(port);
 }
 
-function authHeaders() {
-  const token = getAuthToken();
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-}
-
-function checkAuth() {
-  if (!isAuthenticated()) {
-    window.location.href = 'login.html';
-    return false;
+function resolveApiBaseUrl() {
+  if (typeof window === 'undefined') {
+    return '';
   }
-  return true;
+
+  const { protocol, hostname, port } = window.location;
+  const locationLike = { protocol, hostname, port };
+  const storedBaseUrl = window.localStorage.getItem('food-reader-api-base');
+  const runtimeBaseUrl =
+    window.FOOD_READER_API_BASE ||
+    document.querySelector('meta[name="food-reader-api-base"]')?.content;
+  const splitLocalBaseUrl = `${protocol}//${hostname}:8000`;
+
+  if (storedBaseUrl) {
+    const normalizedStoredBaseUrl = normalizeBaseUrl(storedBaseUrl);
+
+    // Ignore the old split-dev override when the app is served by Nginx on 18080.
+    if (shouldUseSplitLocalApi(locationLike) || normalizedStoredBaseUrl !== splitLocalBaseUrl) {
+      return normalizedStoredBaseUrl;
+    }
+  }
+
+  if (runtimeBaseUrl) {
+    return normalizeBaseUrl(runtimeBaseUrl);
+  }
+
+  if (shouldUseSplitLocalApi(locationLike)) {
+    return splitLocalBaseUrl;
+  }
+
+  return '';
 }
 
-function logout() {
-  localStorage.removeItem('token');
-  window.location.href = 'login.html';
-}
+export const API_BASE_URL = resolveApiBaseUrl();
 
-// API endpoints
-// Use relative URLs to work with any host (including IP addresses)
-// This ensures API requests go to the same host/port as the frontend
-const API_BASE_URL = '';
-
-// Define API endpoints
-const API = {
+export const API = {
   login: `${API_BASE_URL}/auth/login`,
   register: `${API_BASE_URL}/auth/register`,
   currentUser: `${API_BASE_URL}/users/me`,
   meals: `${API_BASE_URL}/me/meals`,
-  summary: `${API_BASE_URL}/me/summary`
+  summary: `${API_BASE_URL}/me/summary`,
+  profile: `${API_BASE_URL}/profile`,
 };
 
-// Fetch current user info
-async function fetchCurrentUser() {
-  try {
-    const response = await fetch(API.currentUser, {
-      headers: authHeaders()
-    });
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        logout();
-        throw new Error('Authentication failed');
-      }
-      throw new Error('Failed to fetch user data');
+export function resolveAssetUrl(url) {
+  if (!url) {
+    return url;
+  }
+
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+
+  if (url.startsWith('/uploads/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+
+  return url;
+}
+
+function capitalizeLabel(value) {
+  if (!value) {
+    return '';
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function truncateLabel(value, maxLength = 40) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  const truncated = value.slice(0, maxLength).trim();
+  const lastSpace = truncated.lastIndexOf(' ');
+  return `${(lastSpace > 12 ? truncated.slice(0, lastSpace) : truncated).trim()}...`;
+}
+
+export function getMealDisplayName(meal) {
+  const fallback = capitalizeLabel(meal?.meal_type || 'Meal');
+  const notes = String(meal?.notes || '').trim();
+
+  if (!notes) {
+    return fallback;
+  }
+
+  const prefixes = [
+    /^ai analysis:\s*/i,
+    /^updated ai analysis:\s*/i,
+    /^reanalysis with corrections:\s*/i,
+    /^text description:\s*/i,
+    /^estimated from:\s*/i,
+  ];
+  const genericNames = new Set([
+    'unknown food',
+    'could not analyze the image properly',
+    'could not analyze the food description properly',
+    'openai api key is not configured',
+  ]);
+
+  const segments = notes
+    .split(/\n+/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  for (const segment of segments) {
+    const cleanedSegment = prefixes.reduce(
+      (value, pattern) => value.replace(pattern, ''),
+      segment,
+    );
+    const candidate = cleanedSegment
+      .split(/[.!?](?:\s|$)/)[0]
+      .replace(/\s+/g, ' ')
+      .replace(/^[:\-–\s]+|[:\-–\s]+$/g, '')
+      .trim();
+
+    if (!candidate || genericNames.has(candidate.toLowerCase())) {
+      continue;
     }
-    
-    return await response.json();
-  } catch (error) {
-    // Return null on error
-    return null;
+
+    return truncateLabel(capitalizeLabel(candidate));
+  }
+
+  return fallback;
+}
+
+const INSTALL_MESSAGE = 'Use your browser menu to install this app if the prompt is not available.';
+let deferredInstallPrompt = null;
+
+export function getAuthToken() {
+  return window.localStorage.getItem('token');
+}
+
+export function setAuthToken(token) {
+  window.localStorage.setItem('token', token);
+}
+
+export function clearAuthToken() {
+  window.localStorage.removeItem('token');
+}
+
+export function isAuthenticated() {
+  return Boolean(getAuthToken());
+}
+
+export function logout() {
+  clearAuthToken();
+  if (typeof window !== 'undefined') {
+    window.location.href = 'login.html';
   }
 }
 
-// Convert UTC date string to local date object
-function utcToLocal(dateString) {
-  // Create a date object that correctly interprets the input as UTC
-  // and then returns it in the local timezone
-  const date = new Date(dateString + 'Z');
-  return date;
+export function authHeaders(headers = {}) {
+  const token = getAuthToken();
+  return token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
 }
 
-// Convert local date to UTC for API
-function localToUTC(localDate) {
-  return new Date(localDate).toISOString();
+export async function apiFetch(url, options = {}) {
+  const {
+    auth = true,
+    redirectOnAuthError = true,
+    headers = {},
+    body,
+    ...rest
+  } = options;
+
+  const resolvedHeaders = new Headers(auth ? authHeaders(headers) : headers);
+  const requestOptions = { ...rest, headers: resolvedHeaders };
+
+  if (body !== undefined) {
+    if (body instanceof FormData) {
+      requestOptions.body = body;
+    } else if (typeof body === 'string') {
+      requestOptions.body = body;
+    } else {
+      if (!resolvedHeaders.has('Content-Type')) {
+        resolvedHeaders.set('Content-Type', 'application/json');
+      }
+      requestOptions.body = JSON.stringify(body);
+    }
+  }
+
+  const response = await fetch(url, requestOptions);
+  if (response.status === 401 && redirectOnAuthError) {
+    clearAuthToken();
+    if (!window.location.pathname.endsWith('login.html')) {
+      window.location.href = 'login.html';
+    }
+  }
+
+  return response;
 }
 
-// Format date for display in local timezone with time zone name
-function formatDate(dateString) {
-  const options = {
-    year: 'numeric',
+export async function getJsonOrThrow(response, fallbackMessage = 'Request failed') {
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.detail || fallbackMessage);
+  }
+  return data;
+}
+
+export async function fetchCurrentUser() {
+  const response = await apiFetch(API.currentUser);
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+}
+
+export function showStatus(target, message = '', tone = 'info') {
+  if (!target) {
+    return;
+  }
+
+  target.textContent = message;
+  target.dataset.tone = tone;
+  target.hidden = !message;
+}
+
+export function formatDateTime(value) {
+  if (!value) {
+    return 'Unknown';
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
     minute: '2-digit',
-    timeZoneName: 'short'
-  };
-  return utcToLocal(dateString).toLocaleDateString(undefined, options);
+  }).format(new Date(value));
 }
 
-// Format time only with time zone name
-function formatTime(dateString) {
-  const options = {
-    hour: '2-digit',
+export function formatTime(value) {
+  if (!value) {
+    return 'Unknown';
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric',
     minute: '2-digit',
-    timeZoneName: 'short'
-  };
-  return utcToLocal(dateString).toLocaleTimeString(undefined, options);
+  }).format(new Date(value));
 }
 
-// Format time only without time zone name
-function formatTimeShort(dateString) {
-  const options = {
-    hour: '2-digit',
-    minute: '2-digit'
-  };
-  return utcToLocal(dateString).toLocaleTimeString(undefined, options);
+export function formatDayLabel(value) {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(value));
 }
 
-// Format date for input fields (in local timezone)
-function formatDateForInput(dateString) {
-  const date = utcToLocal(dateString);
+export function getLocalDateKey(value) {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function getDefaultDateRange(daysBack = 6) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - daysBack);
+
+  return {
+    from: toDateInputValue(start),
+    to: toDateInputValue(end),
+  };
+}
+
+export function toDateInputValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function toDateTimeInputValue(value) {
+  const date = new Date(value);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
-  
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-// Get current date in ISO format (local date, start of day)
-function getCurrentDateISO() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
+export function localDateRangeToUtc(fromDate, toDate) {
+  const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
+  const to = toDate ? new Date(`${toDate}T00:00:00`) : null;
 
-// Get date range for the past week (in local timezone)
-function getLastWeekRange() {
-  const today = new Date();
-  const lastWeek = new Date(today);
-  lastWeek.setDate(today.getDate() - 7);
-  
+  if (to) {
+    to.setDate(to.getDate() + 1);
+  }
+
   return {
-    from: `${lastWeek.getFullYear()}-${String(lastWeek.getMonth() + 1).padStart(2, '0')}-${String(lastWeek.getDate()).padStart(2, '0')}`,
-    to: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    from: from ? from.toISOString() : null,
+    to: to ? to.toISOString() : null,
   };
 }
 
-// Initialize navigation
-function initNavigation() {
-  // Get current page
-  const currentPage = window.location.pathname.split('/').pop();
-  
-  // Set active class on current page link
-  document.querySelectorAll('.navbar-link').forEach(link => {
-    const href = link.getAttribute('href');
-    if (href === currentPage) {
-      link.classList.add('active');
-    }
+export function normalizeOptionalNumber(value) {
+  if (value === '' || value === null || value === undefined) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function bindQuickRangeButtons(buttons, onSelect) {
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const days = Number(button.dataset.days || 0);
+      const range = getDefaultDateRange(days);
+      onSelect(range);
+    });
   });
-  
-  // Mobile menu toggle
-  const navbarToggle = document.querySelector('.navbar-toggle');
-  const navbarMenu = document.querySelector('.navbar-menu');
-  
-  if (navbarToggle && navbarMenu) {
-    navbarToggle.addEventListener('click', () => {
-      navbarMenu.classList.toggle('active');
-    });
+}
+
+export function setActiveNavLink() {
+  const page = document.body.dataset.page;
+  document.querySelectorAll('[data-nav]').forEach((link) => {
+    link.classList.toggle('active', link.dataset.nav === page);
+  });
+}
+
+export function toggleModal(modal, shouldOpen) {
+  if (!modal) {
+    return;
+  }
+  modal.hidden = !shouldOpen;
+  document.body.classList.toggle('modal-open', shouldOpen);
+}
+
+export async function registerServiceWorker() {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return;
+  }
+
+  try {
+    await navigator.serviceWorker.register('/service-worker.js');
+  } catch (error) {
+    console.error('Service worker registration failed:', error);
   }
 }
 
-// Display error message
-function showError(elementId, message) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    element.textContent = message;
-    element.style.color = 'var(--danger-color)';
+export function setupInstallPrompt() {
+  const installButton = document.querySelector('[data-install-button]');
+  if (!installButton) {
+    return;
   }
-}
 
-// Display success message
-function showSuccess(elementId, message) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    element.textContent = message;
-    element.style.color = 'var(--success-color)';
-  }
-}
-
-// Create nutrition progress bar
-function createNutritionBar(value, maxValue, color = 'var(--primary-color)') {
-  const percentage = Math.min(100, (value / maxValue) * 100);
-  return `
-    <div class="nutrition-bar-container" style="width: 100%; background-color: #eee; border-radius: 10px; height: 20px; overflow: hidden;">
-      <div class="nutrition-bar" style="width: ${percentage}%; height: 100%; background-color: ${color};"></div>
-    </div>
-    <div class="nutrition-bar-label" style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-      <span>${value}</span>
-      <span>${maxValue}</span>
-    </div>
-  `;
-}
-
-// Initialize page
-document.addEventListener('DOMContentLoaded', () => {
-  // Skip authentication check on login page
-  const currentPage = window.location.pathname.split('/').pop();
-  if (currentPage === 'login.html') {
-    return; // Skip auth check on login page
-  }
-  
-  // Check authentication for all other pages
-  if (checkAuth()) {
-    // Initialize navigation
-    initNavigation();
-    
-    // Set up logout buttons
-    const logoutBtnMobile = document.getElementById('logoutBtnMobile');
-    const logoutBtnDesktop = document.getElementById('logoutBtnDesktop');
-    
-    if (logoutBtnMobile) {
-      logoutBtnMobile.addEventListener('click', logout);
+  installButton.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) {
+      showToast(INSTALL_MESSAGE);
+      return;
     }
-    
-    if (logoutBtnDesktop) {
-      logoutBtnDesktop.addEventListener('click', logout);
-    }
-    
-    // Fetch and display user info
-    fetchCurrentUser().then(user => {
-      const userNameElement = document.getElementById('userName');
-      if (userNameElement && user) {
-        userNameElement.textContent = `Hello, ${user.name}!`;
-      }
-    });
+
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installButton.hidden = true;
+  });
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    installButton.hidden = false;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installButton.hidden = true;
+    deferredInstallPrompt = null;
+  });
+}
+
+export function showToast(message) {
+  let toast = document.getElementById('appToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'appToast';
+    toast.className = 'app-toast';
+    document.body.appendChild(toast);
   }
-});
+
+  toast.textContent = message;
+  toast.classList.add('visible');
+  window.clearTimeout(showToast.timeoutId);
+  showToast.timeoutId = window.setTimeout(() => {
+    toast.classList.remove('visible');
+  }, 3200);
+}
+
+showToast.timeoutId = null;
+
+export async function setupPage({ requiresAuth = true } = {}) {
+  setActiveNavLink();
+  setupInstallPrompt();
+  await registerServiceWorker();
+
+  const logoutButtons = document.querySelectorAll('[data-logout]');
+  logoutButtons.forEach((button) => button.addEventListener('click', logout));
+
+  if (!requiresAuth) {
+    return null;
+  }
+
+  if (!isAuthenticated()) {
+    window.location.href = 'login.html';
+    return null;
+  }
+
+  const user = await fetchCurrentUser();
+  const greeting = document.querySelector('[data-user-greeting]');
+  if (greeting && user) {
+    greeting.textContent = user.name;
+  }
+  return user;
+}

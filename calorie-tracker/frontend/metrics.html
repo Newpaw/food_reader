@@ -1,521 +1,123 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Calorie Tracker - Metrics Dashboard</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Visualize your nutrition data with interactive charts and comprehensive metrics to track your dietary habits">
-    <meta name="author" content="Calorie Tracker App">
-    <meta name="theme-color" content="#4CAF50">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Calorie Tracker - Metrics Dashboard">
-    <meta property="og:description" content="Visualize your nutrition data with interactive charts and comprehensive metrics to track your dietary habits">
-    <meta property="og:image" content="assets/favicon/apple-touch-icon.png">
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Calorie Tracker - Metrics Dashboard">
-    <meta name="twitter:description" content="Visualize your nutrition data with interactive charts and comprehensive metrics to track your dietary habits">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Reader | Metrics</title>
+    <meta name="description" content="Track progress against calorie and macro goals with a responsive dashboard built for mobile screens first.">
+    <meta name="theme-color" content="#d96b3b">
     <link rel="stylesheet" href="styles.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
-    <link rel="manifest" href="assets/favicon/site.webmanifest">
-    <link rel="shortcut icon" href="assets/favicon/favicon.ico">
   </head>
-  <body>
-    <div class="navbar">
-      <div class="navbar-container">
-        <button class="navbar-toggle">☰</button>
-        <a href="index.html" class="navbar-brand">Calorie Tracker</a>
-        <ul class="navbar-menu">
-          <li class="navbar-item"><a href="index.html" class="navbar-link">Add Meal</a></li>
-          <li class="navbar-item"><a href="history.html" class="navbar-link">History</a></li>
-          <li class="navbar-item"><a href="metrics.html" class="navbar-link">Metrics</a></li>
-          <li class="navbar-item navbar-user-menu-item">
-            <div class="navbar-user-section">
-              <span id="userName"></span>
-              <button id="logoutBtnMobile" class="btn btn-neutral btn-sm btn-outline">Logout</button>
-            </div>
-          </li>
-        </ul>
-        <div class="navbar-user-section navbar-user-desktop">
-          <span id="userName"></span>
-          <button id="logoutBtnDesktop" class="btn btn-neutral btn-sm btn-outline">Logout</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav">
-      <div class="mobile-bottom-nav-container">
-        <div class="mobile-nav-item">
-          <a href="index.html" class="mobile-nav-link">
-            <span class="mobile-nav-icon">➕</span>
-            <span class="mobile-nav-label">Add Meal</span>
+  <body data-page="metrics">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="index.html">
+            <span class="brand-mark">FR</span>
+            <span class="brand-copy">
+              <strong>Food Reader</strong>
+              <small>mobile nutrition log</small>
+            </span>
           </a>
+          <nav class="desktop-nav" aria-label="Primary">
+            <a href="index.html" data-nav="add">Add Meal</a>
+            <a href="history.html" data-nav="history">History</a>
+            <a href="metrics.html" data-nav="metrics">Metrics</a>
+            <a href="profile.html" data-nav="profile">Profile</a>
+          </nav>
+          <div class="topbar-actions">
+            <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+            <span class="user-chip"><span data-user-greeting>You</span></span>
+            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+          </div>
         </div>
-        <div class="mobile-nav-item">
-          <a href="history.html" class="mobile-nav-link">
-            <span class="mobile-nav-icon">📋</span>
-            <span class="mobile-nav-label">History</span>
-          </a>
-        </div>
-        <div class="mobile-nav-item">
-          <a href="metrics.html" class="mobile-nav-link active">
-            <span class="mobile-nav-icon">📊</span>
-            <span class="mobile-nav-label">Metrics</span>
-          </a>
-        </div>
-        <div class="mobile-nav-item">
-          <a href="#" class="mobile-nav-link" id="mobileLogoutBtn">
-            <span class="mobile-nav-icon">🚪</span>
-            <span class="mobile-nav-label">Logout</span>
-          </a>
-        </div>
-      </div>
-    </nav>
+      </header>
 
-    <div class="container">
-      <!-- Mobile Filter Toggle Button -->
-      <button id="mobileFilterToggle" class="mobile-filter-toggle" aria-label="Toggle Filters">
-        <span class="filter-icon">🔍</span>
-        <span class="filter-text">Filters</span>
-        <span class="filter-badge" id="filterBadge"></span>
-      </button>
+      <main class="page">
+        <section class="page-hero">
+          <p class="eyebrow">Metrics</p>
+          <h1>See whether your daily pattern is moving toward the target.</h1>
+          <p>The dashboard stays readable on narrow screens, but expands into a denser command view on larger layouts.</p>
+        </section>
 
-      <div class="card filter-card" id="filterCard">
-        <div class="filter-header">
-          <h2>Nutrition Metrics</h2>
-          <button class="filter-close-btn" id="filterCloseBtn" aria-label="Close Filters">&times;</button>
-        </div>
-        
-        <div class="filter-content">
-          <div class="form-group">
-            <label for="dateRange" class="form-label">Date Range:</label>
-            <div class="filter-container">
-              <input type="date" id="fromDate" class="form-control">
-              <span>to</span>
-              <input type="date" id="toDate" class="form-control">
-              <button id="updateBtn" class="btn btn-primary">Apply Filters</button>
+        <section class="panel">
+          <form id="metricsFilters" class="filter-grid">
+            <label class="field">
+              <span>From</span>
+              <input id="metricsFrom" type="date" required>
+            </label>
+            <label class="field">
+              <span>To</span>
+              <input id="metricsTo" type="date" required>
+            </label>
+            <button type="submit" class="btn btn-primary">Refresh metrics</button>
+          </form>
+          <div class="button-row quick-row">
+            <button type="button" class="btn btn-secondary btn-small" data-days="0">Today</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="6">Last 7 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="29">Last 30 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-days="89">Last 90 days</button>
+          </div>
+          <p id="metricsStatus" class="status" hidden></p>
+        </section>
+
+        <section id="targetPanel" class="panel"></section>
+        <section id="metricsStats" class="stat-grid"></section>
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Progress</p>
+              <h2>Average intake versus target</h2>
             </div>
           </div>
-          
-          <div class="form-group">
-            <label class="form-label">Quick Select:</label>
-            <div class="quick-select-container">
-              <button id="todayBtn" class="btn btn-secondary">Today</button>
-              <button id="lastWeekBtn" class="btn btn-secondary">Last 7 Days</button>
-              <button id="lastMonthBtn" class="btn btn-secondary">Last 30 Days</button>
-              <button id="thisMonthBtn" class="btn btn-secondary">This Month</button>
+          <div id="progressPanel" class="stack"></div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Daily calories</p>
+                <h2>Bar view</h2>
+              </div>
+            </div>
+            <div id="calorieBars" class="mini-chart"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Macro balance</p>
+                <h2>Distribution</h2>
+              </div>
+            </div>
+            <div id="macroRing" class="macro-panel"></div>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Day by day</p>
+              <h2>Summary list</h2>
             </div>
           </div>
-        </div>
-      </div>
-      
-      <div class="card">
-        <h3>Daily Calorie Intake</h3>
-        <div class="chart-container" style="position: relative; background: rgba(20, 20, 20, 0.5); border-radius: 12px; padding: 15px; box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);">
-          <canvas id="calorieChart"></canvas>
-        </div>
-        
-        <div class="nutrition-summary mt-3">
-          <div class="nutrition-grid">
-            <div class="nutrition-card">
-              <div id="avgCalories" class="value">0</div>
-              <div class="label">Avg. Daily Calories</div>
-            </div>
-            <div class="nutrition-card">
-              <div id="totalCalories" class="value">0</div>
-              <div class="label">Total Calories</div>
-            </div>
-            <div class="nutrition-card">
-              <div id="maxCalories" class="value">0</div>
-              <div class="label">Max Daily Calories</div>
-            </div>
-            <div class="nutrition-card">
-              <div id="totalMeals" class="value">0</div>
-              <div class="label">Total Meals</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="card">
-        <h3>Macronutrient Distribution</h3>
-        <div class="chart-container" style="height: 350px; position: relative; background: rgba(20, 20, 20, 0.5); border-radius: 12px; padding: 15px; box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);">
-          <canvas id="macroChart"></canvas>
-        </div>
-        
-        <div class="nutrition-summary mt-3">
-          <div class="nutrition-grid">
-            <div class="nutrition-card">
-              <div id="totalProtein" class="value">0</div>
-              <div class="label">Total Protein (g)</div>
-            </div>
-            <div class="nutrition-card">
-              <div id="totalFat" class="value">0</div>
-              <div class="label">Total Fat (g)</div>
-            </div>
-            <div class="nutrition-card">
-              <div id="totalCarbs" class="value">0</div>
-              <div class="label">Total Carbs (g)</div>
-            </div>
-            <div class="nutrition-card">
-              <div id="proteinPercentage" class="value">0%</div>
-              <div class="label">Protein %</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="card">
-        <h3>Nutrient Intake Over Time</h3>
-        <div class="chart-container" style="position: relative; background: rgba(20, 20, 20, 0.5); border-radius: 12px; padding: 15px; box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);">
-          <canvas id="nutrientChart"></canvas>
-        </div>
-      </div>
-      
-      <div class="card">
-        <h3>Meals per Day</h3>
-        <div class="chart-container" style="position: relative; background: rgba(20, 20, 20, 0.5); border-radius: 12px; padding: 15px; box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);">
-          <canvas id="mealsChart"></canvas>
-        </div>
-      </div>
+          <div id="dailyList" class="stack"></div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Mobile">
+        <a href="index.html" data-nav="add">Add</a>
+        <a href="history.html" data-nav="history">History</a>
+        <a href="metrics.html" data-nav="metrics">Metrics</a>
+        <a href="profile.html" data-nav="profile">Profile</a>
+      </nav>
     </div>
 
-    <script src="common.js"></script>
-    <script src="charts.js"></script>
-    <script>
-      // Mobile Filter Toggle Functionality
-      function initializeFilterToggle() {
-        const filterToggle = document.getElementById('mobileFilterToggle');
-        const filterCard = document.getElementById('filterCard');
-        const filterCloseBtn = document.getElementById('filterCloseBtn');
-        const filterBadge = document.getElementById('filterBadge');
-        
-        if (filterToggle && filterCard) {
-          // Toggle filter panel
-          filterToggle.addEventListener('click', () => {
-            filterCard.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
-          });
-          
-          // Close filter panel
-          const closeFilter = () => {
-            filterCard.classList.remove('active');
-            document.body.style.overflow = ''; // Restore scrolling
-          };
-          
-          if (filterCloseBtn) {
-            filterCloseBtn.addEventListener('click', closeFilter);
-          }
-          
-          // Close on backdrop click
-          filterCard.addEventListener('click', (e) => {
-            if (e.target === filterCard) {
-              closeFilter();
-            }
-          });
-          
-          // Update filter badge when dates change
-          const updateFilterBadge = () => {
-            const fromDate = document.getElementById('fromDate').value;
-            const toDate = document.getElementById('toDate').value;
-            const today = new Date().toISOString().split('T')[0];
-            
-            // Show badge if not filtering by today
-            if (fromDate !== today || toDate !== today) {
-              filterBadge.textContent = '●';
-            } else {
-              filterBadge.textContent = '';
-            }
-          };
-          
-          document.getElementById('fromDate').addEventListener('change', updateFilterBadge);
-          document.getElementById('toDate').addEventListener('change', updateFilterBadge);
-          
-          // Close filter after update button is clicked
-          document.getElementById('updateBtn').addEventListener('click', () => {
-            setTimeout(closeFilter, 300); // Small delay for better UX
-          });
-          
-          // Close filter after quick select buttons
-          ['todayBtn', 'lastWeekBtn', 'lastMonthBtn', 'thisMonthBtn'].forEach(btnId => {
-            const btn = document.getElementById(btnId);
-            if (btn) {
-              btn.addEventListener('click', () => {
-                setTimeout(closeFilter, 300);
-              });
-            }
-          });
-        }
-      }
-      
-      // Initialize date range with today's date only and automatically load data
-      document.addEventListener('DOMContentLoaded', () => {
-        // Initialize filter toggle functionality
-        initializeFilterToggle();
-        
-        // Bypass auth check for testing
-        // if (!checkAuth()) return;
-        
-        const today = new Date();
-        
-        // Set both from and to dates to today for default filtering
-        document.getElementById('fromDate').value = today.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        console.log(`DEBUG: Initialized metrics page with today's date: ${today.toISOString().split('T')[0]}`);
-        
-        // Automatically load metrics with today's date filter
-        if (typeof API !== 'undefined') {  // Check if we're in a real environment, not testing
-          console.log("DEBUG: Automatically loading metrics with today's date filter");
-          loadMetrics();
-        } else {
-          console.log("DEBUG: In testing mode, using mock data");
-          
-          // Mobile logout button handler
-          const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-          if (mobileLogoutBtn) {
-            mobileLogoutBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              logout();
-            });
-          }
-          
-          // Mock data for testing
-          const mockSummaryData = {
-            days: [
-              { total_calories: 2000, meals: 3 },
-              { total_calories: 1800, meals: 3 },
-              { total_calories: 2200, meals: 4 }
-            ]
-          };
-          
-          const mockMealsData = [
-            { id: 1, protein: 50, fat: 70, carbs: 200 },
-            { id: 2, protein: 60, fat: 65, carbs: 180 },
-            { id: 3, protein: 55, fat: 75, carbs: 210 }
-          ];
-          
-          updateMetrics(mockSummaryData, mockMealsData);
-        }
-      });
-      
-      // Load metrics data
-      async function loadMetrics() {
-        console.log("DEBUG: Loading metrics data");
-        const fromDate = document.getElementById('fromDate').value;
-        const toDate = document.getElementById('toDate').value;
-        
-        console.log(`DEBUG: Metrics date range - from: ${fromDate}, to: ${toDate}`);
-        
-        if (!fromDate || !toDate) {
-          console.log("DEBUG: Invalid date range selected");
-          alert('Please select a valid date range');
-          return;
-        }
-        
-        try {
-          // Load summary data with proper timezone conversion
-          const fromUTC = new Date(`${fromDate}T00:00:00`).toISOString();
-          const toUTC = new Date(`${toDate}T23:59:59`).toISOString();
-          console.log(`DEBUG: Converted date range - from: ${fromUTC}, to: ${toUTC}`);
-          
-          const summaryUrl = `${API.summary}?frm=${fromUTC}&to=${toUTC}`;
-          console.log(`DEBUG: Fetching summary from URL: ${summaryUrl}`);
-          
-          const summaryResponse = await fetch(summaryUrl, {
-            headers: authHeaders()
-          });
-          
-          console.log(`DEBUG: Summary API response status: ${summaryResponse.status}`);
-          
-          if (!summaryResponse.ok) {
-            if (summaryResponse.status === 401) {
-              console.log("DEBUG: Authentication failed, logging out");
-              logout();
-              return;
-            }
-            throw new Error('Failed to load summary data');
-          }
-          
-          const summaryData = await summaryResponse.json();
-          console.log(`DEBUG: Received summary data with ${summaryData.days.length} days`);
-          
-          // Load meals data for the same period
-          const mealsUrl = `${API.meals}?frm=${fromUTC}&to=${toUTC}&limit=100`;
-          console.log(`DEBUG: Fetching meals from URL: ${mealsUrl}`);
-          
-          const mealsResponse = await fetch(mealsUrl, {
-            headers: authHeaders()
-          });
-          
-          console.log(`DEBUG: Meals API response status: ${mealsResponse.status}`);
-          
-          if (!mealsResponse.ok) {
-            throw new Error('Failed to load meals data');
-          }
-          
-          const mealsData = await mealsResponse.json();
-          console.log(`DEBUG: Received ${mealsData.length} meals for metrics`);
-          
-          // Log meal IDs for debugging
-          if (mealsData.length > 0) {
-            console.log("DEBUG: Meal IDs for metrics:", mealsData.map(m => m.id).join(", "));
-          }
-          
-          // Update charts and metrics
-          updateMetrics(summaryData, mealsData);
-        } catch (error) {
-          console.error('Error loading metrics:', error);
-          console.log(`DEBUG: Metrics error details: ${error.message}`);
-          alert(`Error loading metrics: ${error.message}`);
-        }
-      }
-      
-      // Update all charts and metrics
-      async function updateMetrics(summaryData, mealsData) {
-        console.log(`DEBUG: Updating metrics with ${summaryData.days.length} days and ${mealsData.length} meals`);
-        
-        // Calculate summary statistics
-        let totalCalories = 0;
-        let maxCalories = 0;
-        let totalMeals = 0;
-        
-        summaryData.days.forEach(day => {
-          totalCalories += day.total_calories;
-          maxCalories = Math.max(maxCalories, day.total_calories);
-          totalMeals += day.meals;
-        });
-        
-        const avgCalories = summaryData.days.length > 0
-          ? Math.round(totalCalories / summaryData.days.length)
-          : 0;
-        
-        console.log(`DEBUG: Calculated metrics - avgCalories: ${avgCalories}, totalCalories: ${totalCalories}, maxCalories: ${maxCalories}, totalMeals: ${totalMeals}`);
-        
-        // Update summary cards
-        document.getElementById('avgCalories').textContent = avgCalories;
-        document.getElementById('totalCalories').textContent = totalCalories;
-        document.getElementById('maxCalories').textContent = maxCalories;
-        document.getElementById('totalMeals').textContent = totalMeals;
-        
-        // Track which meal IDs we've seen to avoid duplicates
-        const processedMealIds = new Set();
-        
-        // Filter out any potential duplicate or invalid meals
-        const validMeals = mealsData.filter(meal => {
-          if (!meal.id || processedMealIds.has(meal.id)) {
-            console.log(`DEBUG: Skipping duplicate or invalid meal ID in metrics: ${meal.id}`);
-            return false;
-          }
-          processedMealIds.add(meal.id);
-          return true;
-        });
-        
-        console.log(`DEBUG: Filtered down to ${validMeals.length} valid meals for metrics`);
-        
-        // Calculate macronutrient totals
-        let totalProtein = 0;
-        let totalFat = 0;
-        let totalCarbs = 0;
-        
-        validMeals.forEach(meal => {
-          totalProtein += meal.protein || 0;
-          totalFat += meal.fat || 0;
-          totalCarbs += meal.carbs || 0;
-        });
-        
-        console.log(`DEBUG: Calculated macros - protein: ${totalProtein}g, fat: ${totalFat}g, carbs: ${totalCarbs}g`);
-        
-        // Calculate macronutrient percentages (by calories)
-        const proteinCalories = totalProtein * 4;
-        const fatCalories = totalFat * 9;
-        const carbCalories = totalCarbs * 4;
-        const totalMacroCalories = proteinCalories + fatCalories + carbCalories;
-        
-        const proteinPercentage = totalMacroCalories > 0 
-          ? Math.round((proteinCalories / totalMacroCalories) * 100) 
-          : 0;
-        
-        // Update macronutrient cards
-        document.getElementById('totalProtein').textContent = Math.round(totalProtein);
-        document.getElementById('totalFat').textContent = Math.round(totalFat);
-        document.getElementById('totalCarbs').textContent = Math.round(totalCarbs);
-        document.getElementById('proteinPercentage').textContent = `${proteinPercentage}%`;
-        
-        // Create charts
-        try {
-          console.log(`DEBUG: Creating charts with filtered data`);
-          
-          // Daily calorie chart
-          await createDailyCalorieChart('calorieChart', summaryData);
-          
-          // Macronutrient distribution chart
-          await createMacronutrientChart('macroChart', validMeals);
-          
-          // Nutrient intake over time chart
-          await createNutrientIntakeChart('nutrientChart', validMeals);
-          
-          // Meals per day chart
-          await createMealFrequencyChart('mealsChart', summaryData);
-          
-          console.log(`DEBUG: Charts created successfully`);
-        } catch (error) {
-          console.error('Error creating charts:', error);
-          console.log(`DEBUG: Chart creation error: ${error.message}`);
-        }
-      }
-      
-      // Date range quick select buttons
-      document.getElementById('todayBtn').addEventListener('click', () => {
-        const today = new Date();
-        
-        document.getElementById('fromDate').value = today.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMetrics();
-      });
-      
-      document.getElementById('lastWeekBtn').addEventListener('click', () => {
-        const today = new Date();
-        const lastWeek = new Date(today);
-        lastWeek.setDate(today.getDate() - 7);
-        
-        document.getElementById('fromDate').value = lastWeek.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMetrics();
-      });
-      
-      document.getElementById('lastMonthBtn').addEventListener('click', () => {
-        const today = new Date();
-        const lastMonth = new Date(today);
-        lastMonth.setDate(today.getDate() - 30);
-        
-        document.getElementById('fromDate').value = lastMonth.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMetrics();
-      });
-      
-      document.getElementById('thisMonthBtn').addEventListener('click', () => {
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        
-        document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
-        
-        loadMetrics();
-      });
-      
-      // Update button click handler
-      document.getElementById('updateBtn').addEventListener('click', loadMetrics);
-    </script>
+    <script type="module" src="metrics.js"></script>
   </body>
 </html>

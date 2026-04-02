@@ -1,81 +1,81 @@
-# Calorie Tracker Application
+# Food Reader
 
-A simple yet powerful nutrition tracking application with AI-powered food image analysis. This application allows users to track their meals by simply uploading photos, and the system automatically analyzes the food to determine nutritional information including calories, macronutrients, and more.
+Food Reader is a mobile-first nutrition tracking app with a FastAPI backend and a static frontend that can be installed as a Progressive Web App. Users can log meals from a photo or plain text, review the estimate immediately, then manage history, metrics, and profile-based targets from the same interface.
 
 ## Features
 
-- **AI-Powered Food Analysis**: Upload food photos and get automatic analysis using OpenAI's Vision API  
-- **Text-Based Meal Tracking**: Add meals by text description without requiring photos
-- **Comprehensive Nutritional Tracking**: Track calories, protein, fat, carbohydrates, fiber, sugar, and sodium  
-- **User Authentication**: Email and password-based registration and login with JWT tokens  
-- **Meal Tracking**: Upload meal photos with automatic or manual metadata (nutritional info, meal type, time, notes)  
-- **Image Storage**: Photos are stored on disk with proper organization  
-- **Calorie Summaries**: View daily calorie totals and meal counts  
-- **Responsive UI**: Simple and clean interface for tracking meals  
-- **Timezone Support**: All dates and times are displayed in the user's local timezone  
-- **Docker Support**: Easy deployment with Docker and docker-compose  
-- **Nginx Web Server**: Static content served efficiently through Nginx  
-- **Comprehensive Logging System**: Detailed application logging with multiple log levels, file rotation, and request tracking
+- **Mobile-First UX**: Every primary screen is designed for phone-sized layouts first, then expands for larger screens.
+- **Photo And Text Capture**: Add meals from an image or a free-form description.
+- **Review-First Logging**: New meals open into an editable nutrition panel so users can correct values immediately.
+- **History And Metrics**: Browse grouped meal history, daily calorie summaries, and macro trends.
+- **Profile-Based Targets**: Save body metrics and optional custom goals to compare intake against realistic targets.
+- **Progressive Web App**: Install the app from the browser, cache the shell offline, and keep it on the home screen.
+- **Automated Tests**: Backend API coverage with `pytest` and frontend module coverage with `vitest`.
+- **Docker And Nginx Support**: Static frontend delivery plus backend API proxying in one container setup.
 
 ## Project Structure
 
 ```
-calorie-tracker/
-├─ backend/
-│  ├─ app/
-│  │  ├─ main.py              # FastAPI application setup
-│  │  ├─ settings.py          # Configuration settings
-│  │  ├─ database.py          # Database connection
-│  │  ├─ models.py            # SQLAlchemy models
-│  │  ├─ schemas.py           # Pydantic schemas
-│  │  ├─ auth.py              # Authentication utilities
-│  │  ├─ crud.py              # Database operations
-│  │  ├─ deps.py              # Dependency injection
-│  │  ├─ ai_analyzer.py       # OpenAI Vision API integration
-│  │  ├─ logger.py            # Logging system implementation
-│  │  └─ routers/             # API endpoints
-│  ├─ logs/                   # Application logs directory
-│  │  ├─ app.log              # Main application logs
-│  │  ├─ error.log            # Error-level logs only
-│  │  └─ access.log           # API request/response logs
-│  └─ uploads/                # Generated at runtime
-├─ frontend/
-│  ├─ index.html              # Main application page
-│  ├─ login.html              # Login page
-│  ├─ history.html            # Meal history page
-│  ├─ metrics.html            # Nutrition metrics page
-│  ├─ common.js               # Shared JavaScript utilities
-│  ├─ charts.js               # Chart visualization code
-│  ├─ app.js                  # Frontend JavaScript
-│  ├─ imageOptimizer.js       # Image optimization utilities
-│  └─ styles.css              # CSS styles
-├─ nginx.conf                 # Nginx configuration
-├─ Dockerfile                 # Docker build instructions
-├─ docker-compose.yml         # Docker Compose (production)
-├─ docker-compose.local.yml   # Docker Compose (local dev)
-├─ Makefile                   # Shortcuts for local dev
-├─ Makefile.local             # Additional local dev shortcuts
-├─ .env.example               # Example environment variables
-└─ requirements.txt           # Python dependencies
+food_reader/
+├─ pyproject.toml             # uv-managed Python project metadata
+├─ uv.lock                    # Locked Python dependency graph
+├─ calorie-tracker/
+│  ├─ backend/
+│  │  ├─ app/
+│  │  │  ├─ main.py              # FastAPI application setup
+│  │  │  ├─ settings.py          # Configuration settings
+│  │  │  ├─ database.py          # Database connection
+│  │  │  ├─ models.py            # SQLAlchemy models
+│  │  │  ├─ schemas.py           # Pydantic schemas
+│  │  │  ├─ auth.py              # Authentication utilities
+│  │  │  ├─ crud.py              # Database operations
+│  │  │  ├─ deps.py              # Dependency injection
+│  │  │  ├─ ai_analyzer.py       # OpenAI Vision API integration
+│  │  │  ├─ logger.py            # Logging system implementation
+│  │  │  └─ routers/             # API endpoints
+│  │  ├─ logs/                   # Application logs directory
+│  │  └─ uploads/                # Generated at runtime
+│  ├─ frontend/
+│  │  ├─ index.html              # Add meal screen
+│  │  ├─ login.html              # Sign in and registration screen
+│  │  ├─ history.html            # Meal history screen
+│  │  ├─ metrics.html            # Metrics dashboard
+│  │  ├─ profile.html            # Profile and target settings
+│  │  ├─ common.js               # Shared frontend utilities
+│  │  ├─ charts.js               # Dashboard data rendering helpers
+│  │  ├─ service-worker.js       # PWA service worker
+│  │  ├─ manifest.webmanifest    # PWA manifest
+│  │  ├─ tests/                  # Frontend unit tests
+│  │  └─ styles.css              # Shared mobile-first styling
+│  ├─ nginx.conf                 # Nginx configuration
+│  ├─ Dockerfile                 # Docker build instructions
+│  ├─ docker-compose.yml         # Docker Compose (production)
+│  ├─ docker-compose.local.yml   # Docker Compose (local dev)
+│  ├─ Makefile                   # Shortcuts for local dev
+│  ├─ Makefile.local             # Additional local dev shortcuts
+│  ├─ start.sh                   # Container entrypoint
+│  └─ .env.example               # Example environment variables
 ```
 
 ## Installation
 
 ### Prerequisites
-- Python 3.8+
+- `uv`
+- Python 3.12
+- Node.js 20+
 - Docker and Docker Compose (optional)
 - Make (optional, for using Makefile)
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/calorie-tracker.git
-cd calorie-tracker
+git clone <repository-url> food_reader
+cd food_reader
 ```
 
 2. Set up environment variables:
 ```bash
-cp .env.example .env
-# Edit .env with your OpenAI API key and other settings
+cp calorie-tracker/.env.example calorie-tracker/.env
+# Edit calorie-tracker/.env with your OpenAI API key and other settings
 ```
 
 ## Running the Application
@@ -84,11 +84,13 @@ cp .env.example .env
 
 Production mode:
 ```bash
+cd calorie-tracker
 docker compose up -d
 ```
 
 Development mode:
 ```bash
+cd calorie-tracker
 make up    # Starts the application
 make down  # Stops the application
 make logs  # Views backend logs
@@ -98,44 +100,72 @@ Access the application at: http://localhost:18080
 
 ### Option 2: Manual Setup
 
-1. Create and activate virtual environment:
+1. Install backend dependencies:
 ```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+uv sync
 ```
 
 2. Start the backend:
 ```bash
-cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+cd calorie-tracker
+uv run uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-3. Serve the frontend:
-- Using Python: `python -m http.server 8080`
-- Or configure with Nginx
+3. Serve the frontend from the `frontend/` directory:
+```bash
+cd calorie-tracker/frontend
+python3 -m http.server 8080
+```
+
+4. Open `http://localhost:8080`.
+The frontend now auto-detects this split local setup and sends API traffic to `http://localhost:8000`.
+If your backend runs on another host or port, set it in the browser console with:
+```js
+localStorage.setItem('food-reader-api-base', 'http://YOUR-HOST:8000')
+```
+Then reload the page.
+
+Auth sessions use a JWT stored in `localStorage` and now stay valid for 7 days by default, so closing the browser does not force a fresh login during that window.
 
 ### Option 3: Running with Docker (Without Compose)
 
 ```bash
-docker build -t calorie-tracker .
+docker build -f calorie-tracker/Dockerfile -t calorie-tracker .
 docker run -d \
   -p 18080:8080 \
   -p 18000:8000 \
   -e OPENAI_API_KEY=your_openai_api_key_here \
-  -e JWT_SECRET_KEY=your_jwt_secret_key_here \
-  -v $(pwd)/backend/uploads:/app/backend/uploads \
+  -e JWT_SECRET=your_jwt_secret_here \
+  -v $(pwd)/calorie-tracker/backend/uploads:/app/calorie-tracker/backend/uploads \
   --name calorie-tracker \
   calorie-tracker
 ```
 
-## Getting Started
+## PWA Install
 
-1. Register a new user account
-2. Login with your credentials
-3. Upload a food image or add a meal by text description
-4. Review the AI-generated nutritional info
-5. Save meal → view in history & metrics
+When the browser supports installation, the app exposes an `Install` button in the header. The service worker caches the shell pages and core assets so the installed app can reopen even when the network is temporarily unavailable.
+
+## Testing
+
+Backend tests:
+```bash
+uv run pytest -q
+```
+
+Frontend tests:
+```bash
+cd calorie-tracker/frontend
+npm install
+npm test
+```
+
+Frontend end-to-end tests against a running local app:
+```bash
+cd calorie-tracker/frontend
+E2E_EMAIL="your-email@example.com" \
+E2E_PASSWORD="your-password" \
+npm run test:e2e
+```
 
 ## API Endpoints
 
@@ -211,8 +241,8 @@ sudo apt update && sudo apt install make -y
 ## Technologies Used
 
 * **Backend**: FastAPI, SQLAlchemy, Pydantic, JWT, SQLite, OpenAI API
-* **Frontend**: HTML, JavaScript, Chart.js
-* **Infrastructure**: Nginx, Docker, Docker Compose
+* **Frontend**: HTML, CSS, vanilla JavaScript modules, Vitest
+* **Infrastructure**: Nginx, Docker, Docker Compose, Progressive Web App manifest + service worker
 
 ## Troubleshooting
 
@@ -231,6 +261,7 @@ docker compose logs -f app
 For production:
 
 * Change JWT secret in `.env`
+* Reduce or tighten `ACCESS_TOKEN_EXPIRE_MINUTES` if you need shorter sessions
 * Use HTTPS
 * Add rate limiting
 * Limit upload size

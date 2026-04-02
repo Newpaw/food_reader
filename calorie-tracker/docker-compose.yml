@@ -4,15 +4,15 @@ services:
   app:
     container_name: calorie-tracker
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: calorie-tracker/Dockerfile
     restart: unless-stopped
     env_file:
       - ./.env
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
-      - ./backend/uploads:/app/backend/uploads
+      - ./backend/uploads:/app/calorie-tracker/backend/uploads
       - ../db_folder:/app/data
     networks:
       - cloudflare

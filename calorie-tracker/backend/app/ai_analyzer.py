@@ -1,80 +1,91 @@
-import os
 import base64
+import json
+import re
+from datetime import datetime, timezone
+from functools import lru_cache
+from typing import Any
+
 from openai import OpenAI
-from datetime import datetime
-from typing import Dict, Any, Optional, Tuple, List
+
 from .settings import settings
 
-# Initialize OpenAI client with the API key from settings
-client = OpenAI(
-    api_key=settings.OPENAI_API_KEY
-)
+
+@lru_cache(maxsize=1)
+def get_openai_client() -> OpenAI | None:
+    if not settings.OPENAI_API_KEY:
+        return None
+    return OpenAI(api_key=settings.OPENAI_API_KEY)
+
 
 def encode_image_to_base64(image_path: str) -> str:
-    """
-    Encode an image file to base64 string
-    """
     with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+        return base64.b64encode(image_file.read()).decode("utf-8")
 
-def analyze_food_image(image_path: str, corrections: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
-    """
-    Analyze a food image using OpenAI's Vision API to extract:
-    - Food name/description
-    - Estimated calories
-    - Protein, fat, carbohydrates content
-    - Fiber, sugar, sodium content (if possible)
-    - Meal type (breakfast, lunch, dinner, snack)
-    
-    Args:
-        image_path: Path to the food image
-        corrections: Optional dictionary with corrections to the previous analysis
-                    (e.g., {"food_type": "This is pork, not chicken"})
-    """
-    # Encode the image to base64
-    base64_image = encode_image_to_base64(image_path)
-    
-    # Prepare the base prompt for the API
-    base_prompt = """
-    Analyze this food image and provide the following nutritional information in JSON format:
-    1. Food description: What food items are visible in the image?
-    2. Estimated calories: Provide a reasonable estimate of total calories.
-    3. Protein: Estimated protein content in grams.
-    4. Fat: Estimated fat content in grams.
-    5. Carbohydrates: Estimated carbohydrate content in grams.
-    6. Fiber: Estimated fiber content in grams.
-    7. Sugar: Estimated sugar content in grams.
-    8. Sodium: Estimated sodium content in milligrams.
-    9. Meal type: Categorize as breakfast, lunch, dinner, or snack.
-    10. Notes: Any additional nutritional information or observations.
-    
-    Format your response as a valid JSON object with these keys:
-    {
-        "food_description": "string",
-        "estimated_calories": number,
-        "protein": number,
-        "fat": number,
-        "carbs": number,
-        "fiber": number,
-        "sugar": number,
-        "sodium": number,
-        "meal_type": "breakfast|lunch|dinner|snack",
-        "notes": "string"
-    }
-    """
-    
-    # Add corrections to the prompt if provided
-    if corrections:
-        correction_text = "Please note the following corrections to your analysis:\n"
-        for key, value in corrections.items():
-            correction_text += f"- {key}: {value}\n"
-        correction_text += "\nPlease adjust your analysis based on these corrections."
-        prompt = base_prompt + "\n" + correction_text
+
+def _parse_ai_response(response_text: str, fallback: dict[str, Any]) -> dict[str, Any]:
+    json_match = re.search(r"({.*})", response_text.replace("\n", ""), re.DOTALL)
+    if json_match:
+        try:
+            result = json.loads(json_match.group(0))
+        except json.JSONDecodeError:
+            result = fallback.copy()
     else:
-        prompt = base_prompt
-    
+        result = fallback.copy()
+
+    result.setdefault("food_description", fallback.get("food_description", "Unknown food"))
+    result.setdefault("estimated_calories", 1)
+    result.setdefault("protein", 0)
+    result.setdefault("fat", 0)
+    result.setdefault("carbs", 0)
+    result.setdefault("fiber", 0)
+    result.setdefault("sugar", 0)
+    result.setdefault("sodium", 0)
+    result.setdefault("meal_type", "snack")
+    result.setdefault("notes", "")
+    return result
+
+
+def analyze_food_image(image_path: str, corrections: dict[str, str] | None = None) -> dict[str, Any]:
+    client = get_openai_client()
+    if client is None:
+        return {
+            "food_description": "Unknown food",
+            "estimated_calories": 1,
+            "protein": 0,
+            "fat": 0,
+            "carbs": 0,
+            "fiber": 0,
+            "sugar": 0,
+            "sodium": 0,
+            "meal_type": "snack",
+            "notes": "OpenAI API key is not configured.",
+        }
+
+    base64_image = encode_image_to_base64(image_path)
+    prompt = """
+    Analyze this food image and return valid JSON with:
+    food_description, estimated_calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, notes.
+    meal_type must be one of breakfast, lunch, dinner, or snack.
+    """
+
+    if corrections:
+        prompt += "\nApply these user corrections before answering:\n"
+        prompt += "\n".join(f"- {key}: {value}" for key, value in corrections.items())
+
+    fallback = {
+        "food_description": "Unknown food",
+        "estimated_calories": 1,
+        "protein": 0,
+        "fat": 0,
+        "carbs": 0,
+        "fiber": 0,
+        "sugar": 0,
+        "sodium": 0,
+        "meal_type": "snack",
+        "notes": "Could not analyze the image properly.",
+    }
+
     try:
-        # Call the OpenAI API with the image
         response = client.chat.completions.create(
             model=settings.LLM_MODEL,
             messages=[
@@ -82,256 +93,119 @@ def analyze_food_image(image_path: str, corrections: Optional[Dict[str, str]] = 
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}"
-                            }
-                        }
-                    ]
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
+                    ],
                 }
             ],
-            max_tokens=1000
+            max_tokens=900,
         )
-        
-        # Extract the response text
-        response_text = response.choices[0].message.content
-        
-        # Parse the JSON from the response
-        # Note: In a production environment, you would want more robust parsing
-        import json
-        import re
-        
-        # Try to extract JSON from the response text
-        json_match = re.search(r'({.*})', response_text.replace('\n', ''), re.DOTALL)
-        if json_match:
-            result = json.loads(json_match.group(0))
-        else:
-            # Fallback if JSON extraction fails
-            result = {
-                "food_description": "Unknown food",
-                "estimated_calories": 1,  # Default value
-                "protein": 0,
-                "fat": 0,
-                "carbs": 0,
-                "fiber": 0,
-                "sugar": 0,
-                "sodium": 0,
-                "meal_type": "snack",       # Default value
-                "notes": "Could not analyze the image properly."
-            }
-        
-        # Ensure all required fields are present
-        result.setdefault("food_description", "Unknown food")
-        result.setdefault("estimated_calories", 1)
-        result.setdefault("protein", 0)
-        result.setdefault("fat", 0)
-        result.setdefault("carbs", 0)
-        result.setdefault("fiber", 0)
-        result.setdefault("sugar", 0)
-        result.setdefault("sodium", 0)
-        result.setdefault("meal_type", "snack")
-        result.setdefault("notes", "")
-        
-        return result
-        
-    except Exception as e:
-        # Return a default response on error
-        return {
-            "food_description": "Error analyzing image",
-            "estimated_calories": 1,  # Default value
-            "protein": 0,
-            "fat": 0,
-            "carbs": 0,
-            "fiber": 0,
-            "sugar": 0,
-            "sodium": 0,
-            "meal_type": "snack",       # Default value
-            "notes": f"Error: {str(e)}"
-        }
+        response_text = response.choices[0].message.content or ""
+        return _parse_ai_response(response_text, fallback)
+    except Exception as exc:
+        fallback["notes"] = f"Error: {exc}"
+        return fallback
 
-def analyze_food_text(food_description: str) -> Dict[str, Any]:
-    """
-    Analyze a text description of food using OpenAI's API to extract nutritional information.
-    
-    Args:
-        food_description: Text description of the food (e.g., "Caesar salad with grilled chicken")
-        
-    Returns:
-        Dictionary with nutritional information
-    """
-    prompt = f"""
-    Analyze this food description and provide nutritional information in JSON format:
-    
-    Food description: "{food_description}"
-    
-    Please provide the following information:
-    1. Estimated calories: Provide a reasonable estimate of total calories.
-    2. Protein: Estimated protein content in grams.
-    3. Fat: Estimated fat content in grams.
-    4. Carbohydrates: Estimated carbohydrate content in grams.
-    5. Fiber: Estimated fiber content in grams.
-    6. Sugar: Estimated sugar content in grams.
-    7. Sodium: Estimated sodium content in milligrams.
-    8. Meal type: Categorize as breakfast, lunch, dinner, or snack.
-    9. Notes: Any additional nutritional information or observations.
-    
-    Format your response as a valid JSON object with these keys:
-    {{
-        "food_description": "string",
-        "estimated_calories": number,
-        "protein": number,
-        "fat": number,
-        "carbs": number,
-        "fiber": number,
-        "sugar": number,
-        "sodium": number,
-        "meal_type": "breakfast|lunch|dinner|snack",
-        "notes": "string"
-    }}
-    """
-    
-    try:
-        # Call the OpenAI API with the text description
-        response = client.chat.completions.create(
-            model=settings.LLM_MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            max_tokens=1000
-        )
-        
-        # Extract the response text
-        response_text = response.choices[0].message.content
-        
-        # Parse the JSON from the response
-        import json
-        import re
-        
-        # Try to extract JSON from the response text
-        json_match = re.search(r'({.*})', response_text.replace('\n', ''), re.DOTALL)
-        if json_match:
-            result = json.loads(json_match.group(0))
-        else:
-            # Fallback if JSON extraction fails
-            result = {
-                "food_description": food_description,
-                "estimated_calories": 1,  # Default value
-                "protein": 0,
-                "fat": 0,
-                "carbs": 0,
-                "fiber": 0,
-                "sugar": 0,
-                "sodium": 0,
-                "meal_type": "snack",       # Default value
-                "notes": "Could not analyze the food description properly."
-            }
-        
-        # Ensure all required fields are present
-        result.setdefault("food_description", food_description)
-        result.setdefault("estimated_calories", 1)
-        result.setdefault("protein", 0)
-        result.setdefault("fat", 0)
-        result.setdefault("carbs", 0)
-        result.setdefault("fiber", 0)
-        result.setdefault("sugar", 0)
-        result.setdefault("sodium", 0)
-        result.setdefault("meal_type", "snack")
-        result.setdefault("notes", "")
-        
-        return result
-        
-    except Exception as e:
-        # Return a default response on error
+
+def analyze_food_text(food_description: str) -> dict[str, Any]:
+    client = get_openai_client()
+    if client is None:
         return {
             "food_description": food_description,
-            "estimated_calories": 1,  # Default value
+            "estimated_calories": 1,
             "protein": 0,
             "fat": 0,
             "carbs": 0,
             "fiber": 0,
             "sugar": 0,
             "sodium": 0,
-            "meal_type": "snack",       # Default value
-            "notes": f"Error: {str(e)}"
+            "meal_type": "snack",
+            "notes": "OpenAI API key is not configured.",
         }
 
-def get_meal_data_from_image(image_path: str, corrections: Optional[Dict[str, str]] = None) -> Tuple[int, int, int, int, int, int, int, str, datetime, Optional[str]]:
-    """
-    Extract meal data from an image and return it in a format ready for the Meal model
-    
-    Args:
-        image_path: Path to the food image
-        corrections: Optional dictionary with corrections to the previous analysis
-        
-    Returns:
-        (calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, consumed_at, notes)
-    """
-    # Analyze the image with any corrections
-    analysis = analyze_food_image(image_path, corrections)
-    
-    # Extract the data
-    calories = int(analysis.get("estimated_calories", 1))
-    protein = int(analysis.get("protein", 0))
-    fat = int(analysis.get("fat", 0))
-    carbs = int(analysis.get("carbs", 0))
-    fiber = int(analysis.get("fiber", 0))
-    sugar = int(analysis.get("sugar", 0))
-    sodium = int(analysis.get("sodium", 0))
-    meal_type = analysis.get("meal_type", "snack").lower()
-    
-    # Validate meal_type is one of the allowed values
-    valid_meal_types = ["breakfast", "lunch", "dinner", "snack"]
-    if meal_type not in valid_meal_types:
-        meal_type = "snack"  # Default to snack if invalid
-    
-    # Use current time for consumed_at
-    consumed_at = datetime.utcnow()
-    
-    # Combine food description and notes
-    food_desc = analysis.get("food_description", "")
-    additional_notes = analysis.get("notes", "")
-    notes = f"{food_desc}. {additional_notes}" if additional_notes else food_desc
-    
-    return calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, consumed_at, notes
+    prompt = f"""
+    Analyze this food description and return valid JSON with:
+    food_description, estimated_calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, notes.
 
-def get_meal_data_from_text(food_description: str) -> Tuple[int, int, int, int, int, int, int, str, datetime, Optional[str]]:
+    Food description: "{food_description}"
+    meal_type must be one of breakfast, lunch, dinner, or snack.
     """
-    Extract meal data from a text description and return it in a format ready for the Meal model
-    
-    Args:
-        food_description: Text description of the food
-        
-    Returns:
-        (calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, consumed_at, notes)
-    """
-    # Analyze the text description
-    analysis = analyze_food_text(food_description)
-    
-    # Extract the data
-    calories = int(analysis.get("estimated_calories", 1))
-    protein = int(analysis.get("protein", 0))
-    fat = int(analysis.get("fat", 0))
-    carbs = int(analysis.get("carbs", 0))
-    fiber = int(analysis.get("fiber", 0))
-    sugar = int(analysis.get("sugar", 0))
-    sodium = int(analysis.get("sodium", 0))
-    meal_type = analysis.get("meal_type", "snack").lower()
-    
-    # Validate meal_type is one of the allowed values
-    valid_meal_types = ["breakfast", "lunch", "dinner", "snack"]
-    if meal_type not in valid_meal_types:
-        meal_type = "snack"  # Default to snack if invalid
-    
-    # Use current time for consumed_at
-    consumed_at = datetime.utcnow()
-    
-    # Combine food description and notes
+
+    fallback = {
+        "food_description": food_description,
+        "estimated_calories": 1,
+        "protein": 0,
+        "fat": 0,
+        "carbs": 0,
+        "fiber": 0,
+        "sugar": 0,
+        "sodium": 0,
+        "meal_type": "snack",
+        "notes": "Could not analyze the food description properly.",
+    }
+
+    try:
+        response = client.chat.completions.create(
+            model=settings.LLM_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=700,
+        )
+        response_text = response.choices[0].message.content or ""
+        return _parse_ai_response(response_text, fallback)
+    except Exception as exc:
+        fallback["notes"] = f"Error: {exc}"
+        return fallback
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return max(int(value), 0)
+    except (TypeError, ValueError):
+        return default
+
+
+def _normalize_meal_type(value: Any) -> str:
+    meal_type = str(value or "snack").lower()
+    return meal_type if meal_type in {"breakfast", "lunch", "dinner", "snack"} else "snack"
+
+
+def get_meal_data_from_image(
+    image_path: str,
+    corrections: dict[str, str] | None = None,
+) -> tuple[int, int, int, int, int, int, int, str, datetime, str | None]:
+    analysis = analyze_food_image(image_path, corrections)
     food_desc = analysis.get("food_description", "")
     additional_notes = analysis.get("notes", "")
     notes = f"{food_desc}. {additional_notes}" if additional_notes else food_desc
-    
-    return calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, consumed_at, notes
+
+    return (
+        _safe_int(analysis.get("estimated_calories", 1), 1),
+        _safe_int(analysis.get("protein", 0)),
+        _safe_int(analysis.get("fat", 0)),
+        _safe_int(analysis.get("carbs", 0)),
+        _safe_int(analysis.get("fiber", 0)),
+        _safe_int(analysis.get("sugar", 0)),
+        _safe_int(analysis.get("sodium", 0)),
+        _normalize_meal_type(analysis.get("meal_type")),
+        datetime.now(timezone.utc),
+        notes,
+    )
+
+
+def get_meal_data_from_text(food_description: str) -> tuple[int, int, int, int, int, int, int, str, datetime, str | None]:
+    analysis = analyze_food_text(food_description)
+    food_desc = analysis.get("food_description", food_description)
+    additional_notes = analysis.get("notes", "")
+    notes = f"{food_desc}. {additional_notes}" if additional_notes else food_desc
+
+    return (
+        _safe_int(analysis.get("estimated_calories", 1), 1),
+        _safe_int(analysis.get("protein", 0)),
+        _safe_int(analysis.get("fat", 0)),
+        _safe_int(analysis.get("carbs", 0)),
+        _safe_int(analysis.get("fiber", 0)),
+        _safe_int(analysis.get("sugar", 0)),
+        _safe_int(analysis.get("sodium", 0)),
+        _normalize_meal_type(analysis.get("meal_type")),
+        datetime.now(timezone.utc),
+        notes,
+    )

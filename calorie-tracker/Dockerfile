@@ -1,13 +1,18 @@
-# Use Python 3.10 as the base image
-FROM python:3.10-slim
+# Use Python 3.12 to match the locked project requirements
+FROM python:3.12-slim
 
-# Set working directory
+COPY --from=ghcr.io/astral-sh/uv:0.11.2 /uv /uvx /bin/
+
 WORKDIR /app
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=8000 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_NO_DEV=1 \
+    UV_PROJECT_ENVIRONMENT=/app/.venv \
+    PATH="/app/.venv/bin:$PATH"
 
 # Install system dependencies including Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -18,39 +23,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && mkdir -p /var/log/nginx /var/run \
     && chown -R www-data:www-data /var/log/nginx /var/run
 
-# Copy requirements file
-COPY requirements.txt .
+# Copy the uv project metadata first for better layer caching
+COPY pyproject.toml uv.lock README.md ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install the locked runtime dependencies
+RUN uv sync --frozen --no-install-project
 
 # Copy the application code
-COPY . .
+COPY calorie-tracker ./calorie-tracker
 
 # Create uploads directory
-RUN mkdir -p backend/uploads && chmod 777 backend/uploads
+RUN mkdir -p /app/calorie-tracker/backend/uploads \
+    && chmod 777 /app/calorie-tracker/backend/uploads \
+    && chmod +x /app/calorie-tracker/start.sh
 
 # Copy Nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+RUN cp /app/calorie-tracker/nginx.conf /etc/nginx/nginx.conf
 
 # Expose ports for the backend API and Nginx frontend server
 EXPOSE 8000 8080
 
-# Create a script to run both services
-RUN echo '#!/bin/bash\n\
-# Create necessary directories if they don't exist\n\
-mkdir -p /var/log/nginx /var/run\n\
-chown -R www-data:www-data /var/log/nginx /var/run\n\
-\n\
-# Start the FastAPI backend in the background\n\
-cd /app && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 & \n\
-\n\
-# Wait a moment for the backend to start\n\
-sleep 2\n\
-\n\
-# Start Nginx in the foreground\n\
-nginx -g "daemon off;"\n\
-' > /app/start.sh && chmod +x /app/start.sh
-
 # Set the entrypoint
-ENTRYPOINT ["/app/start.sh"]
+ENTRYPOINT ["/app/calorie-tracker/start.sh"]

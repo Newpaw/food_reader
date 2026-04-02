@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Reader | Profile</title>
+    <meta name="description" content="Set body data, activity, and custom nutrition targets in a mobile-first profile workspace.">
+    <meta name="theme-color" content="#d96b3b">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  </head>
+  <body data-page="profile">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="index.html">
+            <span class="brand-mark">FR</span>
+            <span class="brand-copy">
+              <strong>Food Reader</strong>
+              <small>mobile nutrition log</small>
+            </span>
+          </a>
+          <nav class="desktop-nav" aria-label="Primary">
+            <a href="index.html" data-nav="add">Add Meal</a>
+            <a href="history.html" data-nav="history">History</a>
+            <a href="metrics.html" data-nav="metrics">Metrics</a>
+            <a href="profile.html" data-nav="profile">Profile</a>
+          </nav>
+          <div class="topbar-actions">
+            <button class="btn btn-ghost btn-small" data-install-button hidden>Install</button>
+            <span class="user-chip"><span data-user-greeting>You</span></span>
+            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="page-hero">
+          <p class="eyebrow">Profile</p>
+          <h1>Store the context that makes the dashboard useful.</h1>
+          <p>Save baseline body data, activity level, and optional custom targets so the app can compare intake against something real.</p>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Inputs</p>
+                <h2>Personal settings</h2>
+              </div>
+            </div>
+
+            <form id="profileForm" class="stack">
+              <div class="form-grid">
+                <label class="field">
+                  <span>Height (cm)</span>
+                  <input id="height" name="height" type="number" min="50" max="300" step="0.1">
+                </label>
+                <label class="field">
+                  <span>Weight (kg)</span>
+                  <input id="weight" name="weight" type="number" min="20" max="500" step="0.1">
+                </label>
+                <label class="field">
+                  <span>Age</span>
+                  <input id="age" name="age" type="number" min="10" max="120">
+                </label>
+                <label class="field">
+                  <span>Gender</span>
+                  <select id="gender" name="gender">
+                    <option value="">Choose</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Activity level</span>
+                  <select id="activityLevel" name="activityLevel">
+                    <option value="sedentary">Sedentary</option>
+                    <option value="lightly_active">Lightly active</option>
+                    <option value="moderately_active">Moderately active</option>
+                    <option value="very_active">Very active</option>
+                    <option value="extremely_active">Extremely active</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Goal</span>
+                  <select id="goal" name="goal">
+                    <option value="weight_loss">Weight loss</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="muscle_gain">Muscle gain</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Diet preference</span>
+                  <select id="dietaryPreference" name="dietaryPreference">
+                    <option value="none">Balanced</option>
+                    <option value="high_protein">High protein</option>
+                    <option value="low_carb">Low carb</option>
+                    <option value="keto">Keto</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="subtle-panel">
+                <p class="eyebrow">Optional overrides</p>
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Custom calories</span>
+                    <input id="customCalories" name="customCalories" type="number" min="0">
+                  </label>
+                  <label class="field">
+                    <span>Custom protein</span>
+                    <input id="customProtein" name="customProtein" type="number" min="0">
+                  </label>
+                  <label class="field">
+                    <span>Custom carbs</span>
+                    <input id="customCarbs" name="customCarbs" type="number" min="0">
+                  </label>
+                  <label class="field">
+                    <span>Custom fat</span>
+                    <input id="customFats" name="customFats" type="number" min="0">
+                  </label>
+                  <label class="field">
+                    <span>Custom fiber</span>
+                    <input id="customFiber" name="customFiber" type="number" min="0">
+                  </label>
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button type="submit" class="btn btn-primary">Save profile</button>
+                <button id="resetProfileButton" type="button" class="btn btn-secondary">Reset form</button>
+              </div>
+            </form>
+
+            <p id="profileStatus" class="status" hidden></p>
+          </section>
+
+          <section class="panel sticky-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Outputs</p>
+                <h2>Current targets</h2>
+              </div>
+            </div>
+            <div id="profileTargets" class="stack"></div>
+          </section>
+        </div>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Mobile">
+        <a href="index.html" data-nav="add">Add</a>
+        <a href="history.html" data-nav="history">History</a>
+        <a href="metrics.html" data-nav="metrics">Metrics</a>
+        <a href="profile.html" data-nav="profile">Profile</a>
+      </nav>
+    </div>
+
+    <script type="module" src="profile.js"></script>
+  </body>
+</html>

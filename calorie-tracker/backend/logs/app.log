@@ -1,0 +1,340 @@
+2026-04-02 08:01:46,905 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 08:03:33,210 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 08:03:33,437 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:03:33,873 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:03:34,289 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 08:03:34,291 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.73ms
+2026-04-02 08:03:34,294 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 08:03:34,296 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.10ms
+2026-04-02 08:03:34,312 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 08:03:34,313 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.78ms
+2026-04-02 08:03:34,321 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:03:34,743 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:03:35,580 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:03:36,009 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:19:54,617 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 08:19:54,900 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:19:55,344 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:19:55,792 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 08:19:55,795 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 2.34ms
+2026-04-02 08:19:55,799 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 08:19:55,800 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.22ms
+2026-04-02 08:19:55,822 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 08:19:55,823 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.04ms
+2026-04-02 08:19:55,833 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:19:56,264 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:19:57,102 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 08:19:57,542 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 18:54:14,496 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 18:54:14,891 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:00:13,486 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 19:00:13,676 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:00:14,085 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:00:14,481 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:00:14,483 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.70ms
+2026-04-02 19:00:14,486 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:00:14,487 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.00ms
+2026-04-02 19:00:14,501 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:00:14,502 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.69ms
+2026-04-02 19:00:14,507 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:00:14,935 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:00:15,748 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:00:16,161 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:01:30,692 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 19:01:30,922 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:02:22,355 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:02:22,358 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 2.52ms
+2026-04-02 19:02:31,671 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:02:31,673 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.02ms
+2026-04-02 19:02:49,815 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:02:49,815 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.49ms
+2026-04-02 19:06:15,610 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:15,612 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.94ms
+2026-04-02 19:06:15,658 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:15,659 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.60ms
+2026-04-02 19:06:15,744 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:06:15,744 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:15,746 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.87ms
+2026-04-02 19:06:15,747 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.80ms
+2026-04-02 19:06:16,183 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:16,183 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.52ms
+2026-04-02 19:06:16,936 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:16,937 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.49ms
+2026-04-02 19:06:18,053 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:18,054 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.50ms
+2026-04-02 19:06:18,096 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:06:18,097 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:18,097 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.21ms
+2026-04-02 19:06:18,099 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.27ms
+2026-04-02 19:06:32,113 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:32,113 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.58ms
+2026-04-02 19:06:32,160 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:32,160 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.57ms
+2026-04-02 19:06:32,204 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:32,204 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:06:32,205 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.86ms
+2026-04-02 19:06:32,207 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.89ms
+2026-04-02 19:06:32,696 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:32,696 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.49ms
+2026-04-02 19:06:33,434 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:33,434 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.49ms
+2026-04-02 19:06:40,900 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:40,900 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.47ms
+2026-04-02 19:06:41,315 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:41,316 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.50ms
+2026-04-02 19:06:52,852 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:52,853 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.75ms
+2026-04-02 19:06:52,904 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:06:52,908 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.35ms
+2026-04-02 19:06:52,908 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:06:52,910 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.08ms
+2026-04-02 19:07:13,918 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:07:13,918 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.68ms
+2026-04-02 19:07:13,972 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:07:13,973 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.67ms
+2026-04-02 19:07:14,021 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:07:14,021 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:07:14,023 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.94ms
+2026-04-02 19:07:14,026 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.30ms
+2026-04-02 19:07:14,514 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:07:14,515 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.70ms
+2026-04-02 19:07:15,259 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:07:15,260 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.74ms
+2026-04-02 19:07:19,223 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:07:19,224 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.48ms
+2026-04-02 19:07:19,355 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:07:19,355 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.57ms
+2026-04-02 19:07:19,478 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:07:19,479 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.57ms
+2026-04-02 19:08:16,093 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:16,094 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.61ms
+2026-04-02 19:08:16,144 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:08:16,144 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:16,146 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.15ms
+2026-04-02 19:08:16,147 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.59ms
+2026-04-02 19:08:36,680 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:36,681 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.54ms
+2026-04-02 19:08:36,733 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:36,733 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.57ms
+2026-04-02 19:08:36,776 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:36,778 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:08:36,779 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.75ms
+2026-04-02 19:08:36,781 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.01ms
+2026-04-02 19:08:37,269 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:37,270 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.48ms
+2026-04-02 19:08:38,020 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:38,021 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.72ms
+2026-04-02 19:08:42,591 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:42,592 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.67ms
+2026-04-02 19:08:43,093 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:43,094 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.60ms
+2026-04-02 19:08:43,216 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:43,217 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.60ms
+2026-04-02 19:08:43,260 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:43,261 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.80ms
+2026-04-02 19:08:43,738 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:43,739 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.71ms
+2026-04-02 19:08:43,792 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:43,792 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:08:43,794 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.08ms
+2026-04-02 19:08:43,794 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.19ms
+2026-04-02 19:08:50,266 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 19:08:50,484 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:08:50,891 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:08:51,282 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:51,283 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.65ms
+2026-04-02 19:08:51,286 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:08:51,287 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.72ms
+2026-04-02 19:08:51,309 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:08:51,310 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.94ms
+2026-04-02 19:08:51,319 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:08:51,742 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:08:52,529 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:08:52,938 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 19:35:20,176 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:35:20,177 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.68ms
+2026-04-02 19:35:25,406 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:35:25,407 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.56ms
+2026-04-02 19:35:29,791 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:35:29,792 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.61ms
+2026-04-02 19:35:34,802 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:35:34,802 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.55ms
+2026-04-02 19:35:39,278 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:35:39,279 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.62ms
+2026-04-02 19:35:39,282 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:35:39,282 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.56ms
+2026-04-02 19:35:57,622 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:35:57,622 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:35:57,624 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.95ms
+2026-04-02 19:35:57,625 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.85ms
+2026-04-02 19:36:01,616 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:36:01,617 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.80ms
+2026-04-02 19:38:20,179 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:38:20,180 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.54ms
+2026-04-02 19:38:30,667 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:38:30,668 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.55ms
+2026-04-02 19:38:42,446 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:38:42,447 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.75ms
+2026-04-02 19:40:22,575 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:40:22,576 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.52ms
+2026-04-02 19:41:06,972 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:41:06,973 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.53ms
+2026-04-02 19:41:32,160 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:41:32,162 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.87ms
+2026-04-02 19:42:03,242 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:03,243 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.49ms
+2026-04-02 19:42:06,712 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:06,713 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.53ms
+2026-04-02 19:42:07,673 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:42:07,673 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:07,676 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 2.27ms
+2026-04-02 19:42:07,677 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.51ms
+2026-04-02 19:42:08,966 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:08,967 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.65ms
+2026-04-02 19:42:09,542 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:09,543 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.70ms
+2026-04-02 19:42:10,263 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:10,265 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:42:10,266 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.99ms
+2026-04-02 19:42:10,266 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.84ms
+2026-04-02 19:42:11,980 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:42:11,981 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:11,982 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.09ms
+2026-04-02 19:42:11,983 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.12ms
+2026-04-02 19:42:12,493 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:42:12,493 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:12,495 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.04ms
+2026-04-02 19:42:12,496 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.93ms
+2026-04-02 19:42:12,944 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:12,944 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:42:12,946 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.10ms
+2026-04-02 19:42:12,946 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.92ms
+2026-04-02 19:42:13,422 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:13,422 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:42:13,424 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.14ms
+2026-04-02 19:42:13,424 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.96ms
+2026-04-02 19:42:14,091 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:42:14,091 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:14,093 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.08ms
+2026-04-02 19:42:14,094 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.85ms
+2026-04-02 19:42:20,677 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:20,678 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.64ms
+2026-04-02 19:42:21,732 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:21,733 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.61ms
+2026-04-02 19:42:22,489 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:22,490 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.77ms
+2026-04-02 19:42:22,873 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:22,874 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.55ms
+2026-04-02 19:42:23,222 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:42:23,223 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.80ms
+2026-04-02 19:43:27,814 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:43:27,814 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.46ms
+2026-04-02 19:44:00,059 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:44:00,060 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.63ms
+2026-04-02 19:44:10,067 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:44:10,067 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.77ms
+2026-04-02 19:44:28,372 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:44:28,373 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.46ms
+2026-04-02 19:44:28,376 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:44:28,377 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.53ms
+2026-04-02 19:44:32,219 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:44:32,221 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:44:32,222 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 2.06ms
+2026-04-02 19:44:32,223 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.70ms
+2026-04-02 19:44:34,025 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:44:34,026 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:44:34,027 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.81ms
+2026-04-02 19:44:34,028 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.90ms
+2026-04-02 19:44:50,838 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:44:50,838 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.52ms
+2026-04-02 19:45:01,326 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:01,326 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.57ms
+2026-04-02 19:45:04,186 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:04,187 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.67ms
+2026-04-02 19:45:04,191 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:04,191 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.54ms
+2026-04-02 19:45:05,212 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:05,213 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.50ms
+2026-04-02 19:45:14,941 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:14,942 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.49ms
+2026-04-02 19:45:23,792 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:23,793 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.47ms
+2026-04-02 19:45:29,006 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:29,007 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.50ms
+2026-04-02 19:45:29,496 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:29,498 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:29,499 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.27ms
+2026-04-02 19:45:29,500 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.89ms
+2026-04-02 19:45:30,523 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:30,523 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:30,524 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.96ms
+2026-04-02 19:45:30,525 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.65ms
+2026-04-02 19:45:30,908 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:30,909 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.51ms
+2026-04-02 19:45:32,039 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:32,039 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:32,041 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.66ms
+2026-04-02 19:45:32,041 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.48ms
+2026-04-02 19:45:32,879 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:32,879 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:32,882 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.83ms
+2026-04-02 19:45:32,882 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.10ms
+2026-04-02 19:45:33,373 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:33,374 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:33,375 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.36ms
+2026-04-02 19:45:33,376 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.63ms
+2026-04-02 19:45:33,578 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:33,579 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:33,581 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 1.61ms
+2026-04-02 19:45:33,582 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.44ms
+2026-04-02 19:45:33,749 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:33,749 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:33,751 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.89ms
+2026-04-02 19:45:33,751 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.77ms
+2026-04-02 19:45:42,892 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:42,892 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:42,894 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.00ms
+2026-04-02 19:45:42,894 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.72ms
+2026-04-02 19:45:54,810 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:45:54,812 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:45:54,812 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.65ms
+2026-04-02 19:45:54,814 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.32ms
+2026-04-02 19:46:00,082 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:46:00,083 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.63ms
+2026-04-02 19:50:16,507 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:50:16,507 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.55ms
+2026-04-02 19:50:41,469 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:50:41,469 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 19:50:41,471 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.24ms
+2026-04-02 19:50:41,472 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.85ms
+2026-04-02 19:51:02,123 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:51:02,123 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.62ms
+2026-04-02 19:52:01,671 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 19:52:01,672 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.09ms
+2026-04-02 20:00:07,264 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 20:00:07,597 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:00:08,037 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:00:08,450 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 20:00:08,451 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.01ms
+2026-04-02 20:00:08,454 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 20:00:08,455 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.86ms
+2026-04-02 20:00:08,467 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 20:00:08,470 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 2.33ms
+2026-04-02 20:00:08,477 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:00:08,890 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:00:09,685 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:00:10,106 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:05:13,839 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-02 20:05:14,159 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:05:14,588 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:05:14,987 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:05:15,404 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 20:05:15,406 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.96ms
+2026-04-02 20:05:15,411 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-02 20:05:15,412 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.93ms
+2026-04-02 20:05:15,428 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-02 20:05:15,429 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.13ms
+2026-04-02 20:05:15,440 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:05:15,865 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:05:16,669 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-02 20:05:17,083 - backend.app.main - INFO - [main.py:21] - Application started

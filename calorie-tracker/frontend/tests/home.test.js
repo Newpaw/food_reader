@@ -90,4 +90,16 @@ describe('photo optimization plan', () => {
     expect(plan.targetWidth).toBe(1600);
     expect(plan.targetHeight).toBe(1200);
   });
+
+  it('forces conversion for unsupported mobile image formats', () => {
+    const plan = planPhotoOptimization({
+      type: 'image/heic',
+      size: 420_000,
+      width: 1200,
+      height: 1600,
+    });
+
+    expect(plan.shouldOptimize).toBe(true);
+    expect(plan.shouldResize).toBe(false);
+  });
 });

@@ -35,6 +35,7 @@ let photoSubmissionInProgress = false;
 const MAX_UPLOAD_DIMENSION = 1600;
 const MAX_UPLOAD_BYTES = 1_800_000;
 const UPLOAD_QUALITY = 0.82;
+const BROWSER_SAFE_UPLOAD_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 
 export function buildMealUpdatePayload(draft) {
@@ -119,7 +120,11 @@ export function planPhotoOptimization(fileLike, options = {}) {
     shouldOptimize:
       (fileLike?.type || '').startsWith('image/') &&
       fileLike?.type !== 'image/svg+xml' &&
-      (Number(fileLike?.size || 0) > maxBytes || largestSide > maxDimension),
+      (
+        Number(fileLike?.size || 0) > maxBytes ||
+        largestSide > maxDimension ||
+        !BROWSER_SAFE_UPLOAD_TYPES.has(fileLike?.type || '')
+      ),
   };
 }
 

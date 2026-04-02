@@ -15,7 +15,7 @@ async function login(page) {
   await page.getByLabel('Password').first().fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.waitForURL(/index\.html$/);
-  await expect(page.getByRole('heading', { name: /log meals in seconds/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /add a meal/i })).toBeVisible();
 }
 
 
@@ -25,13 +25,13 @@ test('user can log in and navigate the main screens', async ({ page }) => {
   await expect(page.locator('[data-user-greeting]')).not.toHaveText('You');
 
   await page.goto('/history.html');
-  await expect(page.getByRole('heading', { name: /review the full log/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /filter history/i })).toBeVisible();
 
   await page.goto('/metrics.html');
-  await expect(page.getByRole('heading', { name: /see whether your daily pattern/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /daily goal status/i })).toBeVisible();
 
   await page.goto('/profile.html');
-  await expect(page.getByRole('heading', { name: /store the context/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /personal settings/i })).toBeVisible();
 });
 
 
@@ -53,7 +53,7 @@ test('user can save profile settings from the frontend', async ({ page }) => {
 });
 
 
-test('user can add a text meal and see it in recent meals and history', async ({ page }) => {
+test('user can add a text meal and see it in the review panel and history', async ({ page }) => {
   const uniqueLabel = `e2e meal ${Date.now()}`;
 
   await login(page);
@@ -69,11 +69,10 @@ test('user can add a text meal and see it in recent meals and history', async ({
   await page.locator('#analysisNotes').fill(`Created by playwright ${uniqueLabel}`);
   await page.getByRole('button', { name: 'Save changes' }).click();
   await expect(page.locator('#analysisStatus')).toContainText('Meal updated.');
-
-  await expect(page.locator('#recentMeals')).toContainText('611 kcal');
+  await expect(page.locator('#analysisPanel')).toContainText('611');
 
   await page.goto('/history.html');
-  await page.getByRole('button', { name: 'Apply range' }).click();
+  await page.getByRole('button', { name: 'Today' }).click();
   await expect(page.locator('#historyList')).toContainText(uniqueLabel);
 });
 

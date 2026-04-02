@@ -96,18 +96,14 @@
               <button type="submit" class="btn btn-primary btn-block" data-i18n="button.analyzeText">Analyze meal text</button>
             </form>
 
-            <p id="captureStatus" class="status" hidden></p>
-          </section>
-
-          <section class="panel secondary-feed-panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow" data-i18n="home.recentEyebrow">Keep moving</p>
-                <h2 data-i18n="home.recentHeading">Recent meals</h2>
+            <div id="captureLoading" class="capture-loading" hidden aria-live="polite">
+              <span class="loading-spinner" aria-hidden="true"></span>
+              <div class="capture-loading-copy">
+                <strong data-i18n="home.analysisLoadingTitle">Analyzing your meal</strong>
+                <span id="captureLoadingMessage" class="panel-note" data-i18n="home.analysisLoadingBody">This can take a few seconds.</span>
               </div>
-              <a href="history.html" class="btn btn-secondary btn-small" data-i18n="button.openHistory">Open history</a>
             </div>
-            <div id="recentMeals" class="stack"></div>
+            <p id="captureStatus" class="status" hidden></p>
           </section>
         </div>
 

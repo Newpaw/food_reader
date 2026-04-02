@@ -3,7 +3,6 @@ import {
   apiFetch,
   deleteMealTemplate,
   formatDateTime,
-  formatTime,
   getLocalDateKey,
   getMealDisplayName,
   getMealTemplates,
@@ -23,7 +22,6 @@ import {
 
 let currentMeal = null;
 let originalMeal = null;
-let recentMeals = [];
 let dashboardMeals = [];
 let dashboardTargets = null;
 let voiceRecognition = null;
@@ -147,6 +145,21 @@ function getAnalysisFields() {
 
 function getCaptureStatus() {
   return document.getElementById('captureStatus');
+}
+
+
+function setCaptureLoading(active, message = '') {
+  const loading = document.getElementById('captureLoading');
+  const loadingMessage = document.getElementById('captureLoadingMessage');
+  if (!loading || !loadingMessage) {
+    return;
+  }
+
+  if (message) {
+    loadingMessage.textContent = message;
+  }
+
+  loading.hidden = !active;
 }
 
 
@@ -312,42 +325,6 @@ function renderMealEditor(meal, { scroll = true } = {}) {
 }
 
 
-function renderRecentMeals(meals) {
-  const target = document.getElementById('recentMeals');
-  if (!meals.length) {
-    target.innerHTML = `<p class="empty-state">${t('home.noMeals')}</p>`;
-    return;
-  }
-
-  target.innerHTML = meals
-    .map(
-      (meal) => `
-        <article class="meal-card compact">
-          <img src="${resolveAssetUrl(meal.image_url)}" alt="${getMealDisplayName(meal)}" class="meal-card-image">
-          <div class="meal-card-body">
-            <div class="meal-card-heading">
-              <h3>${getMealDisplayName(meal)}</h3>
-              <span>${formatTime(meal.consumed_at)}</span>
-            </div>
-            <p>${meal.calories} kcal</p>
-            <button class="btn btn-secondary btn-small" data-meal-open="${meal.id}">${t('button.review')}</button>
-          </div>
-        </article>
-      `,
-    )
-    .join('');
-
-  target.querySelectorAll('[data-meal-open]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const meal = meals.find((item) => item.id === Number(button.dataset.mealOpen));
-      if (meal) {
-        renderMealEditor(meal);
-      }
-    });
-  });
-}
-
-
 function renderTodayDashboard() {
   const target = document.getElementById('todayDashboard');
   const summary = summarizeTodayState(
@@ -449,18 +426,15 @@ function renderTemplates() {
 function refreshHomePanels() {
   renderTodayDashboard();
   renderTemplates();
-  renderRecentMeals(recentMeals);
 }
 
 
 async function loadHomeData() {
-  const [recentResponse, mealsResponse, targetsResponse] = await Promise.all([
-    apiFetch(`${API.meals}?limit=5`),
+  const [mealsResponse, targetsResponse] = await Promise.all([
     apiFetch(`${API.meals}?limit=120`),
     apiFetch(`${API.profile}/targets`),
   ]);
 
-  recentMeals = await getJsonOrThrow(recentResponse, 'Unable to load recent meals');
   dashboardMeals = await getJsonOrThrow(mealsResponse, 'Unable to load dashboard meals');
   dashboardTargets = targetsResponse.ok ? await targetsResponse.json() : null;
   refreshHomePanels();
@@ -691,6 +665,7 @@ async function submitTemplateMeal(template) {
   }
 
   try {
+    setCaptureLoading(true, t('home.textAnalyzing'));
     showStatus(status, t('home.textAnalyzing'), 'info');
     const meal = await createTextMeal(payload);
     await loadHomeData();
@@ -703,6 +678,8 @@ async function submitTemplateMeal(template) {
       return;
     }
     showStatus(status, error.message, 'danger');
+  } finally {
+    setCaptureLoading(false);
   }
 }
 
@@ -722,6 +699,7 @@ async function handlePhotoMealSubmit(event) {
 
   try {
     photoSubmissionInProgress = true;
+    setCaptureLoading(true, t('home.photoPreparing'));
     showStatus(status, t('home.photoPreparing'), 'info');
     const optimizedFile = await optimizePhotoForUpload(file);
 
@@ -734,6 +712,7 @@ async function handlePhotoMealSubmit(event) {
 
     const formData = new FormData();
     formData.append('image', optimizedFile);
+    setCaptureLoading(true, t('home.photoAnalyzing'));
     showStatus(status, t('home.photoAnalyzing'), 'info');
 
     const response = await apiFetch(API.meals, {
@@ -755,6 +734,7 @@ async function handlePhotoMealSubmit(event) {
     }
     showStatus(status, error.message, 'danger');
   } finally {
+    setCaptureLoading(false);
     photoSubmissionInProgress = false;
   }
 }
@@ -782,9 +762,9 @@ async function handleTextMealSubmit(event) {
     return;
   }
 
-  showStatus(status, t('home.textAnalyzing'), 'info');
-
   try {
+    setCaptureLoading(true, t('home.textAnalyzing'));
+    showStatus(status, t('home.textAnalyzing'), 'info');
     const meal = await createTextMeal(payload);
     await loadHomeData();
     showStatus(status, t('home.mealAdded'), 'success');
@@ -798,6 +778,8 @@ async function handleTextMealSubmit(event) {
       return;
     }
     showStatus(status, error.message, 'danger');
+  } finally {
+    setCaptureLoading(false);
   }
 }
 

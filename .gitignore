@@ -1,27 +1,65 @@
-# Python-generated files
+# Python caches and build output
 __pycache__/
 *.py[oc]
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.nox/
+.tox/
+.pyre/
+.coverage
+.coverage.*
+htmlcov/
 build/
 dist/
+site/
 wheels/
-*.egg-info
+*.egg-info/
 
 # Virtual environments
-.venv
+.venv/
+venv/
+env/
+
+# Local environment files
 .env
-setting.py
-env
+.env.*
+!.env.example
+calorie-tracker/.env
+calorie-tracker/.env.*
+!calorie-tracker/.env.example
 
-# Ignore all files in uploads folder
+# IDE and OS noise
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Frontend dependencies and test output
+calorie-tracker/frontend/node_modules/
+calorie-tracker/frontend/playwright-report/
+calorie-tracker/frontend/test-results/
+calorie-tracker/frontend/.vitest/
+npm-debug.log*
+
+# Runtime data, uploads, and logs
+backend/uploads/
 calorie-tracker/backend/uploads/*
-
-# But keep the folder itself
 !calorie-tracker/backend/uploads/.gitkeep
-
-*.webp
-
-*.jpg
-
-*.db
-
+calorie-tracker/backend/logs/*.log
 *.log
+
+# Local databases
+*.db
+*.sqlite3
+db_folder/
+calorie-tracker/data/
+
+# Generated local media
+*.webp
+*.jpg
+*.jpeg
+*.png

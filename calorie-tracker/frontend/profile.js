@@ -6,7 +6,7 @@ import {
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-5';
+} from './common.js?v=20260403-6';
 
 
 let profileExists = false;
@@ -30,9 +30,20 @@ export function buildProfilePayload(form) {
   };
 }
 
+export function hasCustomOverrides(profile) {
+  return [
+    profile?.custom_calories,
+    profile?.custom_protein_g,
+    profile?.custom_carbs_g,
+    profile?.custom_fats_g,
+    profile?.custom_fiber_g,
+  ].some((value) => value !== null && value !== undefined && value !== '');
+}
+
 
 function fillForm(profile) {
   const form = document.getElementById('profileForm');
+  const overrides = document.getElementById('profileOverrides');
   form.height.value = profile?.height_cm ?? '';
   form.weight.value = profile?.weight_kg ?? '';
   form.age.value = profile?.age ?? '';
@@ -45,6 +56,9 @@ function fillForm(profile) {
   form.customCarbs.value = profile?.custom_carbs_g ?? '';
   form.customFats.value = profile?.custom_fats_g ?? '';
   form.customFiber.value = profile?.custom_fiber_g ?? '';
+  if (overrides) {
+    overrides.open = hasCustomOverrides(profile);
+  }
 }
 
 

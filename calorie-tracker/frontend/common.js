@@ -292,9 +292,17 @@ const TRANSLATIONS = {
     'profile.heroBody': 'Save baseline body data, activity level, and optional custom targets so the app can compare intake against something real.',
     'profile.inputsEyebrow': 'Inputs',
     'profile.inputsHeading': 'Personal settings',
+    'profile.inputsSupport': 'Changes save when you tap Save profile. Targets recalculate right after that.',
+    'profile.basicsHeading': 'Basic profile',
+    'profile.basicsBody': 'Body data used for calorie and macro targets.',
+    'profile.lifestyleHeading': 'Lifestyle and goal',
+    'profile.lifestyleBody': 'The activity and goal settings shape the recommendation.',
     'profile.outputsEyebrow': 'Outputs',
     'profile.outputsHeading': 'Current targets',
+    'profile.outputsSupport': 'These values update after you save the form.',
     'profile.overridesEyebrow': 'Optional overrides',
+    'profile.overridesHeading': 'Advanced target overrides',
+    'profile.overridesBody': 'Only open this if you want to replace the calculated targets with your own numbers.',
     'profile.targetsEmpty': 'Targets will appear after you save a complete profile.',
     'profile.saving': 'Saving profile...',
     'profile.saved': 'Profile saved.',
@@ -586,9 +594,17 @@ const TRANSLATIONS = {
     'profile.heroBody': 'Uložte základní tělesná data, aktivitu a případné vlastní cíle, aby aplikace porovnávala příjem s realitou.',
     'profile.inputsEyebrow': 'Vstupy',
     'profile.inputsHeading': 'Osobní nastavení',
+    'profile.inputsSupport': 'Změny se uloží po klepnutí na Uložit profil. Cíle se hned přepočítají.',
+    'profile.basicsHeading': 'Základní profil',
+    'profile.basicsBody': 'Tělesné údaje, ze kterých se počítají cíle.',
+    'profile.lifestyleHeading': 'Životní styl a cíl',
+    'profile.lifestyleBody': 'Aktivita a cíl určují doporučení.',
     'profile.outputsEyebrow': 'Výstupy',
     'profile.outputsHeading': 'Aktuální cíle',
+    'profile.outputsSupport': 'Tyto hodnoty se aktualizují po uložení formuláře.',
     'profile.overridesEyebrow': 'Volitelné přepisy',
+    'profile.overridesHeading': 'Pokročilé přepisy cílů',
+    'profile.overridesBody': 'Otevírejte jen tehdy, když chcete nahradit vypočítané cíle vlastními čísly.',
     'profile.targetsEmpty': 'Cíle se zobrazí po uložení kompletního profilu.',
     'profile.saving': 'Ukládám profil...',
     'profile.saved': 'Profil byl uložen.',
@@ -906,7 +922,7 @@ export function getMealDisplayName(meal) {
   return fallback;
 }
 
-export const FRONTEND_ASSET_VERSION = '20260403-5';
+export const FRONTEND_ASSET_VERSION = '20260403-6';
 
 const INSTALL_PROMPT_DELAY_MS = 1800;
 const INSTALL_RESHOW_AFTER_SHOW_MS = 18 * 60 * 60 * 1000;

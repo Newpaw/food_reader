@@ -6,8 +6,8 @@
     <title>Food Reader | Profile</title>
     <meta name="description" content="Set body data, activity, and custom nutrition targets in a mobile-first profile workspace.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260403-5">
-    <link rel="manifest" href="manifest.webmanifest?v=20260403-5">
+    <link rel="stylesheet" href="styles.css?v=20260403-6">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-6">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
@@ -45,72 +45,98 @@
       </header>
 
       <main class="page">
-        <div class="dashboard-grid">
+        <div class="dashboard-grid profile-page-layout">
           <section class="panel">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow" data-i18n="profile.inputsEyebrow">Inputs</p>
                 <h2 data-i18n="profile.inputsHeading">Personal settings</h2>
+                <p class="panel-note" data-i18n="profile.inputsSupport">Changes save when you tap Save profile. Targets recalculate right after that.</p>
               </div>
             </div>
 
-            <form id="profileForm" class="stack">
-              <div class="form-grid">
-                <label class="field">
-                  <span data-i18n="label.height">Height (cm)</span>
-                  <input id="height" name="height" type="number" min="50" max="300" step="0.1">
-                </label>
-                <label class="field">
-                  <span data-i18n="label.weight">Weight (kg)</span>
-                  <input id="weight" name="weight" type="number" min="20" max="500" step="0.1">
-                </label>
-                <label class="field">
-                  <span data-i18n="label.age">Age</span>
-                  <input id="age" name="age" type="number" min="10" max="120">
-                </label>
-                <label class="field">
-                  <span data-i18n="label.gender">Gender</span>
-                  <select id="gender" name="gender">
-                    <option value="" data-i18n="option.choose">Choose</option>
-                    <option value="male" data-i18n="option.male">Male</option>
-                    <option value="female" data-i18n="option.female">Female</option>
-                    <option value="other" data-i18n="option.other">Other</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span data-i18n="label.activity">Activity level</span>
-                  <select id="activityLevel" name="activityLevel">
-                    <option value="sedentary" data-i18n="option.sedentary">Sedentary</option>
-                    <option value="lightly_active" data-i18n="option.lightly_active">Lightly active</option>
-                    <option value="moderately_active" data-i18n="option.moderately_active">Moderately active</option>
-                    <option value="very_active" data-i18n="option.very_active">Very active</option>
-                    <option value="extremely_active" data-i18n="option.extremely_active">Extremely active</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span data-i18n="label.goal">Goal</span>
-                  <select id="goal" name="goal">
-                    <option value="weight_loss" data-i18n="option.weight_loss">Weight loss</option>
-                    <option value="maintenance" data-i18n="option.maintenance">Maintenance</option>
-                    <option value="muscle_gain" data-i18n="option.muscle_gain">Muscle gain</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span data-i18n="label.diet">Diet preference</span>
-                  <select id="dietaryPreference" name="dietaryPreference">
-                    <option value="none" data-i18n="option.none">Balanced</option>
-                    <option value="high_protein" data-i18n="option.high_protein">High protein</option>
-                    <option value="low_carb" data-i18n="option.low_carb">Low carb</option>
-                    <option value="keto" data-i18n="option.keto">Keto</option>
-                    <option value="vegetarian" data-i18n="option.vegetarian">Vegetarian</option>
-                    <option value="vegan" data-i18n="option.vegan">Vegan</option>
-                  </select>
-                </label>
-              </div>
+            <form id="profileForm" class="stack profile-form">
+              <section class="profile-section">
+                <div class="profile-section-header">
+                  <div>
+                    <h3 data-i18n="profile.basicsHeading">Basic profile</h3>
+                    <p class="panel-note" data-i18n="profile.basicsBody">Body data used for calorie and macro targets.</p>
+                  </div>
+                </div>
+                <div class="profile-basics-grid">
+                  <label class="field">
+                    <span data-i18n="label.height">Height (cm)</span>
+                    <input id="height" name="height" type="number" min="50" max="300" step="0.1">
+                  </label>
+                  <label class="field">
+                    <span data-i18n="label.weight">Weight (kg)</span>
+                    <input id="weight" name="weight" type="number" min="20" max="500" step="0.1">
+                  </label>
+                  <label class="field">
+                    <span data-i18n="label.age">Age</span>
+                    <input id="age" name="age" type="number" min="10" max="120">
+                  </label>
+                  <label class="field">
+                    <span data-i18n="label.gender">Gender</span>
+                    <select id="gender" name="gender">
+                      <option value="" data-i18n="option.choose">Choose</option>
+                      <option value="male" data-i18n="option.male">Male</option>
+                      <option value="female" data-i18n="option.female">Female</option>
+                      <option value="other" data-i18n="option.other">Other</option>
+                    </select>
+                  </label>
+                </div>
+              </section>
 
-              <div class="subtle-panel">
-                <p class="eyebrow" data-i18n="profile.overridesEyebrow">Optional overrides</p>
-                <div class="form-grid">
+              <section class="profile-section">
+                <div class="profile-section-header">
+                  <div>
+                    <h3 data-i18n="profile.lifestyleHeading">Lifestyle and goal</h3>
+                    <p class="panel-note" data-i18n="profile.lifestyleBody">The activity and goal settings shape the recommendation.</p>
+                  </div>
+                </div>
+                <div class="profile-lifestyle-grid">
+                  <label class="field field-span-2">
+                    <span data-i18n="label.activity">Activity level</span>
+                    <select id="activityLevel" name="activityLevel">
+                      <option value="sedentary" data-i18n="option.sedentary">Sedentary</option>
+                      <option value="lightly_active" data-i18n="option.lightly_active">Lightly active</option>
+                      <option value="moderately_active" data-i18n="option.moderately_active">Moderately active</option>
+                      <option value="very_active" data-i18n="option.very_active">Very active</option>
+                      <option value="extremely_active" data-i18n="option.extremely_active">Extremely active</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span data-i18n="label.goal">Goal</span>
+                    <select id="goal" name="goal">
+                      <option value="weight_loss" data-i18n="option.weight_loss">Weight loss</option>
+                      <option value="maintenance" data-i18n="option.maintenance">Maintenance</option>
+                      <option value="muscle_gain" data-i18n="option.muscle_gain">Muscle gain</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span data-i18n="label.diet">Diet preference</span>
+                    <select id="dietaryPreference" name="dietaryPreference">
+                      <option value="none" data-i18n="option.none">Balanced</option>
+                      <option value="high_protein" data-i18n="option.high_protein">High protein</option>
+                      <option value="low_carb" data-i18n="option.low_carb">Low carb</option>
+                      <option value="keto" data-i18n="option.keto">Keto</option>
+                      <option value="vegetarian" data-i18n="option.vegetarian">Vegetarian</option>
+                      <option value="vegan" data-i18n="option.vegan">Vegan</option>
+                    </select>
+                  </label>
+                </div>
+              </section>
+
+              <details id="profileOverrides" class="subtle-panel profile-overrides">
+                <summary class="profile-overrides-summary">
+                  <div>
+                    <p class="eyebrow" data-i18n="profile.overridesEyebrow">Optional overrides</p>
+                    <h3 data-i18n="profile.overridesHeading">Advanced target overrides</h3>
+                    <p class="panel-note" data-i18n="profile.overridesBody">Only open this if you want to replace the calculated targets with your own numbers.</p>
+                  </div>
+                </summary>
+                <div class="profile-overrides-grid">
                   <label class="field">
                     <span data-i18n="label.customCalories">Custom calories</span>
                     <input id="customCalories" name="customCalories" type="number" min="0">
@@ -132,11 +158,14 @@
                     <input id="customFiber" name="customFiber" type="number" min="0">
                   </label>
                 </div>
-              </div>
+              </details>
 
-              <div class="button-row">
+              <div class="profile-save-bar">
+                <p class="panel-note" data-i18n="profile.inputsSupport">Changes save when you tap Save profile. Targets recalculate right after that.</p>
+                <div class="button-row profile-button-row">
                 <button type="submit" class="btn btn-primary" data-i18n="button.saveProfile">Save profile</button>
                 <button id="resetProfileButton" type="button" class="btn btn-secondary" data-i18n="button.resetForm">Reset form</button>
+                </div>
               </div>
             </form>
 
@@ -148,6 +177,7 @@
               <div>
                 <p class="eyebrow" data-i18n="profile.outputsEyebrow">Outputs</p>
                 <h2 data-i18n="profile.outputsHeading">Current targets</h2>
+                <p class="panel-note" data-i18n="profile.outputsSupport">These values update after you save the form.</p>
               </div>
             </div>
             <div id="profileTargets" class="stack"></div>
@@ -163,6 +193,6 @@
       </nav>
     </div>
 
-    <script type="module" src="profile.js?v=20260403-5"></script>
+    <script type="module" src="profile.js?v=20260403-6"></script>
   </body>
 </html>

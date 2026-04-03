@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildProfilePayload } from '../profile.js';
+import { buildProfilePayload, hasCustomOverrides } from '../profile.js';
 
 
 describe('profile payload builder', () => {
@@ -24,5 +24,10 @@ describe('profile payload builder', () => {
     expect(payload.custom_calories).toBeNull();
     expect(payload.custom_protein_g).toBe(190);
     expect(payload.custom_fiber_g).toBeNull();
+  });
+
+  it('detects whether advanced override fields should open', () => {
+    expect(hasCustomOverrides({ custom_calories: null, custom_protein_g: null })).toBe(false);
+    expect(hasCustomOverrides({ custom_calories: 2400, custom_protein_g: null })).toBe(true);
   });
 });

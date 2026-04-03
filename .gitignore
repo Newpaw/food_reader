@@ -23,3 +23,5 @@ calorie-tracker/backend/uploads/*
 *.jpg
 
 *.db
+
+*.log

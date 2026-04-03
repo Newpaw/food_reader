@@ -952,7 +952,7 @@ export function getMealDisplayName(meal) {
   return fallback;
 }
 
-export const FRONTEND_ASSET_VERSION = '20260403-8';
+export const FRONTEND_ASSET_VERSION = '20260403-9';
 
 const INSTALL_PROMPT_DELAY_MS = 1800;
 const INSTALL_RESHOW_AFTER_SHOW_MS = 18 * 60 * 60 * 1000;

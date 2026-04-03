@@ -15,7 +15,7 @@ import {
   showToast,
   t,
   toDateTimeInputValue,
-} from './common.js?v=20260403-8';
+} from './common.js?v=20260403-9';
 
 
 let currentMeal = null;
@@ -216,11 +216,29 @@ function getSelectedPhotoFile() {
 
 function updatePhotoSubmitState() {
   const analyzeButton = document.getElementById('analyzePhotoButton');
-  if (!analyzeButton) {
+  const stickyBar = document.getElementById('analyzePhotoStickyBar');
+  const stickyButton = document.getElementById('analyzePhotoStickyButton');
+  const photoForm = document.getElementById('photoMealForm');
+  const previewButton = document.getElementById('uploadPreviewButton');
+  if (!analyzeButton || !photoForm) {
     return;
   }
 
-  analyzeButton.disabled = photoSubmissionInProgress || !getSelectedPhotoFile();
+  const hasPhoto = Boolean(getSelectedPhotoFile());
+  const isPhotoModeVisible = !photoForm.hidden;
+  const disabled = photoSubmissionInProgress || !hasPhoto;
+
+  analyzeButton.disabled = disabled;
+  if (stickyButton) {
+    stickyButton.disabled = disabled;
+  }
+  if (stickyBar) {
+    stickyBar.hidden = !hasPhoto || !isPhotoModeVisible;
+  }
+  if (previewButton) {
+    previewButton.classList.toggle('has-image', hasPhoto);
+  }
+  document.body.classList.toggle('capture-photo-ready', hasPhoto && isPhotoModeVisible);
 }
 
 
@@ -1082,6 +1100,7 @@ function initializeModeSwitch() {
       sections.forEach((panel) => {
         panel.hidden = panel.dataset.modePanel !== button.dataset.captureMode;
       });
+      updatePhotoSubmitState();
     });
   });
 }
@@ -1094,15 +1113,20 @@ function updateCaptureAccessUi() {
 
 function initializePhotoCapture() {
   const { cameraInput, libraryInput } = getPhotoInputs();
+  const photoMealForm = document.getElementById('photoMealForm');
   const takePhotoButton = document.getElementById('takePhotoButton');
   const uploadPreviewButton = document.getElementById('uploadPreviewButton');
   const chooseGalleryButton = document.getElementById('chooseGalleryButton');
+  const stickyAnalyzeButton = document.getElementById('analyzePhotoStickyButton');
 
   cameraInput?.addEventListener('change', handleFileSelection);
   libraryInput?.addEventListener('change', handleFileSelection);
   takePhotoButton?.addEventListener('click', openPrimaryPhotoPicker);
   uploadPreviewButton?.addEventListener('click', openPrimaryPhotoPicker);
   chooseGalleryButton?.addEventListener('click', openGalleryPicker);
+  stickyAnalyzeButton?.addEventListener('click', () => {
+    photoMealForm?.requestSubmit();
+  });
 
   updateCaptureAccessUi();
   updatePhotoSubmitState();

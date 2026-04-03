@@ -11,13 +11,13 @@ import {
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-8';
+} from './common.js?v=20260403-9';
 import {
   buildDailyAverages,
   calculateMacroTotals,
   renderCalorieBars,
   renderMacroRing,
-} from './charts.js?v=20260403-8';
+} from './charts.js?v=20260403-9';
 
 let cachedTargets = null;
 let cachedSummaryDays = [];

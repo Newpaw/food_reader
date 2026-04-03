@@ -1370,6 +1370,131 @@ textarea {
   border-radius: var(--radius-small);
 }
 
+.install-prompt-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(5.9rem + env(safe-area-inset-bottom, 0px));
+  z-index: 90;
+  padding: 0 0.75rem;
+  pointer-events: none;
+}
+
+.install-prompt-card {
+  position: relative;
+  width: min(34rem, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 1.6rem;
+  border: 1px solid rgba(217, 107, 59, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(217, 107, 59, 0.2), transparent 34%),
+    linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(250, 239, 228, 0.98));
+  box-shadow: 0 24px 48px rgba(60, 36, 12, 0.2);
+  pointer-events: auto;
+  transform: translateY(1rem);
+  opacity: 0;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.install-prompt-banner.visible .install-prompt-card {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.install-prompt-dismiss {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: rgba(35, 49, 39, 0.08);
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.install-prompt-mark {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, var(--accent) 0%, #f0a057 100%);
+  color: white;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.install-prompt-copy {
+  display: grid;
+  gap: 0.45rem;
+  padding-right: 2.5rem;
+}
+
+.install-prompt-copy h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 6vw, 2.2rem);
+  line-height: 0.98;
+  max-width: 12ch;
+}
+
+.install-prompt-copy p:last-child {
+  margin: 0;
+  color: var(--muted);
+  max-width: 30rem;
+}
+
+.install-prompt-actions {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.install-help-card {
+  width: min(32rem, 100%);
+}
+
+.install-help-steps {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.install-help-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.8rem;
+  align-items: start;
+  padding: 0.85rem 0.95rem;
+  border-radius: var(--radius-small);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--line);
+}
+
+.install-help-step span {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(217, 107, 59, 0.16);
+  color: var(--accent-deep);
+  font-weight: 800;
+}
+
+.install-help-step p,
+.install-help-hint {
+  margin: 0;
+}
+
+.install-help-hint {
+  color: var(--muted);
+}
+
 .sticky-panel {
   align-self: start;
 }
@@ -1494,6 +1619,17 @@ textarea {
     transform: translateX(-50%);
     width: min(32rem, calc(100% - 1.5rem));
   }
+
+  .install-prompt-banner {
+    left: auto;
+    right: 1rem;
+    width: min(28rem, calc(100% - 2rem));
+    padding: 0;
+  }
+
+  .install-prompt-card {
+    margin: 0;
+  }
 }
 
 @media (min-width: 980px) {
@@ -1556,5 +1692,9 @@ textarea {
 
   .meal-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .install-prompt-banner {
+    bottom: 1.25rem;
   }
 }

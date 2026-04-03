@@ -28,6 +28,9 @@ const TRANSLATIONS = {
     'nav.metrics': 'Metrics',
     'nav.profile': 'Profile',
     'button.install': 'Install',
+    'button.installApp': 'Install app',
+    'button.notNow': 'Not now',
+    'button.showSteps': 'Show steps',
     'button.logout': 'Log out',
     'button.takePhoto': 'Take photo',
     'button.useSavedPhoto': 'Choose from gallery',
@@ -97,6 +100,19 @@ const TRANSLATIONS = {
     'label.customFiber': 'Custom fiber',
     'label.language': 'Language',
     'install.promptFallback': 'Use your browser menu to install this app if the prompt is not available.',
+    'install.bannerEyebrow': 'Install app',
+    'install.bannerTitle': 'Keep Food Reader one tap away',
+    'install.bannerBody': 'Install the app for faster launch, full-screen meal logging, and better offline access.',
+    'install.fallbackTitle': 'Add Food Reader to your Home Screen',
+    'install.fallbackBody': 'On this device, use your browser menu to add the app so meal capture stays one tap away.',
+    'install.dismissed': 'Install prompt dismissed for now.',
+    'install.installed': 'Food Reader is installed and ready.',
+    'install.iosStep1': 'Tap the Share button in Safari.',
+    'install.iosStep2': 'Choose Add to Home Screen.',
+    'install.iosStep3': 'Confirm Add to place Food Reader on your device.',
+    'install.instructionsTitle': 'Install Food Reader',
+    'install.instructionsBody': 'Save the app to your Home Screen for faster meal logging and a cleaner full-screen experience.',
+    'install.instructionsHint': 'You only need to do this once.',
     'option.breakfast': 'Breakfast',
     'option.lunch': 'Lunch',
     'option.dinner': 'Dinner',
@@ -305,6 +321,9 @@ const TRANSLATIONS = {
     'nav.metrics': 'Přehled',
     'nav.profile': 'Profil',
     'button.install': 'Instalovat',
+    'button.installApp': 'Instalovat aplikaci',
+    'button.notNow': 'Teď ne',
+    'button.showSteps': 'Ukázat postup',
     'button.logout': 'Odhlásit',
     'button.takePhoto': 'Vyfotit',
     'button.useSavedPhoto': 'Vybrat z galerie',
@@ -374,6 +393,19 @@ const TRANSLATIONS = {
     'label.customFiber': 'Vlastní vláknina',
     'label.language': 'Jazyk',
     'install.promptFallback': 'Pokud se instalační nabídka neukáže, použijte menu prohlížeče.',
+    'install.bannerEyebrow': 'Instalace aplikace',
+    'install.bannerTitle': 'Mějte Food Reader hned po ruce',
+    'install.bannerBody': 'Nainstalujte aplikaci pro rychlejší spuštění, plnoobrazovkové zapisování a lepší práci offline.',
+    'install.fallbackTitle': 'Přidejte Food Reader na plochu',
+    'install.fallbackBody': 'Na tomto zařízení použijte menu prohlížeče a přidejte aplikaci na plochu, aby bylo focení jídel hned po ruce.',
+    'install.dismissed': 'Instalační výzva byla prozatím skryta.',
+    'install.installed': 'Food Reader je nainstalovaný a připravený.',
+    'install.iosStep1': 'V Safari klepněte na tlačítko Sdílet.',
+    'install.iosStep2': 'Vyberte Přidat na plochu.',
+    'install.iosStep3': 'Potvrďte Přidat a Food Reader se uloží do zařízení.',
+    'install.instructionsTitle': 'Nainstalujte Food Reader',
+    'install.instructionsBody': 'Uložte si aplikaci na plochu pro rychlejší zapisování jídel a čistší celoobrazovkový režim.',
+    'install.instructionsHint': 'Stačí to udělat jen jednou.',
     'option.breakfast': 'Snídaně',
     'option.lunch': 'Oběd',
     'option.dinner': 'Večeře',
@@ -872,7 +904,118 @@ export function getMealDisplayName(meal) {
   return fallback;
 }
 
+export const FRONTEND_ASSET_VERSION = '20260403-4';
+
+const INSTALL_PROMPT_DELAY_MS = 1800;
+const INSTALL_RESHOW_AFTER_SHOW_MS = 18 * 60 * 60 * 1000;
+const INSTALL_RESHOW_AFTER_DISMISS_MS = 3 * 24 * 60 * 60 * 1000;
+const INSTALL_PROMPT_STATE_KEY = `${APP_STORAGE_PREFIX}:install-prompt-state`;
+const INSTALL_PROMPT_ANALYTICS_KEY = `${APP_STORAGE_PREFIX}:install-prompt-analytics`;
+
 let deferredInstallPrompt = null;
+let installPromptElements = null;
+let installPromptTimeoutId = null;
+
+function readGlobalJson(key, fallback) {
+  if (!safeWindowAvailable()) {
+    return fallback;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeGlobalJson(key, value) {
+  if (!safeWindowAvailable()) {
+    return;
+  }
+
+  window.localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getInstallPromptState() {
+  return readGlobalJson(INSTALL_PROMPT_STATE_KEY, {
+    dismissedAt: null,
+    installedAt: null,
+    lastShownAt: null,
+  });
+}
+
+function updateInstallPromptState(patch) {
+  const nextState = {
+    ...getInstallPromptState(),
+    ...patch,
+  };
+  writeGlobalJson(INSTALL_PROMPT_STATE_KEY, nextState);
+  return nextState;
+}
+
+function isStandaloneDisplayMode() {
+  if (!safeWindowAvailable()) {
+    return false;
+  }
+
+  if (window.matchMedia?.('(display-mode: standalone)').matches) {
+    return true;
+  }
+
+  return window.navigator?.standalone === true;
+}
+
+function isIosLike(navigatorLike = safeWindowAvailable() ? window.navigator : undefined) {
+  const userAgent = navigatorLike?.userAgent || '';
+  const platform = navigatorLike?.platform || '';
+  const maxTouchPoints = Number(navigatorLike?.maxTouchPoints || 0);
+  return /iphone|ipad|ipod/i.test(userAgent) || (platform === 'MacIntel' && maxTouchPoints > 1);
+}
+
+function isIosInstallFallbackEligible(navigatorLike = safeWindowAvailable() ? window.navigator : undefined) {
+  const userAgent = navigatorLike?.userAgent || '';
+  const isSafari = /safari/i.test(userAgent) && !/crios|fxios|edgios|optios/i.test(userAgent);
+  return isIosLike(navigatorLike) && isSafari && !isStandaloneDisplayMode();
+}
+
+function canPromptForInstall() {
+  return Boolean(deferredInstallPrompt) && !isStandaloneDisplayMode();
+}
+
+export function shouldAutoShowInstallPrompt(state = getInstallPromptState(), now = Date.now()) {
+  if (state?.installedAt) {
+    return false;
+  }
+
+  const dismissedAt = state?.dismissedAt ? new Date(state.dismissedAt).getTime() : 0;
+  if (dismissedAt && now - dismissedAt < INSTALL_RESHOW_AFTER_DISMISS_MS) {
+    return false;
+  }
+
+  const lastShownAt = state?.lastShownAt ? new Date(state.lastShownAt).getTime() : 0;
+  if (lastShownAt && now - lastShownAt < INSTALL_RESHOW_AFTER_SHOW_MS) {
+    return false;
+  }
+
+  return true;
+}
+
+function trackInstallEvent(type, detail = {}) {
+  const payload = {
+    id: createLocalId(),
+    type,
+    timestamp: new Date().toISOString(),
+    locale: getLocale(),
+    page: document.body?.dataset.page || null,
+    ...detail,
+  };
+
+  const events = readGlobalJson(INSTALL_PROMPT_ANALYTICS_KEY, []);
+  writeGlobalJson(INSTALL_PROMPT_ANALYTICS_KEY, [...events.slice(-39), payload]);
+  dispatchAppEvent(`food-reader:${type}`, payload);
+  return payload;
+}
 
 export function getAuthToken() {
   return window.localStorage.getItem('token');
@@ -1102,46 +1245,345 @@ export function toggleModal(modal, shouldOpen) {
   document.body.classList.toggle('modal-open', shouldOpen);
 }
 
+function getInstallPromptMode() {
+  if (canPromptForInstall()) {
+    return 'prompt';
+  }
+
+  if (isIosInstallFallbackEligible()) {
+    return 'ios-fallback';
+  }
+
+  return 'unavailable';
+}
+
+function closeInstallInstructions() {
+  if (!installPromptElements?.modal) {
+    return;
+  }
+
+  toggleModal(installPromptElements.modal, false);
+}
+
+function hideInstallPromptBanner() {
+  if (!installPromptElements?.banner) {
+    return;
+  }
+
+  installPromptElements.banner.classList.remove('visible');
+  window.setTimeout(() => {
+    if (installPromptElements?.banner && !installPromptElements.banner.classList.contains('visible')) {
+      installPromptElements.banner.hidden = true;
+    }
+  }, 220);
+}
+
+function updateInstallPromptUi() {
+  if (!safeWindowAvailable()) {
+    return 'unavailable';
+  }
+
+  const mode = getInstallPromptMode();
+  const installed = isStandaloneDisplayMode() || Boolean(getInstallPromptState().installedAt);
+  const installButtons = document.querySelectorAll('[data-install-button]');
+  const canShowEntryPoint = !installed && mode !== 'unavailable';
+
+  installButtons.forEach((button) => {
+    button.hidden = !canShowEntryPoint;
+    button.textContent = t('button.install');
+  });
+
+  if (!installPromptElements) {
+    return mode;
+  }
+
+  installPromptElements.banner.dataset.mode = mode;
+  installPromptElements.title.textContent =
+    mode === 'ios-fallback' ? t('install.fallbackTitle') : t('install.bannerTitle');
+  installPromptElements.body.textContent =
+    mode === 'ios-fallback' ? t('install.fallbackBody') : t('install.bannerBody');
+  installPromptElements.cta.textContent =
+    mode === 'ios-fallback' ? t('button.showSteps') : t('button.installApp');
+  installPromptElements.dismiss.textContent = t('button.notNow');
+  installPromptElements.eyebrow.textContent = t('install.bannerEyebrow');
+  installPromptElements.modalEyebrow.textContent = t('install.bannerEyebrow');
+  installPromptElements.modalTitle.textContent = t('install.instructionsTitle');
+  installPromptElements.modalBody.textContent = t('install.instructionsBody');
+  installPromptElements.modalHint.textContent = t('install.instructionsHint');
+  installPromptElements.stepOne.textContent = t('install.iosStep1');
+  installPromptElements.stepTwo.textContent = t('install.iosStep2');
+  installPromptElements.stepThree.textContent = t('install.iosStep3');
+  installPromptElements.modalClose.textContent = t('button.close');
+
+  if (!canShowEntryPoint) {
+    hideInstallPromptBanner();
+    closeInstallInstructions();
+  }
+
+  return mode;
+}
+
+function createInstallPromptUi() {
+  if (installPromptElements || typeof document === 'undefined') {
+    return installPromptElements;
+  }
+
+  const banner = document.createElement('section');
+  banner.id = 'installPromptBanner';
+  banner.className = 'install-prompt-banner';
+  banner.hidden = true;
+  banner.setAttribute('aria-live', 'polite');
+  banner.innerHTML = `
+    <div class="install-prompt-card">
+      <button type="button" class="install-prompt-dismiss" data-install-dismiss aria-label="Dismiss install prompt">×</button>
+      <div class="install-prompt-mark" aria-hidden="true">FR</div>
+      <div class="install-prompt-copy">
+        <p class="eyebrow" data-install-eyebrow></p>
+        <h2 data-install-title></h2>
+        <p data-install-body></p>
+      </div>
+      <div class="install-prompt-actions">
+        <button type="button" class="btn btn-primary btn-block" data-install-cta></button>
+        <button type="button" class="btn btn-secondary btn-block" data-install-later></button>
+      </div>
+    </div>
+  `;
+
+  const modal = document.createElement('section');
+  modal.id = 'installHelpModal';
+  modal.className = 'modal';
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="modal-card install-help-card">
+      <button type="button" class="modal-close" data-install-help-close aria-label="Close install help">×</button>
+      <div class="stack">
+        <div>
+          <p class="eyebrow" data-install-help-eyebrow></p>
+          <h2 data-install-help-title></h2>
+          <p class="panel-note" data-install-help-body></p>
+        </div>
+        <div class="install-help-steps">
+          <div class="install-help-step">
+            <span>1</span>
+            <p data-install-help-step-one></p>
+          </div>
+          <div class="install-help-step">
+            <span>2</span>
+            <p data-install-help-step-two></p>
+          </div>
+          <div class="install-help-step">
+            <span>3</span>
+            <p data-install-help-step-three></p>
+          </div>
+        </div>
+        <p class="install-help-hint" data-install-help-hint></p>
+        <button type="button" class="btn btn-primary btn-block" data-install-help-done></button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(banner);
+  document.body.appendChild(modal);
+
+  installPromptElements = {
+    banner,
+    modal,
+    eyebrow: banner.querySelector('[data-install-eyebrow]'),
+    title: banner.querySelector('[data-install-title]'),
+    body: banner.querySelector('[data-install-body]'),
+    cta: banner.querySelector('[data-install-cta]'),
+    dismiss: banner.querySelector('[data-install-later]'),
+    dismissIcon: banner.querySelector('[data-install-dismiss]'),
+    modalTitle: modal.querySelector('[data-install-help-title]'),
+    modalBody: modal.querySelector('[data-install-help-body]'),
+    modalHint: modal.querySelector('[data-install-help-hint]'),
+    modalEyebrow: modal.querySelector('[data-install-help-eyebrow]'),
+    stepOne: modal.querySelector('[data-install-help-step-one]'),
+    stepTwo: modal.querySelector('[data-install-help-step-two]'),
+    stepThree: modal.querySelector('[data-install-help-step-three]'),
+    modalClose: modal.querySelector('[data-install-help-done]'),
+  };
+
+  installPromptElements.dismiss.addEventListener('click', () => {
+    updateInstallPromptState({ dismissedAt: new Date().toISOString() });
+    trackInstallEvent('installdismissed', { source: 'banner' });
+    hideInstallPromptBanner();
+  });
+
+  installPromptElements.dismissIcon.addEventListener('click', () => {
+    updateInstallPromptState({ dismissedAt: new Date().toISOString() });
+    trackInstallEvent('installdismissed', { source: 'icon' });
+    hideInstallPromptBanner();
+  });
+
+  installPromptElements.cta.addEventListener('click', () => {
+    void handleInstallCallToAction('banner');
+  });
+
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      closeInstallInstructions();
+    }
+  });
+
+  modal.querySelector('[data-install-help-close]').addEventListener('click', closeInstallInstructions);
+  installPromptElements.modalClose.addEventListener('click', closeInstallInstructions);
+
+  updateInstallPromptUi();
+  return installPromptElements;
+}
+
+function openInstallInstructions(source = 'manual') {
+  createInstallPromptUi();
+  updateInstallPromptUi();
+  toggleModal(installPromptElements.modal, true);
+  trackInstallEvent('installpromptshown', { source, mode: 'ios-fallback-instructions' });
+}
+
+function showInstallPromptBanner({ force = false, source = 'auto' } = {}) {
+  createInstallPromptUi();
+  const mode = updateInstallPromptUi();
+
+  if (mode === 'unavailable') {
+    return false;
+  }
+
+  if (!force && !shouldAutoShowInstallPrompt()) {
+    return false;
+  }
+
+  updateInstallPromptState({ lastShownAt: new Date().toISOString() });
+  installPromptElements.banner.hidden = false;
+  const scheduleFrame = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
+  scheduleFrame(() => {
+    installPromptElements?.banner.classList.add('visible');
+  });
+  trackInstallEvent('installpromptshown', { source, mode });
+  return true;
+}
+
+function scheduleInstallPrompt() {
+  window.clearTimeout(installPromptTimeoutId);
+
+  const state = getInstallPromptState();
+  if (!shouldAutoShowInstallPrompt(state)) {
+    return;
+  }
+
+  const mode = updateInstallPromptUi();
+  if (mode === 'unavailable') {
+    return;
+  }
+
+  installPromptTimeoutId = window.setTimeout(() => {
+    showInstallPromptBanner({ source: 'auto' });
+  }, INSTALL_PROMPT_DELAY_MS);
+}
+
+async function handleInstallCallToAction(source = 'manual') {
+  const mode = updateInstallPromptUi();
+
+  if (mode === 'ios-fallback') {
+    trackInstallEvent('installctaclicked', { source, mode });
+    hideInstallPromptBanner();
+    openInstallInstructions(source);
+    return;
+  }
+
+  if (!deferredInstallPrompt) {
+    showToast(t('install.promptFallback'));
+    return;
+  }
+
+  trackInstallEvent('installctaclicked', { source, mode: 'prompt' });
+  hideInstallPromptBanner();
+
+  const promptEvent = deferredInstallPrompt;
+  deferredInstallPrompt = null;
+
+  try {
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    if (choice?.outcome !== 'accepted') {
+      updateInstallPromptState({ dismissedAt: new Date().toISOString() });
+      trackInstallEvent('installdismissed', { source: `${source}-browser`, mode: 'prompt' });
+    }
+  } catch (error) {
+    console.error('Install prompt failed:', error);
+  }
+
+  updateInstallPromptUi();
+}
+
 export async function registerServiceWorker() {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return;
   }
 
   try {
-    await navigator.serviceWorker.register('/service-worker.js?v=20260403-3');
+    await navigator.serviceWorker.register(`/service-worker.js?v=${FRONTEND_ASSET_VERSION}`);
   } catch (error) {
     console.error('Service worker registration failed:', error);
   }
 }
 
 export function setupInstallPrompt() {
-  const installButton = document.querySelector('[data-install-button]');
-  if (!installButton) {
+  if (typeof document === 'undefined') {
     return;
   }
 
-  installButton.addEventListener('click', async () => {
-    if (!deferredInstallPrompt) {
-      showToast(t('install.promptFallback'));
-      return;
-    }
+  createInstallPromptUi();
 
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-    installButton.hidden = true;
+  document.querySelectorAll('[data-install-button]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const mode = updateInstallPromptUi();
+      if (mode === 'ios-fallback') {
+        trackInstallEvent('installctaclicked', { source: 'topbar', mode });
+        openInstallInstructions('topbar');
+        return;
+      }
+
+      if (mode === 'prompt') {
+        void handleInstallCallToAction('topbar');
+        return;
+      }
+
+      showToast(t('install.promptFallback'));
+    });
   });
 
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
-    installButton.hidden = false;
+    updateInstallPromptState({ installedAt: null });
+    scheduleInstallPrompt();
+    updateInstallPromptUi();
   });
 
   window.addEventListener('appinstalled', () => {
-    installButton.hidden = true;
     deferredInstallPrompt = null;
+    updateInstallPromptState({
+      dismissedAt: null,
+      installedAt: new Date().toISOString(),
+    });
+    trackInstallEvent('installsuccess', { mode: 'pwa' });
+    hideInstallPromptBanner();
+    closeInstallInstructions();
+    updateInstallPromptUi();
+    showToast(t('install.installed'));
   });
+
+  window.addEventListener('food-reader:localechange', () => {
+    updateInstallPromptUi();
+  });
+
+  const standaloneQuery = window.matchMedia?.('(display-mode: standalone)');
+  standaloneQuery?.addEventListener?.('change', () => {
+    updateInstallPromptUi();
+  });
+
+  scheduleInstallPrompt();
+  updateInstallPromptUi();
 }
 
 export function showToast(message) {

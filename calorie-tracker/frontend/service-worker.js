@@ -1,5 +1,5 @@
-const CACHE_NAME = 'food-reader-v7';
-const ASSET_VERSION = '20260403-3';
+const CACHE_NAME = 'food-reader-v8';
+const ASSET_VERSION = '20260403-4';
 const withVersion = (path) => `${path}?v=${ASSET_VERSION}`;
 const APP_SHELL = [
   '/',
@@ -19,6 +19,8 @@ const APP_SHELL = [
   withVersion('/charts.js'),
   withVersion('/manifest.webmanifest'),
   '/assets/favicon/apple-touch-icon.png',
+  '/assets/favicon/icon-192.png',
+  '/assets/favicon/icon-512.png',
   '/assets/favicon/favicon-32x32.png',
   '/assets/favicon/favicon-16x16.png',
   '/assets/favicon/favicon.svg',

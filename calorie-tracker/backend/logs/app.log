@@ -441,3 +441,21 @@
 2026-04-03 01:04:12,895 - backend.app.main - INFO - [main.py:21] - Application started
 2026-04-03 01:04:13,740 - backend.app.main - INFO - [main.py:21] - Application started
 2026-04-03 01:04:14,180 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:48,318 - backend.app.logger - INFO - [logger.py:311] - Logging system initialized
+2026-04-03 10:22:48,610 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:49,019 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:49,407 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:49,805 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-03 10:22:49,806 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 1.22ms
+2026-04-03 10:22:49,808 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-03 10:22:49,809 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.74ms
+2026-04-03 10:22:49,820 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing list_meals
+2026-04-03 10:22:49,821 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed list_meals in 0.81ms
+2026-04-03 10:22:49,828 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:50,224 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:50,638 - backend.app.routers.meals_router - INFO - [logger.py:215] - Executing summary
+2026-04-03 10:22:50,639 - backend.app.routers.meals_router - INFO - [logger.py:222] - Completed summary in 0.90ms
+2026-04-03 10:22:50,646 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:51,065 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:51,881 - backend.app.main - INFO - [main.py:21] - Application started
+2026-04-03 10:22:52,294 - backend.app.main - INFO - [main.py:21] - Application started

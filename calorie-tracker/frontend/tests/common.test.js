@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   getMealDisplayName,
@@ -6,6 +6,8 @@ import {
   localDateRangeToUtc,
   normalizeOptionalNumber,
   setLocale,
+  setupInstallPrompt,
+  shouldAutoShowInstallPrompt,
   shouldUseSplitLocalApi,
   t,
 } from '../common.js';
@@ -67,5 +69,58 @@ describe('common helpers', () => {
     expect(t('nav.metrics')).toBe('Přehled');
 
     setLocale('en');
+  });
+
+  it('suppresses install auto-show when recently dismissed', () => {
+    const now = Date.now();
+
+    expect(
+      shouldAutoShowInstallPrompt({
+        dismissedAt: new Date(now - 60 * 60 * 1000).toISOString(),
+        installedAt: null,
+        lastShownAt: null,
+      }, now),
+    ).toBe(false);
+
+    expect(
+      shouldAutoShowInstallPrompt({
+        dismissedAt: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        installedAt: null,
+        lastShownAt: null,
+      }, now),
+    ).toBe(true);
+  });
+
+  it('shows the branded install prompt and triggers the browser prompt', async () => {
+    vi.useFakeTimers();
+    window.localStorage.clear();
+    document.body.innerHTML = '<button data-install-button hidden>Install</button>';
+    document.body.dataset.page = 'add';
+    window.matchMedia = vi.fn().mockImplementation(() => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+
+    setupInstallPrompt();
+
+    const prompt = vi.fn().mockResolvedValue(undefined);
+    const installEvent = new Event('beforeinstallprompt');
+    installEvent.prompt = prompt;
+    installEvent.userChoice = Promise.resolve({ outcome: 'accepted' });
+    window.dispatchEvent(installEvent);
+
+    await vi.advanceTimersByTimeAsync(1900);
+
+    const banner = document.getElementById('installPromptBanner');
+    expect(banner.hidden).toBe(false);
+    expect(document.querySelector('[data-install-button]').hidden).toBe(false);
+
+    banner.querySelector('[data-install-cta]').click();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(prompt).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 });

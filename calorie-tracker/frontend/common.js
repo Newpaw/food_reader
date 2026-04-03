@@ -135,13 +135,14 @@ const TRANSLATIONS = {
     'option.keto': 'Keto',
     'option.vegetarian': 'Vegetarian',
     'option.vegan': 'Vegan',
-    'login.heroEyebrow': 'Built for real phones',
-    'login.heroTitle': 'Track meals fast, then install the app and keep it on your home screen.',
-    'login.heroBody': 'The interface is tuned for quick one-handed logging, clear review states, and clean historical reporting.',
     'login.welcomeBack': 'Welcome back',
     'login.signInHeading': 'Sign in',
+    'login.signInSupport': 'Use your saved account to continue quickly.',
     'login.newAccount': 'New account',
     'login.createAccess': 'Create access',
+    'login.createSupport': 'Create an account to save meals and keep your history.',
+    'login.newHere': 'New here?',
+    'login.haveAccount': 'Already have an account?',
     'login.signingIn': 'Signing you in...',
     'login.registering': 'Creating your account...',
     'login.registered': 'Account created. You can sign in now.',
@@ -428,13 +429,14 @@ const TRANSLATIONS = {
     'option.keto': 'Keto',
     'option.vegetarian': 'Vegetariánská',
     'option.vegan': 'Veganská',
-    'login.heroEyebrow': 'Navrženo pro skutečné telefony',
-    'login.heroTitle': 'Zapisujte jídla rychle, nainstalujte aplikaci a mějte ji na ploše.',
-    'login.heroBody': 'Rozhraní je vyladěné pro rychlé ovládání jednou rukou, jasnou kontrolu výsledků a čistou historii.',
     'login.welcomeBack': 'Vítejte zpět',
     'login.signInHeading': 'Přihlášení',
+    'login.signInSupport': 'Použijte svůj účet a pokračujte hned dál.',
     'login.newAccount': 'Nový účet',
     'login.createAccess': 'Vytvořit přístup',
+    'login.createSupport': 'Vytvořte si účet a ukládejte jídla i historii.',
+    'login.newHere': 'Jste tu nově?',
+    'login.haveAccount': 'Už účet máte?',
     'login.signingIn': 'Přihlašuji vás...',
     'login.registering': 'Vytvářím účet...',
     'login.registered': 'Účet byl vytvořen. Teď se můžete přihlásit.',
@@ -904,7 +906,7 @@ export function getMealDisplayName(meal) {
   return fallback;
 }
 
-export const FRONTEND_ASSET_VERSION = '20260403-4';
+export const FRONTEND_ASSET_VERSION = '20260403-5';
 
 const INSTALL_PROMPT_DELAY_MS = 1800;
 const INSTALL_RESHOW_AFTER_SHOW_MS = 18 * 60 * 60 * 1000;

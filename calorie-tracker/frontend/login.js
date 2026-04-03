@@ -7,7 +7,49 @@ import {
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-4';
+} from './common.js?v=20260403-5';
+
+export function applyAuthMode(mode) {
+  const normalizedMode = mode === 'register' ? 'register' : 'signin';
+  const introEyebrow = document.querySelector('.auth-intro .eyebrow');
+  const introHeading = document.querySelector('.auth-intro h1');
+  const introSupport = document.querySelector('.auth-intro .panel-note');
+
+  document.querySelectorAll('[data-auth-mode-toggle]').forEach((button) => {
+    const isActive = button.dataset.authModeToggle === normalizedMode;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-selected', String(isActive));
+  });
+
+  document.querySelectorAll('[data-auth-mode-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.authModePanel !== normalizedMode;
+  });
+
+  const activeToggle = document.querySelector(`[data-auth-mode-toggle="${normalizedMode}"]`);
+  if (activeToggle && introEyebrow && introHeading && introSupport) {
+    introEyebrow.textContent = t(activeToggle.dataset.authEyebrow);
+    introHeading.textContent = t(activeToggle.dataset.authHeading);
+    introSupport.textContent = t(activeToggle.dataset.authSupport);
+  }
+
+  return normalizedMode;
+}
+
+function bindAuthModeControls() {
+  document.querySelectorAll('[data-auth-mode-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      applyAuthMode(button.dataset.authModeToggle);
+    });
+  });
+
+  document.querySelectorAll('[data-auth-mode-link]').forEach((button) => {
+    button.addEventListener('click', () => {
+      applyAuthMode(button.dataset.authModeLink);
+    });
+  });
+
+  applyAuthMode('signin');
+}
 
 async function handleLoginSubmit(event) {
   event.preventDefault();
@@ -73,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  bindAuthModeControls();
   document.getElementById('loginForm').addEventListener('submit', handleLoginSubmit);
   document.getElementById('registerForm').addEventListener('submit', handleRegisterSubmit);
 });

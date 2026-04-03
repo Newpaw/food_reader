@@ -6,7 +6,7 @@ import {
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-4';
+} from './common.js?v=20260403-5';
 
 
 let profileExists = false;

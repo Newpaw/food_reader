@@ -6,8 +6,8 @@
     <title>Food Reader | History</title>
     <meta name="description" content="Browse, edit, and delete meal entries with a mobile-first history view grouped by day.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260403-7">
-    <link rel="manifest" href="manifest.webmanifest?v=20260403-7">
+    <link rel="stylesheet" href="styles.css?v=20260403-8">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-8">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
@@ -78,6 +78,15 @@
         </section>
 
         <section id="historySummary" class="stat-grid"></section>
+        <section id="historyTemplatesPanel" class="panel" hidden>
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" data-i18n="history.templatesEyebrow">Reuse</p>
+              <h2 data-i18n="history.templatesHeading">Saved templates</h2>
+            </div>
+          </div>
+          <div id="historyTemplateList" class="stack"></div>
+        </section>
         <section id="historyList" class="stack"></section>
       </main>
 
@@ -157,6 +166,6 @@
       </div>
     </div>
 
-    <script type="module" src="history.js?v=20260403-7"></script>
+    <script type="module" src="history.js?v=20260403-8"></script>
   </body>
 </html>

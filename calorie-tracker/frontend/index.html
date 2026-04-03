@@ -6,8 +6,8 @@
     <title>Food Reader | Add Meal</title>
     <meta name="description" content="Capture food quickly, review the AI estimate, and keep a clean nutrition log from any phone.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260403-7">
-    <link rel="manifest" href="manifest.webmanifest?v=20260403-7">
+    <link rel="stylesheet" href="styles.css?v=20260403-8">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-8">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
@@ -58,6 +58,7 @@
               <button type="button" class="active" data-capture-mode="photo" data-i18n="home.capturePhoto">Photo</button>
               <button type="button" data-capture-mode="text" data-i18n="home.captureText">Text</button>
             </div>
+            <p class="panel-note capture-mode-helper" data-i18n="home.captureModeHelper">Choose one input method for the same meal. Photo uses image analysis, text is a full manual alternative.</p>
 
             <form id="photoMealForm" data-mode-panel="photo" class="stack">
               <input id="mealCameraInput" class="sr-only" type="file" accept="image/*" capture="environment">
@@ -124,30 +125,11 @@
                 <span id="captureLoadingMessage" class="panel-note" data-i18n="home.analysisLoadingBody">This can take a few seconds.</span>
               </div>
             </div>
-            <p id="captureStatus" class="status" hidden></p>
-          </section>
-        </div>
-
-        <div class="dashboard-grid dashboard-secondary-grid">
-          <section class="panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow" data-i18n="home.todayEyebrow">Today</p>
-                <h2 data-i18n="home.todayHeading">Daily dashboard</h2>
-              </div>
+            <div id="captureQueueNotice" class="compact-utility-row" hidden>
+              <span id="captureQueueLabel" class="panel-note"></span>
               <button id="syncQueueButton" type="button" class="btn btn-secondary btn-small" hidden data-i18n="button.syncQueue">Sync queue</button>
             </div>
-            <div id="todayDashboard" class="stack"></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow" data-i18n="home.templatesEyebrow">Quick reuse</p>
-                <h2 data-i18n="home.templatesHeading">Favorites and templates</h2>
-              </div>
-            </div>
-            <div id="templateList" class="stack"></div>
+            <p id="captureStatus" class="status" hidden></p>
           </section>
         </div>
 
@@ -269,6 +251,6 @@
       </nav>
     </div>
 
-    <script type="module" src="home.js?v=20260403-7"></script>
+    <script type="module" src="home.js?v=20260403-8"></script>
   </body>
 </html>

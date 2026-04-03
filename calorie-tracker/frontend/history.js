@@ -2,11 +2,13 @@ import {
   API,
   apiFetch,
   bindQuickRangeButtons,
+  deleteMealTemplate,
   formatDateTime,
   formatDayLabel,
   formatTime,
   getDefaultDateRange,
   getMealDisplayName,
+  getMealTemplates,
   getJsonOrThrow,
   getLocalDateKey,
   localDateRangeToUtc,
@@ -18,10 +20,87 @@ import {
   t,
   toggleModal,
   toDateTimeInputValue,
-} from './common.js?v=20260403-7';
+} from './common.js?v=20260403-8';
 
 let historyMeals = [];
 let activeMeal = null;
+
+function buildTextMealPayload(template) {
+  return {
+    food_description: template.description || template.title,
+    calories: template.calories,
+    protein: template.protein,
+    fat: template.fat,
+    carbs: template.carbs,
+    fiber: template.fiber,
+    sugar: template.sugar,
+    sodium: template.sodium,
+    meal_type: template.meal_type,
+    notes: template.notes || `Template: ${template.title}`,
+  };
+}
+
+function renderTemplateSection() {
+  const panel = document.getElementById('historyTemplatesPanel');
+  const list = document.getElementById('historyTemplateList');
+  if (!panel || !list) {
+    return;
+  }
+
+  const templates = getMealTemplates();
+  panel.hidden = templates.length === 0;
+  if (!templates.length) {
+    return;
+  }
+
+  list.innerHTML = templates
+    .map(
+      (template) => `
+        <article class="template-card">
+          <div class="template-card-main">
+            <strong>${template.title}</strong>
+            <span>${template.calories} kcal</span>
+          </div>
+          <div class="template-card-actions">
+            <button type="button" class="btn btn-secondary btn-small" data-template-log="${template.id}">${t('button.logAgain')}</button>
+            <button type="button" class="btn btn-ghost btn-small" data-template-delete="${template.id}">${t('button.remove')}</button>
+          </div>
+        </article>
+      `,
+    )
+    .join('');
+
+  list.querySelectorAll('[data-template-log]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const template = templates.find((item) => item.id === button.dataset.templateLog);
+      if (!template) {
+        return;
+      }
+
+      const status = document.getElementById('historyStatus');
+      showStatus(status, t('home.textAnalyzing'), 'info');
+
+      try {
+        const response = await apiFetch(`${API.meals}/text`, {
+          method: 'POST',
+          body: buildTextMealPayload(template),
+        });
+        await getJsonOrThrow(response, 'Unable to log template meal');
+        await loadMeals();
+        showStatus(status, t('home.mealAdded'), 'success');
+      } catch (error) {
+        showStatus(status, error.message, 'danger');
+      }
+    });
+  });
+
+  list.querySelectorAll('[data-template-delete]').forEach((button) => {
+    button.addEventListener('click', () => {
+      deleteMealTemplate(button.dataset.templateDelete);
+      renderTemplateSection();
+    });
+  });
+}
 
 function formatRangeLabel(from, to) {
   if (!from || !to) {
@@ -298,10 +377,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('food-reader:localechange', () => {
     updateHistoryRangeLabel();
     renderHistory(historyMeals);
+    renderTemplateSection();
     if (activeMeal) {
       openMealModal(activeMeal.id, document.getElementById('mealEditForm').hidden === false);
     }
   });
+  window.addEventListener('food-reader:templateschange', renderTemplateSection);
 
+  renderTemplateSection();
   await loadMeals();
 });

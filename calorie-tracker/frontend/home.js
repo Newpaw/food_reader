@@ -1,11 +1,9 @@
 import {
   API,
   apiFetch,
-  deleteMealTemplate,
   formatDateTime,
   getLocalDateKey,
   getMealDisplayName,
-  getMealTemplates,
   getPendingMealQueue,
   getJsonOrThrow,
   queuePendingMeal,
@@ -17,13 +15,11 @@ import {
   showToast,
   t,
   toDateTimeInputValue,
-} from './common.js?v=20260403-7';
+} from './common.js?v=20260403-8';
 
 
 let currentMeal = null;
 let originalMeal = null;
-let dashboardMeals = [];
-let dashboardTargets = null;
 let voiceRecognition = null;
 let isListening = false;
 let syncInProgress = false;
@@ -550,119 +546,27 @@ function renderMealEditor(meal, { scroll = true, editing = false } = {}) {
 }
 
 
-function renderTodayDashboard() {
-  const target = document.getElementById('todayDashboard');
-  const summary = summarizeTodayState(
-    dashboardMeals,
-    dashboardTargets,
-    getPendingMealQueue().length,
-    getMealTemplates().length,
-  );
+function renderCaptureQueueNotice() {
+  const wrapper = document.getElementById('captureQueueNotice');
+  const label = document.getElementById('captureQueueLabel');
   const syncButton = document.getElementById('syncQueueButton');
-  syncButton.hidden = summary.queueCount === 0;
-
-  const remainingBlock =
-    summary.remainingCalories === null
-      ? `<p class="panel-note">${t('home.dashboardTargetsMissing')}</p>`
-      : `<p class="panel-note">${
-          summary.remainingCalories >= 0
-            ? t('home.dashboardRemaining', { remaining: summary.remainingCalories })
-            : t('home.dashboardOver', { remaining: Math.abs(summary.remainingCalories) })
-        }</p>`;
-
-  const queueBlock =
-    summary.queueCount === 0
-      ? `<p class="panel-note">${t('home.queueReady')}</p>`
-      : `<div class="queue-list">${getPendingMealQueue()
-          .slice(0, 3)
-          .map(
-            (entry) =>
-              `<div class="daily-row"><span>${entry.label || t(`home.queueKind.${entry.kind}`)}</span><span>${t(`home.queueKind.${entry.kind}`)}</span></div>`,
-          )
-          .join('')}</div>`;
-
-  target.innerHTML = `
-    <div class="stat-grid">
-      <article class="stat-card"><span>${t('home.dashboardCalories')}</span><strong>${summary.calories}</strong></article>
-      <article class="stat-card"><span>${t('home.dashboardProtein')}</span><strong>${summary.protein}g</strong></article>
-      <article class="stat-card"><span>${t('home.dashboardFiber')}</span><strong>${summary.fiber}g</strong></article>
-      <article class="stat-card"><span>${t('home.dashboardTarget')}</span><strong>${summary.targetCalories ?? '-'}</strong></article>
-    </div>
-    ${remainingBlock}
-    <div class="detail-list">
-      <div><strong>${t('home.dashboardStreak', { days: summary.streak || 0 })}</strong><span>${summary.meals}</span></div>
-      <div><strong>${t('home.dashboardTemplates', { count: summary.templateCount })}</strong><span>${summary.templateCount}</span></div>
-      <div><strong>${t('home.dashboardQueue', { count: summary.queueCount })}</strong><span>${summary.queueCount}</span></div>
-    </div>
-    <p class="panel-note">${t('home.dashboardInsights', { meals: summary.meals, calories: summary.calories })}</p>
-    <div class="subtle-panel">
-      <p class="eyebrow">${t('home.queueHeading')}</p>
-      ${queueBlock}
-    </div>
-  `;
-}
-
-
-function renderTemplates() {
-  const target = document.getElementById('templateList');
-  const templates = getMealTemplates();
-
-  if (!templates.length) {
-    target.innerHTML = `<p class="empty-state">${t('home.templatesEmpty')}</p>`;
+  if (!wrapper || !label || !syncButton) {
     return;
   }
 
-  target.innerHTML = templates
-    .map(
-      (template) => `
-        <article class="template-card">
-          <div class="template-card-main">
-            <strong>${template.title}</strong>
-            <span>${template.calories} kcal</span>
-          </div>
-          <div class="template-card-actions">
-            <button type="button" class="btn btn-secondary btn-small" data-template-log="${template.id}">${t('button.logAgain')}</button>
-            <button type="button" class="btn btn-ghost btn-small" data-template-delete="${template.id}">${t('button.remove')}</button>
-          </div>
-        </article>
-      `,
-    )
-    .join('');
+  const queueCount = getPendingMealQueue().length;
+  wrapper.hidden = queueCount === 0;
+  syncButton.hidden = queueCount === 0;
+  if (!queueCount) {
+    return;
+  }
 
-  target.querySelectorAll('[data-template-log]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const template = templates.find((item) => item.id === button.dataset.templateLog);
-      if (template) {
-        await submitTemplateMeal(template);
-      }
-    });
-  });
-
-  target.querySelectorAll('[data-template-delete]').forEach((button) => {
-    button.addEventListener('click', () => {
-      deleteMealTemplate(button.dataset.templateDelete);
-      renderTemplates();
-      renderTodayDashboard();
-    });
-  });
-}
-
-
-function refreshHomePanels() {
-  renderTodayDashboard();
-  renderTemplates();
+  label.textContent = t('home.queueCompact', { count: queueCount });
 }
 
 
 async function loadHomeData() {
-  const [mealsResponse, targetsResponse] = await Promise.all([
-    apiFetch(`${API.meals}?limit=120`),
-    apiFetch(`${API.profile}/targets`),
-  ]);
-
-  dashboardMeals = await getJsonOrThrow(mealsResponse, 'Unable to load dashboard meals');
-  dashboardTargets = targetsResponse.ok ? await targetsResponse.json() : null;
-  refreshHomePanels();
+  renderCaptureQueueNotice();
 }
 
 
@@ -830,7 +734,7 @@ async function optimizePhotoForUpload(file) {
 
 async function queueTextLikeMeal(payload, label) {
   queuePendingMeal({ kind: 'text', payload, label });
-  renderTodayDashboard();
+  renderCaptureQueueNotice();
   showToast(t('home.queueAddedText'));
 }
 
@@ -848,7 +752,7 @@ async function queuePhotoMeal(file) {
       analysisContext,
     },
   });
-  renderTodayDashboard();
+  renderCaptureQueueNotice();
   showToast(t('home.queueAddedPhoto'));
 }
 
@@ -1317,7 +1221,7 @@ async function syncPendingQueue() {
 
   const queue = [...getPendingMealQueue()].reverse();
   if (!queue.length) {
-    renderTodayDashboard();
+    renderCaptureQueueNotice();
     return;
   }
 
@@ -1391,12 +1295,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   window.addEventListener('food-reader:templateschange', () => {
-    renderTemplates();
-    renderTodayDashboard();
+    renderCaptureQueueNotice();
   });
-  window.addEventListener('food-reader:queuechange', renderTodayDashboard);
+  window.addEventListener('food-reader:queuechange', renderCaptureQueueNotice);
   window.addEventListener('food-reader:localechange', () => {
-    refreshHomePanels();
+    renderCaptureQueueNotice();
     refreshVoiceUi();
   });
   window.addEventListener('online', syncPendingQueue);

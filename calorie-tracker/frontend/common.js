@@ -159,6 +159,7 @@ const TRANSLATIONS = {
     'home.captureHeading': 'Add a meal',
     'home.capturePhoto': 'Photo',
     'home.captureText': 'Text',
+    'home.captureModeHelper': 'Choose one input method for the same meal. Photo uses image analysis, text is a full manual alternative.',
     'home.mobileCameraHint': 'Open the camera directly on your phone, then review the estimate before saving.',
     'home.uploadHint': 'Take or upload a meal photo',
     'home.analysisContextLabel': 'Add details for better analysis',
@@ -191,6 +192,7 @@ const TRANSLATIONS = {
     'home.queueEmpty': 'Nothing is waiting to sync.',
     'home.queueHeading': 'Offline capture queue',
     'home.queueReady': 'Everything is synced.',
+    'home.queueCompact': '{count} entries waiting to sync',
     'home.queueKind.photo': 'Photo',
     'home.queueKind.text': 'Text entry',
     'home.dashboardTargetsMissing': 'Create a profile to compare today against a calorie target.',
@@ -234,6 +236,8 @@ const TRANSLATIONS = {
     'history.heroBody': 'Filter a date range, spot outliers quickly, and adjust entries without leaving the history screen.',
     'history.filterEyebrow': 'Range',
     'history.filterHeading': 'Filter history',
+    'history.templatesEyebrow': 'Reuse',
+    'history.templatesHeading': 'Saved templates',
     'history.summary.totalMeals': 'Total meals',
     'history.summary.totalCalories': 'Total calories',
     'history.summary.avgPerMeal': 'Avg per meal',
@@ -470,6 +474,7 @@ const TRANSLATIONS = {
     'home.captureHeading': 'Přidat jídlo',
     'home.capturePhoto': 'Fotka',
     'home.captureText': 'Text',
+    'home.captureModeHelper': 'Vyberte jeden způsob zápisu stejného jídla. Fotka používá analýzu obrazu, text je plnohodnotná ruční alternativa.',
     'home.mobileCameraHint': 'Otevřete rovnou fotoaparát v telefonu a před uložením výsledek zkontrolujte.',
     'home.uploadHint': 'Vyfoťte nebo nahrajte fotku jídla',
     'home.analysisContextLabel': 'Přidejte detaily pro přesnější analýzu',
@@ -502,6 +507,7 @@ const TRANSLATIONS = {
     'home.queueEmpty': 'Nic nečeká na synchronizaci.',
     'home.queueHeading': 'Offline fronta záznamů',
     'home.queueReady': 'Všechno je synchronizované.',
+    'home.queueCompact': 'Na synchronizaci čeká {count} záznamů',
     'home.queueKind.photo': 'Fotka',
     'home.queueKind.text': 'Textový záznam',
     'home.dashboardTargetsMissing': 'Vytvořte profil, aby bylo možné porovnávat dnešek s cílem.',
@@ -545,6 +551,8 @@ const TRANSLATIONS = {
     'history.heroBody': 'Filtrujte datumy, rychle najděte odlehlé záznamy a upravujte je bez opuštění historie.',
     'history.filterEyebrow': 'Rozsah',
     'history.filterHeading': 'Filtrovat historii',
+    'history.templatesEyebrow': 'Znovu použít',
+    'history.templatesHeading': 'Uložené šablony',
     'history.summary.totalMeals': 'Počet jídel',
     'history.summary.totalCalories': 'Celkem kalorií',
     'history.summary.avgPerMeal': 'Průměr na jídlo',
@@ -944,7 +952,7 @@ export function getMealDisplayName(meal) {
   return fallback;
 }
 
-export const FRONTEND_ASSET_VERSION = '20260403-7';
+export const FRONTEND_ASSET_VERSION = '20260403-8';
 
 const INSTALL_PROMPT_DELAY_MS = 1800;
 const INSTALL_RESHOW_AFTER_SHOW_MS = 18 * 60 * 60 * 1000;

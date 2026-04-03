@@ -165,8 +165,10 @@ const TRANSLATIONS = {
     'home.analysisContextLabel': 'Add details for better analysis',
     'home.analysisContextHelper': 'You can add ingredients, portion details, sauces, drinks, or anything not clearly visible in the photo.',
     'home.analysisContextPlaceholder': 'Example: double cheeseburger, only half the fries eaten, drink was zero sugar',
+    'home.analysisLoadingEyebrow': 'Analysis in progress',
     'home.analysisLoadingTitle': 'Analyzing your meal',
     'home.analysisLoadingBody': 'This can take a few seconds.',
+    'home.analysisLoadingLongWait': 'Still working. Complex meals can take a few extra seconds.',
     'home.voiceHint': 'Dictate a meal and then review the estimate before saving.',
     'home.recentEyebrow': 'Keep moving',
     'home.recentHeading': 'Recent meals',
@@ -217,6 +219,11 @@ const TRANSLATIONS = {
     'home.queueSyncError': 'Some queued meals still need a connection.',
     'home.photoRequired': 'Choose a photo before submitting.',
     'home.photoPreparing': 'Preparing your photo...',
+    'home.loadingStageUpload': 'Checking the photo and preparing the image.',
+    'home.loadingStageDetect': 'Reviewing ingredients and portion size.',
+    'home.loadingStageEstimate': 'Estimating calories and macros.',
+    'home.loadingStageTextRead': 'Reviewing the meal description.',
+    'home.loadingStageReview': 'Building your review card.',
     'home.textRequired': 'Describe the meal before submitting.',
     'home.photoAnalyzing': 'Analyzing your meal photo...',
     'home.textAnalyzing': 'Analyzing your meal description...',
@@ -480,8 +487,10 @@ const TRANSLATIONS = {
     'home.analysisContextLabel': 'Přidejte detaily pro přesnější analýzu',
     'home.analysisContextHelper': 'Můžete dopsat ingredience, porci, omáčky, nápoje nebo cokoli, co na fotce není dobře vidět.',
     'home.analysisContextPlaceholder': 'Například: dvojitý cheeseburger, snědl jsem jen půlku hranolek, nápoj byl bez cukru',
+    'home.analysisLoadingEyebrow': 'Probíhá analýza',
     'home.analysisLoadingTitle': 'Analyzuji vaše jídlo',
     'home.analysisLoadingBody': 'To může trvat několik sekund.',
+    'home.analysisLoadingLongWait': 'Stále pracuji. U složitějších jídel to může trvat o pár sekund déle.',
     'home.voiceHint': 'Nadiktujte jídlo a potom odhad zkontrolujte před uložením.',
     'home.recentEyebrow': 'Pokračujte',
     'home.recentHeading': 'Poslední jídla',
@@ -532,6 +541,11 @@ const TRANSLATIONS = {
     'home.queueSyncError': 'Některá čekající jídla stále potřebují připojení.',
     'home.photoRequired': 'Před odesláním vyberte fotku.',
     'home.photoPreparing': 'Připravuji vaši fotku...',
+    'home.loadingStageUpload': 'Kontroluji fotku a připravuji obrázek.',
+    'home.loadingStageDetect': 'Vyhodnocuji ingredience a velikost porce.',
+    'home.loadingStageEstimate': 'Odhaduji kalorie a makra.',
+    'home.loadingStageTextRead': 'Vyhodnocuji popis jídla.',
+    'home.loadingStageReview': 'Připravuji kontrolní kartu.',
     'home.textRequired': 'Nejdřív popište jídlo.',
     'home.photoAnalyzing': 'Analyzuji fotku jídla...',
     'home.textAnalyzing': 'Analyzuji popis jídla...',
@@ -952,7 +966,7 @@ export function getMealDisplayName(meal) {
   return fallback;
 }
 
-export const FRONTEND_ASSET_VERSION = '20260403-9';
+export const FRONTEND_ASSET_VERSION = '20260403-10';
 
 const INSTALL_PROMPT_DELAY_MS = 1800;
 const INSTALL_RESHOW_AFTER_SHOW_MS = 18 * 60 * 60 * 1000;

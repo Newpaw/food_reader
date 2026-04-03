@@ -6,8 +6,8 @@
     <title>Food Reader | Add Meal</title>
     <meta name="description" content="Capture food quickly, review the AI estimate, and keep a clean nutrition log from any phone.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260403-9">
-    <link rel="manifest" href="manifest.webmanifest?v=20260403-9">
+    <link rel="stylesheet" href="styles.css?v=20260403-10">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-10">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
@@ -121,13 +121,6 @@
               <button type="submit" class="btn btn-primary btn-block" data-i18n="button.analyzeText">Analyze meal text</button>
             </form>
 
-            <div id="captureLoading" class="capture-loading" hidden aria-live="polite">
-              <span class="loading-spinner" aria-hidden="true"></span>
-              <div class="capture-loading-copy">
-                <strong data-i18n="home.analysisLoadingTitle">Analyzing your meal</strong>
-                <span id="captureLoadingMessage" class="panel-note" data-i18n="home.analysisLoadingBody">This can take a few seconds.</span>
-              </div>
-            </div>
             <div id="captureQueueNotice" class="compact-utility-row" hidden>
               <span id="captureQueueLabel" class="panel-note"></span>
               <button id="syncQueueButton" type="button" class="btn btn-secondary btn-small" hidden data-i18n="button.syncQueue">Sync queue</button>
@@ -246,6 +239,25 @@
         </section>
       </main>
 
+      <div id="captureLoading" class="analysis-loading-overlay" hidden aria-live="polite" aria-modal="true" role="status">
+        <div class="analysis-loading-card">
+          <div id="captureLoadingMedia" class="analysis-loading-media" hidden>
+            <img id="captureLoadingThumb" alt="Meal being analyzed">
+          </div>
+          <div class="analysis-loading-loader" aria-hidden="true">
+            <span class="analysis-loading-ring"></span>
+            <span class="analysis-loading-ring analysis-loading-ring-secondary"></span>
+            <span class="analysis-loading-core"></span>
+          </div>
+          <div class="analysis-loading-copy">
+            <p class="eyebrow" data-i18n="home.analysisLoadingEyebrow">Analysis in progress</p>
+            <strong id="captureLoadingTitle" data-i18n="home.analysisLoadingTitle">Analyzing your meal</strong>
+            <span id="captureLoadingMessage">Estimating calories and macros...</span>
+            <span id="captureLoadingDetail" class="panel-note" data-i18n="home.analysisLoadingBody">This can take a few seconds.</span>
+          </div>
+        </div>
+      </div>
+
       <nav class="bottom-nav" aria-label="Mobile">
         <a href="index.html" data-nav="add" data-i18n="nav.addShort">Add</a>
         <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
@@ -254,6 +266,6 @@
       </nav>
     </div>
 
-    <script type="module" src="home.js?v=20260403-9"></script>
+    <script type="module" src="home.js?v=20260403-10"></script>
   </body>
 </html>

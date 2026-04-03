@@ -15,7 +15,7 @@ import {
   showToast,
   t,
   toDateTimeInputValue,
-} from './common.js?v=20260403-9';
+} from './common.js?v=20260403-10';
 
 
 let currentMeal = null;
@@ -34,6 +34,11 @@ const MAX_UPLOAD_DIMENSION = 1600;
 const MAX_UPLOAD_BYTES = 1_800_000;
 const UPLOAD_QUALITY = 0.82;
 const BROWSER_SAFE_UPLOAD_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const ANALYSIS_LOADING_ROTATION_MS = 1800;
+const ANALYSIS_LOADING_LONG_WAIT_MS = 5200;
+
+let captureLoadingRotationId = null;
+let captureLoadingLongWaitId = null;
 
 
 export function buildMealUpdatePayload(draft) {
@@ -161,26 +166,105 @@ function clearPhotoAnalysisContext() {
 }
 
 
-function setCaptureLoading(active, message = '') {
+function stopCaptureLoadingTimers() {
+  window.clearInterval(captureLoadingRotationId);
+  window.clearTimeout(captureLoadingLongWaitId);
+  captureLoadingRotationId = null;
+  captureLoadingLongWaitId = null;
+}
+
+
+function getAnalysisLoadingSequence(mode) {
+  if (mode === 'text') {
+    return [
+      t('home.loadingStageTextRead'),
+      t('home.loadingStageEstimate'),
+      t('home.loadingStageReview'),
+    ];
+  }
+
+  return [
+    t('home.loadingStageUpload'),
+    t('home.loadingStageDetect'),
+    t('home.loadingStageEstimate'),
+  ];
+}
+
+
+function getCurrentPreviewSource() {
+  const preview = document.getElementById('selectedImagePreview');
+  if (preview?.getAttribute('src')) {
+    return preview.getAttribute('src');
+  }
+  return currentPreviewUrl;
+}
+
+
+function setCaptureLoading(active, options = {}) {
   const loading = document.getElementById('captureLoading');
+  const loadingTitle = document.getElementById('captureLoadingTitle');
   const loadingMessage = document.getElementById('captureLoadingMessage');
-  if (!loading || !loadingMessage) {
+  const loadingDetail = document.getElementById('captureLoadingDetail');
+  const loadingMedia = document.getElementById('captureLoadingMedia');
+  const loadingThumb = document.getElementById('captureLoadingThumb');
+  if (!loading || !loadingTitle || !loadingMessage || !loadingDetail || !loadingMedia || !loadingThumb) {
     return;
   }
 
-  if (message) {
-    loadingMessage.textContent = message;
+  stopCaptureLoadingTimers();
+
+  if (!active) {
+    loading.hidden = true;
+    document.body.classList.remove('modal-open');
+  } else {
+    const mode = options.mode === 'text' ? 'text' : 'photo';
+    const primaryMessage = options.message || (mode === 'text' ? t('home.textAnalyzing') : t('home.photoAnalyzing'));
+    const thumbnailSrc = mode === 'photo' ? getCurrentPreviewSource() : '';
+    const sequence = getAnalysisLoadingSequence(mode).filter((entry) => entry && entry !== primaryMessage);
+
+    loadingTitle.textContent = t('home.analysisLoadingTitle');
+    loadingMessage.textContent = primaryMessage;
+    loadingDetail.textContent = t('home.analysisLoadingBody');
+    loading.dataset.mode = mode;
+    loading.hidden = false;
+    document.body.classList.add('modal-open');
+
+    if (thumbnailSrc) {
+      loadingThumb.src = thumbnailSrc;
+      loadingMedia.hidden = false;
+    } else {
+      loadingThumb.removeAttribute('src');
+      loadingMedia.hidden = true;
+    }
+
+    if (sequence.length) {
+      let rotationIndex = 0;
+      captureLoadingRotationId = window.setInterval(() => {
+        loadingMessage.textContent = sequence[rotationIndex % sequence.length];
+        rotationIndex += 1;
+      }, ANALYSIS_LOADING_ROTATION_MS);
+    }
+
+    captureLoadingLongWaitId = window.setTimeout(() => {
+      loadingDetail.textContent = t('home.analysisLoadingLongWait');
+    }, ANALYSIS_LOADING_LONG_WAIT_MS);
   }
 
-  loading.hidden = !active;
   const analyzeButton = document.getElementById('analyzePhotoButton');
+  const stickyAnalyzeButton = document.getElementById('analyzePhotoStickyButton');
   const takePhotoButton = document.getElementById('takePhotoButton');
   const chooseGalleryButton = document.getElementById('chooseGalleryButton');
   const uploadPreviewButton = document.getElementById('uploadPreviewButton');
   const photoContext = document.getElementById('photoAnalysisContext');
   const photoContextVoiceButton = document.getElementById('photoContextVoiceButton');
+  const textDescription = document.getElementById('textMealDescription');
+  const textVoiceButton = document.getElementById('voiceInputButton');
+  const textSubmitButton = document.querySelector('#textMealForm button[type="submit"]');
   if (analyzeButton) {
     analyzeButton.disabled = active || !getSelectedPhotoFile();
+  }
+  if (stickyAnalyzeButton) {
+    stickyAnalyzeButton.disabled = active || !getSelectedPhotoFile();
   }
   if (takePhotoButton) {
     takePhotoButton.disabled = active;
@@ -196,6 +280,15 @@ function setCaptureLoading(active, message = '') {
   }
   if (photoContextVoiceButton) {
     photoContextVoiceButton.disabled = active;
+  }
+  if (textDescription) {
+    textDescription.disabled = active;
+  }
+  if (textVoiceButton) {
+    textVoiceButton.disabled = active;
+  }
+  if (textSubmitButton) {
+    textSubmitButton.disabled = active;
   }
 }
 
@@ -806,7 +899,7 @@ async function submitTemplateMeal(template) {
   }
 
   try {
-    setCaptureLoading(true, t('home.textAnalyzing'));
+    setCaptureLoading(true, { mode: 'text', message: t('home.textAnalyzing') });
     showStatus(status, t('home.textAnalyzing'), 'info');
     const meal = await createTextMeal(payload);
     await loadHomeData();
@@ -841,7 +934,7 @@ async function handlePhotoMealSubmit(event) {
 
   try {
     photoSubmissionInProgress = true;
-    setCaptureLoading(true, t('home.photoPreparing'));
+    setCaptureLoading(true, { mode: 'photo', message: t('home.photoPreparing') });
     showStatus(status, t('home.photoPreparing'), 'info');
     const optimizedFile = await optimizePhotoForUpload(file);
 
@@ -858,7 +951,7 @@ async function handlePhotoMealSubmit(event) {
     if (analysisContext) {
       formData.append('analysis_context', analysisContext);
     }
-    setCaptureLoading(true, t('home.photoAnalyzing'));
+    setCaptureLoading(true, { mode: 'photo', message: t('home.photoAnalyzing') });
     showStatus(status, t('home.photoAnalyzing'), 'info');
 
     const response = await apiFetch(API.meals, {
@@ -912,7 +1005,7 @@ async function handleTextMealSubmit(event) {
   }
 
   try {
-    setCaptureLoading(true, t('home.textAnalyzing'));
+    setCaptureLoading(true, { mode: 'text', message: t('home.textAnalyzing') });
     showStatus(status, t('home.textAnalyzing'), 'info');
     const meal = await createTextMeal(payload);
     await loadHomeData();

@@ -7,7 +7,7 @@ import {
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-10';
+} from './common.js?v=20260403-11';
 
 export function applyAuthMode(mode) {
   const normalizedMode = mode === 'register' ? 'register' : 'signin';

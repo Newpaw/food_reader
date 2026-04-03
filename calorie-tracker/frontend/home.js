@@ -15,7 +15,7 @@ import {
   showToast,
   t,
   toDateTimeInputValue,
-} from './common.js?v=20260403-10';
+} from './common.js?v=20260403-11';
 
 
 let currentMeal = null;
@@ -33,6 +33,10 @@ let activeVoiceBaseText = '';
 const MAX_UPLOAD_DIMENSION = 1600;
 const MAX_UPLOAD_BYTES = 1_800_000;
 const UPLOAD_QUALITY = 0.82;
+const MIN_UPLOAD_DIMENSION = 960;
+const MIN_UPLOAD_QUALITY = 0.55;
+const UPLOAD_QUALITY_STEP = 0.08;
+const UPLOAD_SCALE_STEP = 0.85;
 const BROWSER_SAFE_UPLOAD_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const ANALYSIS_LOADING_ROTATION_MS = 1800;
 const ANALYSIS_LOADING_LONG_WAIT_MS = 5200;
@@ -129,6 +133,65 @@ export function planPhotoOptimization(fileLike, options = {}) {
         !BROWSER_SAFE_UPLOAD_TYPES.has(fileLike?.type || '')
       ),
   };
+}
+
+
+export function scaleImageDimensions(width, height, maxDimension) {
+  const safeWidth = Math.max(1, Math.round(Number(width) || 0));
+  const safeHeight = Math.max(1, Math.round(Number(height) || 0));
+  const safeMaxDimension = Math.max(1, Math.round(Number(maxDimension) || 0));
+  const largestSide = Math.max(safeWidth, safeHeight);
+  if (!largestSide || largestSide <= safeMaxDimension) {
+    return { width: safeWidth, height: safeHeight };
+  }
+
+  const scale = safeMaxDimension / largestSide;
+  return {
+    width: Math.max(1, Math.round(safeWidth * scale)),
+    height: Math.max(1, Math.round(safeHeight * scale)),
+  };
+}
+
+
+export function buildPhotoOptimizationPasses(width, height, options = {}) {
+  const maxDimension = options.maxDimension ?? MAX_UPLOAD_DIMENSION;
+  const startingQuality = options.quality ?? UPLOAD_QUALITY;
+  const minimumDimension = options.minDimension ?? MIN_UPLOAD_DIMENSION;
+  const minimumQuality = options.minQuality ?? MIN_UPLOAD_QUALITY;
+  const qualityStep = options.qualityStep ?? UPLOAD_QUALITY_STEP;
+  const scaleStep = options.scaleStep ?? UPLOAD_SCALE_STEP;
+
+  const passes = [];
+  let currentSize = scaleImageDimensions(width, height, maxDimension);
+
+  while (true) {
+    let quality = startingQuality;
+    while (true) {
+      passes.push({
+        width: currentSize.width,
+        height: currentSize.height,
+        quality: Number(quality.toFixed(2)),
+      });
+      if (quality <= minimumQuality) {
+        break;
+      }
+      quality = Math.max(minimumQuality, quality - qualityStep);
+    }
+
+    const largestSide = Math.max(currentSize.width, currentSize.height);
+    if (largestSide <= minimumDimension) {
+      break;
+    }
+
+    const nextLargestSide = Math.max(minimumDimension, Math.round(largestSide * scaleStep));
+    const nextSize = scaleImageDimensions(currentSize.width, currentSize.height, nextLargestSide);
+    if (nextSize.width === currentSize.width && nextSize.height === currentSize.height) {
+      break;
+    }
+    currentSize = nextSize;
+  }
+
+  return passes;
 }
 
 
@@ -794,51 +857,75 @@ function renameAsJpeg(filename) {
 }
 
 
+function fileFromBlob(blob, originalFilename) {
+  return new File([blob], renameAsJpeg(originalFilename), {
+    type: 'image/jpeg',
+    lastModified: Date.now(),
+  });
+}
+
+
 async function optimizePhotoForUpload(file) {
   const plan = planPhotoOptimization(file);
   if (!plan.shouldOptimize) {
     return file;
   }
 
+  let source = null;
   try {
-    const source = await loadImageBitmapOrElement(file);
+    source = await loadImageBitmapOrElement(file);
     const sourceWidth = source.width || source.naturalWidth;
     const sourceHeight = source.height || source.naturalHeight;
-    const sizedPlan = planPhotoOptimization({
-      ...file,
-      width: sourceWidth,
-      height: sourceHeight,
+    if (!sourceWidth || !sourceHeight) {
+      return file;
+    }
+
+    const sizedPlan = planPhotoOptimization({ ...file, width: sourceWidth, height: sourceHeight });
+    const optimizationPasses = buildPhotoOptimizationPasses(sourceWidth, sourceHeight, {
+      maxDimension: sizedPlan.maxDimension,
+      quality: sizedPlan.quality,
     });
 
-    if (!sizedPlan.shouldOptimize) {
-      return file;
+    let bestBlob = null;
+
+    for (const pass of optimizationPasses) {
+      const canvas = getImageCanvas(pass.width, pass.height);
+      if (!canvas) {
+        continue;
+      }
+      const context = canvas.getContext('2d', { alpha: false });
+      if (!context) {
+        continue;
+      }
+
+      // JPEG strips transparency, so fill the background explicitly first.
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, pass.width, pass.height);
+      context.drawImage(source, 0, 0, pass.width, pass.height);
+
+      const blob = await canvasToBlob(canvas, 'image/jpeg', pass.quality);
+      if (!blob) {
+        continue;
+      }
+      if (!bestBlob || blob.size < bestBlob.size) {
+        bestBlob = blob;
+      }
+      if (blob.size <= sizedPlan.maxBytes) {
+        return fileFromBlob(blob, file.name);
+      }
     }
 
-    const canvas = getImageCanvas(sizedPlan.targetWidth, sizedPlan.targetHeight);
-    if (!canvas) {
-      return file;
-    }
-    const context = canvas.getContext('2d', { alpha: false });
-    if (!context) {
-      return file;
+    if (bestBlob && bestBlob.size < file.size) {
+      return fileFromBlob(bestBlob, file.name);
     }
 
-    context.drawImage(source, 0, 0, sizedPlan.targetWidth, sizedPlan.targetHeight);
-    if (typeof source.close === 'function') {
-      source.close();
-    }
-
-    const blob = await canvasToBlob(canvas, 'image/jpeg', sizedPlan.quality);
-    if (!blob || blob.size >= file.size) {
-      return file;
-    }
-
-    return new File([blob], renameAsJpeg(file.name), {
-      type: 'image/jpeg',
-      lastModified: Date.now(),
-    });
+    return file;
   } catch (error) {
     return file;
+  } finally {
+    if (typeof source?.close === 'function') {
+      source.close();
+    }
   }
 }
 

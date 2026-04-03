@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildMealUpdatePayload, planPhotoOptimization, shouldPreferMobileCamera, summarizeMealHighlight, summarizeTodayState } from '../home.js';
+import {
+  buildMealUpdatePayload,
+  buildPhotoOptimizationPasses,
+  planPhotoOptimization,
+  scaleImageDimensions,
+  shouldPreferMobileCamera,
+  summarizeMealHighlight,
+  summarizeTodayState,
+} from '../home.js';
 
 
 describe('meal payload builder', () => {
@@ -101,6 +109,31 @@ describe('photo optimization plan', () => {
 
     expect(plan.shouldOptimize).toBe(true);
     expect(plan.shouldResize).toBe(false);
+  });
+
+  it('builds compression passes that progressively lower quality and dimensions', () => {
+    expect(scaleImageDimensions(4032, 3024, 1600)).toEqual({
+      width: 1600,
+      height: 1200,
+    });
+
+    const passes = buildPhotoOptimizationPasses(4032, 3024);
+
+    expect(passes[0]).toEqual({
+      width: 1600,
+      height: 1200,
+      quality: 0.82,
+    });
+    expect(passes).toContainEqual({
+      width: 1600,
+      height: 1200,
+      quality: 0.55,
+    });
+    expect(passes[passes.length - 1]).toEqual({
+      width: 960,
+      height: 720,
+      quality: 0.55,
+    });
   });
 });
 

@@ -977,6 +977,7 @@ textarea {
 .analysis-detail-row strong {
   text-align: right;
   max-width: 14rem;
+  white-space: pre-line;
 }
 
 .analysis-primary-actions {

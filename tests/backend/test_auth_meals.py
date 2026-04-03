@@ -169,20 +169,23 @@ def test_image_meal_upload_and_reanalysis(client, register_and_login, ai_stubs):
         "/me/meals",
         headers=headers,
         files={"image": ("meal.jpg", b"fake-image", "image/jpeg")},
+        data={"analysis_context": "Double cheeseburger, ate only half the fries"},
     )
     assert create_response.status_code == 200, create_response.text
     meal = create_response.json()
     assert meal["image_url"].startswith("/uploads/1/")
     assert meal["calories"] == 590
+    assert "User context: Double cheeseburger, ate only half the fries" in meal["notes"]
 
     reanalyze_response = client.post(
         f"/me/meals/{meal['id']}/reanalyze",
         headers=headers,
-        json={"corrections": {"protein": "This included extra chicken"}},
+        json={"refinement_context": "Include the garlic dip and the second patty"},
     )
     assert reanalyze_response.status_code == 200
     assert reanalyze_response.json()["calories"] == 640
-    assert "Reanalysis with corrections" in reanalyze_response.json()["notes"]
+    assert "Original user context: Double cheeseburger, ate only half the fries" in reanalyze_response.json()["notes"]
+    assert "Refinement context: Include the garlic dip and the second patty" in reanalyze_response.json()["notes"]
 
 
 def test_user_cannot_delete_someone_elses_meal(client, register_and_login, ai_stubs):

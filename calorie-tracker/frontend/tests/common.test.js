@@ -51,6 +51,13 @@ describe('common helpers', () => {
         notes: 'Burger with fries. Estimated from image with moderate confidence.',
       }),
     ).toBe('Burger with fries');
+
+    expect(
+      getMealDisplayName({
+        meal_type: 'dinner',
+        notes: 'AI Analysis: cheeseburger with bacon\nUser context: I only ate half the fries',
+      }),
+    ).toBe('Cheeseburger with bacon');
   });
 
   it('falls back to meal type when notes are generic', () => {

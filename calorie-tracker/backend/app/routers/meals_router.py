@@ -19,6 +19,15 @@ from ..settings import settings
 router = APIRouter(prefix="/me", tags=["meals"])
 logger = get_logger(__name__)
 TEXT_MEAL_PLACEHOLDER = "/assets/images/text-meal-placeholder.svg"
+NOTE_PREFIXES = {
+    "ai analysis": "ai_analysis",
+    "updated ai analysis": "updated_ai_analysis",
+    "ai notes": "ai_notes",
+    "user context": "user_context",
+    "original user context": "original_user_context",
+    "refinement context": "refinement_context",
+    "text description": "text_description",
+}
 
 
 def _normalize_datetime(value: datetime | None) -> datetime:
@@ -52,10 +61,77 @@ def _meal_to_schema(meal: models.Meal, user_id: int) -> schemas.MealOut:
     )
 
 
+def _clean_optional_text(value: str | None) -> str | None:
+    cleaned = value.strip() if value else ""
+    return cleaned or None
+
+
+def _extract_note_sections(notes: str | None) -> dict[str, str]:
+    sections: dict[str, str] = {}
+    if not notes:
+        return sections
+
+    for raw_line in notes.splitlines():
+        line = raw_line.strip()
+        if not line or ":" not in line:
+            continue
+        label, value = line.split(":", 1)
+        key = NOTE_PREFIXES.get(label.strip().lower())
+        cleaned_value = value.strip()
+        if key and cleaned_value:
+            sections[key] = cleaned_value
+
+    return sections
+
+
+def _build_image_meal_notes(
+    ai_analysis: str | None,
+    *,
+    user_context: str | None = None,
+    refinement_context: str | None = None,
+    previous_user_context: str | None = None,
+) -> str | None:
+    lines: list[str] = []
+    cleaned_ai_analysis = _clean_optional_text(ai_analysis)
+    cleaned_user_context = _clean_optional_text(user_context)
+    cleaned_previous_user_context = _clean_optional_text(previous_user_context)
+    cleaned_refinement_context = _clean_optional_text(refinement_context)
+
+    if cleaned_ai_analysis:
+        label = "Updated AI Analysis" if cleaned_refinement_context else "AI Analysis"
+        lines.append(f"{label}: {cleaned_ai_analysis}")
+
+    if cleaned_user_context:
+        lines.append(f"User context: {cleaned_user_context}")
+    elif cleaned_previous_user_context:
+        lines.append(f"Original user context: {cleaned_previous_user_context}")
+
+    if cleaned_refinement_context:
+        lines.append(f"Refinement context: {cleaned_refinement_context}")
+
+    return "\n".join(lines) if lines else None
+
+
+def _get_reanalysis_context(payload: schemas.MealReanalysis) -> str | None:
+    if payload.refinement_context:
+        return _clean_optional_text(payload.refinement_context)
+
+    if payload.corrections:
+        flattened = []
+        for key, value in payload.corrections.items():
+            cleaned_value = _clean_optional_text(value)
+            if cleaned_value:
+                flattened.append(cleaned_value if key == "note" else f"{key}: {cleaned_value}")
+        return "; ".join(flattened) if flattened else None
+
+    return None
+
+
 @router.post("/meals", response_model=schemas.MealOut)
 @log_execution_time()
 async def create_meal(
     image: UploadFile = File(...),
+    analysis_context: str | None = Form(None),
     calories: int | None = Form(None),
     protein: int | None = Form(None),
     fat: int | None = Form(None),
@@ -84,6 +160,8 @@ async def create_meal(
     with open(path, "wb") as file_handle:
         file_handle.write(contents)
 
+    cleaned_analysis_context = _clean_optional_text(analysis_context)
+
     if any(value is None for value in [calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, consumed_at]):
         try:
             (
@@ -97,7 +175,7 @@ async def create_meal(
                 ai_meal_type,
                 ai_consumed_at,
                 ai_notes,
-            ) = get_meal_data_from_image(path)
+            ) = get_meal_data_from_image(path, analysis_context=cleaned_analysis_context)
             calories = calories if calories is not None else ai_calories
             protein = protein if protein is not None else ai_protein
             fat = fat if fat is not None else ai_fat
@@ -107,8 +185,7 @@ async def create_meal(
             sodium = sodium if sodium is not None else ai_sodium
             meal_type = meal_type or ai_meal_type
             consumed_at = consumed_at or ai_consumed_at
-            if ai_notes:
-                notes = f"{notes}\n\nAI Analysis: {ai_notes}" if notes else f"AI Analysis: {ai_notes}"
+            notes = _build_image_meal_notes(ai_notes, user_context=cleaned_analysis_context)
         except Exception as exc:
             log_exception(logger, exc, "AI analysis failed for meal image")
             calories = calories if calories is not None else 300
@@ -120,6 +197,7 @@ async def create_meal(
             sodium = sodium if sodium is not None else 0
             meal_type = meal_type or "snack"
             consumed_at = consumed_at or datetime.now(timezone.utc)
+            notes = _build_image_meal_notes(notes, user_context=cleaned_analysis_context) or notes
 
     meal = models.Meal(
         user_id=user.id,
@@ -249,6 +327,13 @@ async def reanalyze_meal(
     if not os.path.exists(meal.image_path):
         raise HTTPException(status_code=400, detail="Image file not found. Cannot reanalyze.")
 
+    refinement_context = _get_reanalysis_context(payload)
+    if not refinement_context:
+        raise HTTPException(status_code=400, detail="Refinement context is required.")
+
+    note_sections = _extract_note_sections(meal.notes)
+    original_user_context = note_sections.get("user_context") or note_sections.get("original_user_context")
+
     try:
         (
             meal.calories,
@@ -261,9 +346,16 @@ async def reanalyze_meal(
             meal.meal_type,
             _,
             ai_notes,
-        ) = get_meal_data_from_image(meal.image_path, payload.corrections)
-        correction_text = ", ".join(f"{key}: {value}" for key, value in payload.corrections.items())
-        meal.notes = f"Updated AI Analysis: {ai_notes}\n\nReanalysis with corrections: {correction_text}"
+        ) = get_meal_data_from_image(
+            meal.image_path,
+            analysis_context=original_user_context,
+            refinement_context=refinement_context,
+        )
+        meal.notes = _build_image_meal_notes(
+            ai_notes,
+            previous_user_context=original_user_context,
+            refinement_context=refinement_context,
+        )
         db.commit()
         db.refresh(meal)
     except Exception as exc:

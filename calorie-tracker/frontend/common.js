@@ -58,6 +58,8 @@ const TRANSLATIONS = {
     'button.startVoice': 'Start voice input',
     'button.stopVoice': 'Stop listening',
     'button.syncQueue': 'Sync queue',
+    'button.improveEstimate': 'Improve estimate',
+    'button.applyRefinement': 'Update estimate',
     'button.openEdit': 'Edit meal',
     'button.editMeal': 'Edit meal',
     'button.saveMeal': 'Save meal',
@@ -159,6 +161,9 @@ const TRANSLATIONS = {
     'home.captureText': 'Text',
     'home.mobileCameraHint': 'Open the camera directly on your phone, then review the estimate before saving.',
     'home.uploadHint': 'Take or upload a meal photo',
+    'home.analysisContextLabel': 'Add details for better analysis',
+    'home.analysisContextHelper': 'You can add ingredients, portion details, sauces, drinks, or anything not clearly visible in the photo.',
+    'home.analysisContextPlaceholder': 'Example: double cheeseburger, only half the fries eaten, drink was zero sugar',
     'home.analysisLoadingTitle': 'Analyzing your meal',
     'home.analysisLoadingBody': 'This can take a few seconds.',
     'home.voiceHint': 'Dictate a meal and then review the estimate before saving.',
@@ -171,6 +176,9 @@ const TRANSLATIONS = {
     'home.moreDetailsHint': 'Fiber, sugar, sodium, and meal context',
     'home.correctionHeading': 'Correct the AI identification',
     'home.correctionPlaceholder': 'Example: this was grilled pork, not chicken',
+    'home.refineHeading': 'Add missing details',
+    'home.refineHelper': 'Clarify portion size, hidden ingredients, sauces, drinks, or what you did not eat.',
+    'home.refinePlaceholder': 'Example: this was a double burger, I only ate half the fries, and there was mayo under the bun',
     'home.insightHighProteinTitle': 'High-protein meal',
     'home.insightHighProteinBody': 'Protein carries a strong share of this estimate, so it should keep you fuller than a lighter snack.',
     'home.insightHighFiberTitle': 'Fiber-supportive meal',
@@ -216,7 +224,8 @@ const TRANSLATIONS = {
     'home.mealDeleted': 'Meal deleted.',
     'home.deleteConfirm': 'Delete this meal permanently?',
     'home.resetDone': 'Changes reset.',
-    'home.correctionRequired': 'Add a correction before re-running the analysis.',
+    'home.correctionRequired': 'Add more detail before updating the estimate.',
+    'home.refineCancelled': 'Estimate refinement cancelled.',
     'home.reanalyzing': 'Reanalyzing meal...',
     'home.reanalysisUpdated': 'AI analysis updated.',
     'home.noMeals': 'No meals yet. Add one to get started.',
@@ -360,6 +369,8 @@ const TRANSLATIONS = {
     'button.startVoice': 'Spustit diktování',
     'button.stopVoice': 'Zastavit poslech',
     'button.syncQueue': 'Synchronizovat frontu',
+    'button.improveEstimate': 'Zpřesnit odhad',
+    'button.applyRefinement': 'Aktualizovat odhad',
     'button.openEdit': 'Upravit jídlo',
     'button.editMeal': 'Upravit jídlo',
     'button.saveMeal': 'Uložit jídlo',
@@ -461,6 +472,9 @@ const TRANSLATIONS = {
     'home.captureText': 'Text',
     'home.mobileCameraHint': 'Otevřete rovnou fotoaparát v telefonu a před uložením výsledek zkontrolujte.',
     'home.uploadHint': 'Vyfoťte nebo nahrajte fotku jídla',
+    'home.analysisContextLabel': 'Přidejte detaily pro přesnější analýzu',
+    'home.analysisContextHelper': 'Můžete dopsat ingredience, porci, omáčky, nápoje nebo cokoli, co na fotce není dobře vidět.',
+    'home.analysisContextPlaceholder': 'Například: dvojitý cheeseburger, snědl jsem jen půlku hranolek, nápoj byl bez cukru',
     'home.analysisLoadingTitle': 'Analyzuji vaše jídlo',
     'home.analysisLoadingBody': 'To může trvat několik sekund.',
     'home.voiceHint': 'Nadiktujte jídlo a potom odhad zkontrolujte před uložením.',
@@ -473,6 +487,9 @@ const TRANSLATIONS = {
     'home.moreDetailsHint': 'Vláknina, cukr, sodík a kontext jídla',
     'home.correctionHeading': 'Opravte AI rozpoznání',
     'home.correctionPlaceholder': 'Například: bylo to grilované vepřové, ne kuře',
+    'home.refineHeading': 'Doplňte chybějící detaily',
+    'home.refineHelper': 'Upřesněte porci, skryté ingredience, omáčky, nápoje nebo co jste nesnědli.',
+    'home.refinePlaceholder': 'Například: byl to dvojitý burger, snědl jsem jen půlku hranolek a pod houskou byla majonéza',
     'home.insightHighProteinTitle': 'Jídlo s vyšším podílem bílkovin',
     'home.insightHighProteinBody': 'Bílkoviny tvoří výraznou část odhadu, takže by jídlo mělo zasytit lépe než lehká svačina.',
     'home.insightHighFiberTitle': 'Jídlo s dobrou vlákninou',
@@ -518,7 +535,8 @@ const TRANSLATIONS = {
     'home.mealDeleted': 'Jídlo bylo smazáno.',
     'home.deleteConfirm': 'Smazat toto jídlo natrvalo?',
     'home.resetDone': 'Změny byly vráceny.',
-    'home.correctionRequired': 'Před opětovnou analýzou přidejte opravu.',
+    'home.correctionRequired': 'Před aktualizací odhadu doplňte další detail.',
+    'home.refineCancelled': 'Zpřesnění odhadu bylo zrušeno.',
     'home.reanalyzing': 'Provádím novou analýzu...',
     'home.reanalysisUpdated': 'AI analýza byla aktualizována.',
     'home.noMeals': 'Zatím tu nejsou žádná jídla. Přidejte první.',
@@ -885,7 +903,11 @@ export function getMealDisplayName(meal) {
   const prefixes = [
     /^ai analysis:\s*/i,
     /^updated ai analysis:\s*/i,
+    /^ai notes:\s*/i,
     /^reanalysis with corrections:\s*/i,
+    /^user context:\s*/i,
+    /^original user context:\s*/i,
+    /^refinement context:\s*/i,
     /^text description:\s*/i,
     /^estimated from:\s*/i,
   ];
@@ -922,7 +944,7 @@ export function getMealDisplayName(meal) {
   return fallback;
 }
 
-export const FRONTEND_ASSET_VERSION = '20260403-6';
+export const FRONTEND_ASSET_VERSION = '20260403-7';
 
 const INSTALL_PROMPT_DELAY_MS = 1800;
 const INSTALL_RESHOW_AFTER_SHOW_MS = 18 * 60 * 60 * 1000;

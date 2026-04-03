@@ -6,8 +6,8 @@
     <title>Food Reader | Add Meal</title>
     <meta name="description" content="Capture food quickly, review the AI estimate, and keep a clean nutrition log from any phone.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260403-6">
-    <link rel="manifest" href="manifest.webmanifest?v=20260403-6">
+    <link rel="stylesheet" href="styles.css?v=20260403-7">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-7">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
@@ -77,6 +77,25 @@
                   <button type="button" id="chooseGalleryButton" class="btn btn-ghost btn-small upload-link-button" data-i18n="button.useSavedPhoto">Choose from gallery</button>
                 </div>
               </div>
+              <label class="field">
+                <span data-i18n="home.analysisContextLabel">Add details for better analysis</span>
+                <textarea
+                  id="photoAnalysisContext"
+                  rows="3"
+                  data-i18n-placeholder="home.analysisContextPlaceholder"
+                  placeholder="Example: double cheeseburger, only half the fries eaten, drink was zero sugar"
+                ></textarea>
+              </label>
+              <div class="inline-actions">
+                <button
+                  id="photoContextVoiceButton"
+                  type="button"
+                  class="btn btn-secondary btn-small"
+                  data-voice-target="photoAnalysisContext"
+                  data-i18n="button.startVoice"
+                >Start voice input</button>
+                <span class="panel-note" data-i18n="home.analysisContextHelper">You can add ingredients, portion details, sauces, drinks, or anything not clearly visible in the photo.</span>
+              </div>
               <button id="analyzePhotoButton" type="submit" class="btn btn-primary btn-block" data-i18n="button.analyzePhoto" disabled>Analyze meal</button>
             </form>
 
@@ -84,6 +103,7 @@
               <label class="field">
                 <span data-i18n="label.describeMeal">Describe the meal</span>
                 <textarea
+                  id="textMealDescription"
                   name="foodDescription"
                   rows="5"
                   data-i18n-placeholder="text.placeholder"
@@ -91,7 +111,7 @@
                 ></textarea>
               </label>
               <div class="inline-actions">
-                <button id="voiceInputButton" type="button" class="btn btn-secondary btn-small" data-i18n="button.startVoice">Start voice input</button>
+                <button id="voiceInputButton" type="button" class="btn btn-secondary btn-small" data-voice-target="textMealDescription" data-i18n="button.startVoice">Start voice input</button>
                 <span class="panel-note" data-i18n="home.voiceHint">Dictate a meal and then review the estimate before saving.</span>
               </div>
               <button type="submit" class="btn btn-primary btn-block" data-i18n="button.analyzeText">Analyze meal text</button>
@@ -148,8 +168,35 @@
 
           <div id="analysisViewActions" class="analysis-primary-actions">
             <button type="button" id="editAnalysisButton" class="btn btn-primary" data-i18n="button.editMeal">Edit meal</button>
+            <button type="button" id="toggleRefineAnalysisButton" class="btn btn-secondary" data-i18n="button.improveEstimate">Improve estimate</button>
             <button type="button" id="addAnotherMealButton" class="btn btn-secondary" data-i18n="button.addAnotherMeal">Add another meal</button>
             <button type="button" id="saveTemplateButton" class="btn btn-ghost" data-i18n="button.saveFavorite">Save as favorite</button>
+          </div>
+
+          <div id="refineAnalysisPanel" class="subtle-panel stack" hidden>
+            <label class="field">
+              <span data-i18n="home.refineHeading">Add missing details</span>
+              <textarea
+                id="reanalysisCorrections"
+                rows="3"
+                data-i18n-placeholder="home.refinePlaceholder"
+                placeholder="Example: this was a double burger, I only ate half the fries, and there was mayo under the bun"
+              ></textarea>
+            </label>
+            <div class="inline-actions">
+              <button
+                id="reanalysisVoiceButton"
+                type="button"
+                class="btn btn-secondary btn-small"
+                data-voice-target="reanalysisCorrections"
+                data-i18n="button.startVoice"
+              >Start voice input</button>
+              <span class="panel-note" data-i18n="home.refineHelper">Clarify portion size, hidden ingredients, sauces, drinks, or what you did not eat.</span>
+            </div>
+            <div class="button-row">
+              <button type="button" id="reanalyzeButton" class="btn btn-primary" data-i18n="button.applyRefinement">Update estimate</button>
+              <button type="button" id="cancelRefineAnalysisButton" class="btn btn-secondary" data-i18n="button.cancelEdit">Cancel edit</button>
+            </div>
           </div>
 
           <div id="analysisEditPanel" class="stack" hidden>
@@ -208,14 +255,6 @@
               <button type="button" id="cancelAnalysisEditButton" class="btn btn-ghost" data-i18n="button.cancelEdit">Cancel edit</button>
               <button type="button" id="deleteAnalysisButton" class="btn btn-danger" data-i18n="button.delete">Delete</button>
             </div>
-
-            <div id="reanalysisBlock" class="subtle-panel" hidden>
-              <label class="field">
-                <span data-i18n="home.correctionHeading">Correct the AI identification</span>
-                <textarea id="reanalysisCorrections" rows="3" data-i18n-placeholder="home.correctionPlaceholder" placeholder="Example: this was grilled pork, not chicken"></textarea>
-              </label>
-              <button type="button" id="reanalyzeButton" class="btn btn-secondary" data-i18n="button.rerunAnalysis">Re-run analysis</button>
-            </div>
           </div>
 
           <p id="analysisStatus" class="status" hidden></p>
@@ -230,6 +269,6 @@
       </nav>
     </div>
 
-    <script type="module" src="home.js?v=20260403-6"></script>
+    <script type="module" src="home.js?v=20260403-7"></script>
   </body>
 </html>

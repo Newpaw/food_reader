@@ -67,7 +67,38 @@ def _parse_ai_response(response_text: str, fallback: dict[str, Any]) -> dict[str
     return result
 
 
-def analyze_food_image(image_path: str, corrections: dict[str, str] | None = None) -> dict[str, Any]:
+def _build_image_analysis_prompt(
+    analysis_context: str | None = None,
+    refinement_context: str | None = None,
+) -> str:
+    prompt = IMAGE_ANALYSIS_PROMPT
+
+    if analysis_context:
+        prompt += (
+            "\n\nUser-provided meal context that may not be fully visible in the image:\n"
+            f"- {analysis_context.strip()}"
+            "\nTreat this as trusted context about ingredients, sauces, drinks, missing sides, or portion size."
+        )
+
+    if refinement_context:
+        prompt += (
+            "\n\nUser refinement after the first estimate:\n"
+            f"- {refinement_context.strip()}"
+            "\nUse this to correct the previous estimate while keeping the same photo as the visual source."
+        )
+
+    prompt += (
+        "\n\nImportant: separate what you can see from the photo from what the user clarified."
+        " Use the image as the primary visual source and the user context as explicit supplemental information."
+    )
+    return prompt
+
+
+def analyze_food_image(
+    image_path: str,
+    analysis_context: str | None = None,
+    refinement_context: str | None = None,
+) -> dict[str, Any]:
     client = get_openai_client()
     if client is None:
         return {
@@ -84,11 +115,7 @@ def analyze_food_image(image_path: str, corrections: dict[str, str] | None = Non
         }
 
     base64_image = encode_image_to_base64(image_path)
-    prompt = IMAGE_ANALYSIS_PROMPT
-
-    if corrections:
-        prompt += "\nApply these user corrections before answering:\n"
-        prompt += "\n".join(f"- {key}: {value}" for key, value in corrections.items())
+    prompt = _build_image_analysis_prompt(analysis_context, refinement_context)
 
     fallback = {
         "food_description": "Unknown food",
@@ -184,9 +211,10 @@ def _normalize_meal_type(value: Any) -> str:
 
 def get_meal_data_from_image(
     image_path: str,
-    corrections: dict[str, str] | None = None,
+    analysis_context: str | None = None,
+    refinement_context: str | None = None,
 ) -> tuple[int, int, int, int, int, int, int, str, datetime, str | None]:
-    analysis = analyze_food_image(image_path, corrections)
+    analysis = analyze_food_image(image_path, analysis_context, refinement_context)
     food_desc = analysis.get("food_description", "")
     additional_notes = analysis.get("notes", "")
     notes = f"{food_desc}. {additional_notes}" if additional_notes else food_desc

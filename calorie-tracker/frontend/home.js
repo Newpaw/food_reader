@@ -17,7 +17,7 @@ import {
   showToast,
   t,
   toDateTimeInputValue,
-} from './common.js?v=20260403-6';
+} from './common.js?v=20260403-7';
 
 
 let currentMeal = null;
@@ -30,6 +30,9 @@ let syncInProgress = false;
 let currentPreviewUrl = null;
 let photoSubmissionInProgress = false;
 let isAnalysisEditing = false;
+let activeVoiceButton = null;
+let activeVoiceTextarea = null;
+let activeVoiceBaseText = '';
 
 const MAX_UPLOAD_DIMENSION = 1600;
 const MAX_UPLOAD_BYTES = 1_800_000;
@@ -149,6 +152,19 @@ function getCaptureStatus() {
 }
 
 
+function getPhotoAnalysisContext() {
+  return document.getElementById('photoAnalysisContext')?.value.trim() || '';
+}
+
+
+function clearPhotoAnalysisContext() {
+  const contextField = document.getElementById('photoAnalysisContext');
+  if (contextField) {
+    contextField.value = '';
+  }
+}
+
+
 function setCaptureLoading(active, message = '') {
   const loading = document.getElementById('captureLoading');
   const loadingMessage = document.getElementById('captureLoadingMessage');
@@ -165,6 +181,8 @@ function setCaptureLoading(active, message = '') {
   const takePhotoButton = document.getElementById('takePhotoButton');
   const chooseGalleryButton = document.getElementById('chooseGalleryButton');
   const uploadPreviewButton = document.getElementById('uploadPreviewButton');
+  const photoContext = document.getElementById('photoAnalysisContext');
+  const photoContextVoiceButton = document.getElementById('photoContextVoiceButton');
   if (analyzeButton) {
     analyzeButton.disabled = active || !getSelectedPhotoFile();
   }
@@ -176,6 +194,12 @@ function setCaptureLoading(active, message = '') {
   }
   if (uploadPreviewButton) {
     uploadPreviewButton.disabled = active;
+  }
+  if (photoContext) {
+    photoContext.disabled = active;
+  }
+  if (photoContextVoiceButton) {
+    photoContextVoiceButton.disabled = active;
   }
 }
 
@@ -371,6 +395,20 @@ function setAnalysisEditing(editing) {
 }
 
 
+function toggleRefineAnalysisPanel(open) {
+  const panel = document.getElementById('refineAnalysisPanel');
+  const textarea = document.getElementById('reanalysisCorrections');
+  if (!panel) {
+    return;
+  }
+
+  panel.hidden = !open;
+  if (open) {
+    textarea?.focus();
+  }
+}
+
+
 function renderMealInsight(meal) {
   const highlight = document.getElementById('analysisHighlight');
   if (!highlight) {
@@ -460,6 +498,7 @@ function hideMealEditor() {
   if (details) {
     details.open = false;
   }
+  toggleRefineAnalysisPanel(false);
   setAnalysisEditing(false);
 }
 
@@ -498,7 +537,12 @@ function renderMealEditor(meal, { scroll = true, editing = false } = {}) {
   `;
 
   renderMealSummary(meal);
-  document.getElementById('reanalysisBlock').hidden = meal.image_url === '/assets/images/text-meal-placeholder.svg';
+  const isImageMeal = meal.image_url !== '/assets/images/text-meal-placeholder.svg';
+  const refineButton = document.getElementById('toggleRefineAnalysisButton');
+  if (refineButton) {
+    refineButton.hidden = !isImageMeal;
+  }
+  toggleRefineAnalysisPanel(false);
   setAnalysisEditing(editing);
   if (scroll) {
     scrollToAnalysisPanel();
@@ -793,6 +837,7 @@ async function queueTextLikeMeal(payload, label) {
 
 async function queuePhotoMeal(file) {
   const dataUrl = await fileToDataUrl(file);
+  const analysisContext = getPhotoAnalysisContext();
   queuePendingMeal({
     kind: 'photo',
     label: file.name || t('home.capturePhoto'),
@@ -800,6 +845,7 @@ async function queuePhotoMeal(file) {
       dataUrl,
       fileName: file.name || 'queued-meal.jpg',
       mimeType: file.type || 'image/jpeg',
+      analysisContext,
     },
   });
   renderTodayDashboard();
@@ -864,6 +910,7 @@ async function handlePhotoMealSubmit(event) {
   }
   const file = getSelectedPhotoFile();
   const status = getCaptureStatus();
+  const analysisContext = getPhotoAnalysisContext();
 
   if (!file) {
     showStatus(status, t('home.photoRequired'), 'danger');
@@ -879,12 +926,16 @@ async function handlePhotoMealSubmit(event) {
     if (!navigator.onLine) {
       await queuePhotoMeal(optimizedFile);
       clearPhotoSelection();
+      clearPhotoAnalysisContext();
       showStatus(status, t('home.queueAddedPhoto'), 'info');
       return;
     }
 
     const formData = new FormData();
     formData.append('image', optimizedFile);
+    if (analysisContext) {
+      formData.append('analysis_context', analysisContext);
+    }
     setCaptureLoading(true, t('home.photoAnalyzing'));
     showStatus(status, t('home.photoAnalyzing'), 'info');
 
@@ -894,6 +945,7 @@ async function handlePhotoMealSubmit(event) {
     });
     const meal = await getJsonOrThrow(response, 'Unable to add meal from photo');
     clearPhotoSelection();
+    clearPhotoAnalysisContext();
     await loadHomeData();
     showStatus(status, t('home.mealAdded'), 'success');
     renderMealEditor(meal);
@@ -902,6 +954,7 @@ async function handlePhotoMealSubmit(event) {
       const queuedFile = await optimizePhotoForUpload(file);
       await queuePhotoMeal(queuedFile);
       clearPhotoSelection();
+      clearPhotoAnalysisContext();
       showStatus(status, t('home.queueAddedPhoto'), 'info');
       return;
     }
@@ -1063,6 +1116,25 @@ function cancelMealEditing() {
 }
 
 
+function beginMealRefinement() {
+  if (!currentMeal) {
+    return;
+  }
+
+  toggleRefineAnalysisPanel(true);
+}
+
+
+function cancelMealRefinement() {
+  const reanalysis = document.getElementById('reanalysisCorrections');
+  if (reanalysis) {
+    reanalysis.value = '';
+  }
+  toggleRefineAnalysisPanel(false);
+  showStatus(document.getElementById('analysisStatus'), t('home.refineCancelled'), 'info');
+}
+
+
 async function handleReanalyze() {
   if (!currentMeal) {
     return;
@@ -1081,13 +1153,14 @@ async function handleReanalyze() {
   try {
     const response = await apiFetch(`${API.meals}/${currentMeal.id}/reanalyze`, {
       method: 'POST',
-      body: { corrections: { note: corrections } },
+      body: { refinement_context: corrections },
     });
     currentMeal = await getJsonOrThrow(response, 'Unable to reanalyze meal');
     originalMeal = { ...currentMeal };
     await loadHomeData();
     renderMealEditor(currentMeal);
     document.getElementById('reanalysisCorrections').value = '';
+    toggleRefineAnalysisPanel(false);
     showStatus(status, t('home.reanalysisUpdated'), 'success');
   } catch (error) {
     showStatus(status, error.message, 'danger');
@@ -1133,18 +1206,26 @@ function initializePhotoCapture() {
 }
 
 
+function setVoiceButtonsIdle() {
+  document.querySelectorAll('[data-voice-target]').forEach((button) => {
+    button.textContent = t('button.startVoice');
+  });
+}
+
+
 function initializeVoiceInput() {
-  const button = document.getElementById('voiceInputButton');
-  const textarea = document.querySelector('#textMealForm textarea[name="foodDescription"]');
+  const buttons = Array.from(document.querySelectorAll('[data-voice-target]'));
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  if (!button || !textarea) {
+  if (!buttons.length) {
     return;
   }
 
   if (!SpeechRecognition) {
-    button.disabled = true;
-    button.title = t('home.voiceUnsupported');
+    buttons.forEach((button) => {
+      button.disabled = true;
+      button.title = t('home.voiceUnsupported');
+    });
     return;
   }
 
@@ -1154,47 +1235,67 @@ function initializeVoiceInput() {
   voiceRecognition.continuous = false;
 
   voiceRecognition.addEventListener('result', (event) => {
+    if (!activeVoiceTextarea) {
+      return;
+    }
+
     const transcript = Array.from(event.results)
       .map((result) => result[0]?.transcript || '')
       .join(' ')
       .trim();
-    textarea.value = transcript;
+    activeVoiceTextarea.value = [activeVoiceBaseText, transcript].filter(Boolean).join(' ').trim();
   });
 
   voiceRecognition.addEventListener('start', () => {
     isListening = true;
-    button.textContent = t('button.stopVoice');
+    if (activeVoiceButton) {
+      activeVoiceButton.textContent = t('button.stopVoice');
+    }
     showStatus(getCaptureStatus(), t('home.voiceActive'), 'info');
   });
 
   voiceRecognition.addEventListener('end', () => {
     isListening = false;
-    button.textContent = t('button.startVoice');
+    activeVoiceButton = null;
+    activeVoiceTextarea = null;
+    activeVoiceBaseText = '';
+    setVoiceButtonsIdle();
   });
 
-  button.addEventListener('click', () => {
-    if (!voiceRecognition) {
-      return;
-    }
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!voiceRecognition) {
+        return;
+      }
 
-    if (isListening) {
-      voiceRecognition.stop();
-      showStatus(getCaptureStatus(), t('home.voiceStopped'), 'info');
-      return;
-    }
+      if (isListening && activeVoiceButton === button) {
+        voiceRecognition.stop();
+        showStatus(getCaptureStatus(), t('home.voiceStopped'), 'info');
+        return;
+      }
 
-    voiceRecognition.start();
+      if (isListening) {
+        voiceRecognition.stop();
+      }
+
+      activeVoiceButton = button;
+      activeVoiceTextarea = document.getElementById(button.dataset.voiceTarget);
+      activeVoiceBaseText = activeVoiceTextarea?.value.trim() || '';
+      voiceRecognition.start();
+    });
   });
 }
 
 function refreshVoiceUi() {
-  const button = document.getElementById('voiceInputButton');
-  if (!button) {
+  const buttons = Array.from(document.querySelectorAll('[data-voice-target]'));
+  if (!buttons.length) {
     return;
   }
 
-  if (button.disabled) {
-    button.title = t('home.voiceUnsupported');
+  if (buttons[0].disabled) {
+    buttons.forEach((button) => {
+      button.title = t('home.voiceUnsupported');
+    });
     return;
   }
 
@@ -1202,7 +1303,10 @@ function refreshVoiceUi() {
     voiceRecognition.lang = document.documentElement.lang === 'cs' ? 'cs-CZ' : 'en-US';
   }
 
-  button.textContent = t(isListening ? 'button.stopVoice' : 'button.startVoice');
+  setVoiceButtonsIdle();
+  if (isListening && activeVoiceButton) {
+    activeVoiceButton.textContent = t('button.stopVoice');
+  }
 }
 
 
@@ -1229,6 +1333,9 @@ async function syncPendingQueue() {
         const blob = dataUrlToBlob(entry.payload.dataUrl);
         const formData = new FormData();
         formData.append('image', new File([blob], entry.payload.fileName, { type: entry.payload.mimeType }));
+        if (entry.payload.analysisContext) {
+          formData.append('analysis_context', entry.payload.analysisContext);
+        }
         const response = await apiFetch(API.meals, { method: 'POST', body: formData });
         await getJsonOrThrow(response, 'Unable to sync queued photo');
       } else {
@@ -1264,11 +1371,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('photoMealForm').addEventListener('submit', handlePhotoMealSubmit);
   document.getElementById('textMealForm').addEventListener('submit', handleTextMealSubmit);
   document.getElementById('editAnalysisButton').addEventListener('click', beginMealEditing);
+  document.getElementById('toggleRefineAnalysisButton').addEventListener('click', beginMealRefinement);
   document.getElementById('addAnotherMealButton').addEventListener('click', startAnotherMeal);
   document.getElementById('saveAnalysisButton').addEventListener('click', handleSaveMealChanges);
   document.getElementById('saveTemplateButton').addEventListener('click', saveCurrentMealAsTemplate);
   document.getElementById('resetAnalysisButton').addEventListener('click', resetMealChanges);
   document.getElementById('cancelAnalysisEditButton').addEventListener('click', cancelMealEditing);
+  document.getElementById('cancelRefineAnalysisButton').addEventListener('click', cancelMealRefinement);
   document.getElementById('deleteAnalysisButton').addEventListener('click', handleDeleteMeal);
   document.getElementById('reanalyzeButton').addEventListener('click', handleReanalyze);
   document.getElementById('syncQueueButton').addEventListener('click', syncPendingQueue);

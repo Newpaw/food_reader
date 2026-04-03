@@ -94,8 +94,8 @@ def ai_stubs(monkeypatch):
     monkeypatch.setattr(
         meals_router,
         "get_meal_data_from_image",
-        lambda image_path, corrections=None: (
-            640 if corrections else 590,
+        lambda image_path, analysis_context=None, refinement_context=None: (
+            640 if refinement_context else 590,
             44,
             26,
             38,
@@ -104,6 +104,6 @@ def ai_stubs(monkeypatch):
             610,
             "dinner",
             __import__("datetime").datetime(2026, 4, 2, 18, 30, tzinfo=__import__("datetime").timezone.utc),
-            "Updated analysis" if corrections else f"Estimated from image: {Path(image_path).name}",
+            "Updated analysis" if refinement_context else f"Estimated from image: {Path(image_path).name}",
         ),
     )

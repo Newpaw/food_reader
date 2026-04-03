@@ -103,7 +103,16 @@ class TextMealCreate(BaseModel):
 
 
 class MealReanalysis(BaseModel):
-    corrections: dict[str, str] = Field(..., description="Corrections to the previous analysis")
+    refinement_context: str | None = Field(
+        None,
+        min_length=1,
+        max_length=2000,
+        description="Optional clarification supplied after the initial analysis",
+    )
+    corrections: dict[str, str] | None = Field(
+        None,
+        description="Legacy correction map for the previous analysis",
+    )
 
 
 class DailySummary(BaseModel):

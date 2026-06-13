@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "backend/uploads"
     OPENAI_API_KEY: str | None = None
     LLM_MODEL: str = "gpt-4o-mini"
+    WITHINGS_CLIENT_ID: str | None = None
+    WITHINGS_CLIENT_SECRET: str | None = None
+    WITHINGS_REDIRECT_URI: str | None = None
+    APP_FRONTEND_URL: str = "/profile.html"
 
     LOG_LEVEL: str = "INFO"
     LOG_DIR: str = "backend/logs"

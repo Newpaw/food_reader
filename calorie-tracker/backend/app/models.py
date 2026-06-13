@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -48,6 +48,17 @@ class User(Base):
 
     meals = relationship("Meal", back_populates="user", cascade="all, delete-orphan")
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    withings_connection = relationship(
+        "WithingsConnection",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    withings_measurements = relationship(
+        "WithingsMeasurement",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 class UserProfile(Base):
@@ -78,6 +89,8 @@ class UserProfile(Base):
     target_carbs_g = Column(Integer, nullable=True)
     target_fats_g = Column(Integer, nullable=True)
     target_fiber_g = Column(Integer, nullable=True)
+    weight_source = Column(String, nullable=True, default="manual")
+    weight_measured_at = Column(UTCDateTime(), nullable=True)
 
     created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(
@@ -110,3 +123,61 @@ class Meal(Base):
     is_text_only = Column(Boolean, default=False, nullable=False)
 
     user = relationship("User", back_populates="meals")
+
+
+class WithingsConnection(Base):
+    __tablename__ = "withings_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    withings_user_id = Column(String, nullable=True)
+    access_token_encrypted = Column(String, nullable=False)
+    refresh_token_encrypted = Column(String, nullable=False)
+    scope = Column(String, nullable=True)
+    token_expires_at = Column(UTCDateTime(), nullable=True)
+    last_sync_at = Column(UTCDateTime(), nullable=True)
+    last_update_timestamp = Column(Integer, nullable=True)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(
+        UTCDateTime(),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    user = relationship("User", back_populates="withings_connection")
+
+
+class WithingsMeasurement(Base):
+    __tablename__ = "withings_measurements"
+    __table_args__ = (UniqueConstraint("user_id", "withings_grpid", name="uq_withings_measurements_user_grpid"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    withings_grpid = Column(String, nullable=False)
+    measured_at = Column(UTCDateTime(), index=True, nullable=False)
+    remote_created_at = Column(UTCDateTime(), nullable=True)
+    remote_modified_at = Column(UTCDateTime(), nullable=True)
+    attrib = Column(Integer, nullable=True)
+    category = Column(Integer, nullable=True)
+    device_id = Column(String, nullable=True)
+    model = Column(String, nullable=True)
+    weight_kg = Column(Float, nullable=True)
+    fat_free_mass_kg = Column(Float, nullable=True)
+    fat_ratio = Column(Float, nullable=True)
+    fat_mass_kg = Column(Float, nullable=True)
+    muscle_mass_kg = Column(Float, nullable=True)
+    hydration_kg = Column(Float, nullable=True)
+    bone_mass_kg = Column(Float, nullable=True)
+    visceral_fat = Column(Float, nullable=True)
+    bmr = Column(Float, nullable=True)
+    metabolic_age = Column(Float, nullable=True)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(
+        UTCDateTime(),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    user = relationship("User", back_populates="withings_measurements")

@@ -15,6 +15,7 @@ ActivityLevelType = Literal[
 ]
 GoalType = Literal["weight_loss", "maintenance", "muscle_gain"]
 DietaryPreferenceType = Literal["none", "vegetarian", "vegan", "keto", "high_protein", "low_carb"]
+WeightSourceType = Literal["manual", "withings"]
 
 
 class ORMModel(BaseModel):
@@ -174,6 +175,8 @@ class UserProfileOut(ORMModel):
     target_carbs_g: int | None
     target_fats_g: int | None
     target_fiber_g: int | None
+    weight_source: str | None
+    weight_measured_at: AwareDatetime | None
     created_at: AwareDatetime
     updated_at: AwareDatetime
 
@@ -188,3 +191,41 @@ class NutritionTargets(BaseModel):
     bmr: float | None = Field(None, description="Basal Metabolic Rate")
     tdee: float | None = Field(None, description="Total Daily Energy Expenditure")
     last_updated: AwareDatetime = Field(..., description="When profile was last updated")
+
+
+class WithingsAuthUrlOut(BaseModel):
+    authorization_url: str
+
+
+class WithingsStatusOut(BaseModel):
+    configured: bool
+    connected: bool
+    last_sync_at: AwareDatetime | None = None
+    latest_weight_kg: float | None = None
+    latest_measured_at: AwareDatetime | None = None
+    scope: str | None = None
+
+
+class WithingsSyncOut(BaseModel):
+    synced_count: int
+    latest_weight_kg: float | None = None
+    latest_measured_at: AwareDatetime | None = None
+    profile_weight_updated: bool
+    last_sync_at: AwareDatetime
+
+
+class WithingsMeasurementOut(ORMModel):
+    id: int
+    withings_grpid: str
+    measured_at: AwareDatetime
+    weight_kg: float | None = None
+    fat_free_mass_kg: float | None = None
+    fat_ratio: float | None = None
+    fat_mass_kg: float | None = None
+    muscle_mass_kg: float | None = None
+    hydration_kg: float | None = None
+    bone_mass_kg: float | None = None
+    visceral_fat: float | None = None
+    bmr: float | None = None
+    metabolic_age: float | None = None
+    model: str | None = None

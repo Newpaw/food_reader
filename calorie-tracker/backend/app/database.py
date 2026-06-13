@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -58,5 +58,26 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=engine)
 
 
+def _ensure_profile_schema() -> None:
+    inspector = inspect(engine)
+    if "user_profiles" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("user_profiles")}
+    missing_columns = []
+    if "weight_source" not in existing_columns:
+        missing_columns.append(("weight_source", "VARCHAR"))
+    if "weight_measured_at" not in existing_columns:
+        missing_columns.append(("weight_measured_at", "DATETIME"))
+
+    if not missing_columns:
+        return
+
+    with engine.begin() as connection:
+        for column_name, column_type in missing_columns:
+            connection.execute(text(f"ALTER TABLE user_profiles ADD COLUMN {column_name} {column_type}"))
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    _ensure_profile_schema()

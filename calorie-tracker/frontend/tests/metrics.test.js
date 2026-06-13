@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { summarizeMeals, summarizeTodayGoal } from '../metrics.js';
+import { summarizeBodyMetrics, summarizeMeals, summarizeTodayGoal } from '../metrics.js';
 
 
 describe('metrics summarizer', () => {
@@ -29,5 +29,26 @@ describe('metrics summarizer', () => {
     expect(summary.mealCount).toBe(2);
     expect(summary.remainingCalories).toBe(850);
     expect(summary.tone).toBe('success');
+  });
+
+  it('summarizes Withings body metric trends', () => {
+    const summary = summarizeBodyMetrics([
+      { measured_at: '2026-05-10T08:00:00Z', weight_kg: 81.1, fat_ratio: 22.1 },
+      { measured_at: '2026-05-01T08:00:00Z', weight_kg: 82.3, fat_ratio: 22.3 },
+      { measured_at: '2026-05-04T08:00:00Z', weight_kg: null, muscle_mass_kg: 61 },
+    ]);
+
+    expect(summary.hasData).toBe(true);
+    expect(summary.latest.weight_kg).toBe(81.1);
+    expect(summary.first.weight_kg).toBe(82.3);
+    expect(summary.weightDelta).toBe(-1.2);
+  });
+
+  it('returns an empty Withings body summary without weight measurements', () => {
+    const summary = summarizeBodyMetrics([{ measured_at: '2026-05-10T08:00:00Z', weight_kg: null }]);
+
+    expect(summary.hasData).toBe(false);
+    expect(summary.latest).toBeNull();
+    expect(summary.weightDelta).toBeNull();
   });
 });

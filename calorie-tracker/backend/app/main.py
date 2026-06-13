@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .database import init_db
 from .logger import RequestLoggingMiddleware, get_logger
-from .routers import auth_router, meals_router, profile_router, users_router
+from .routers import auth_router, meals_router, profile_router, users_router, withings_router
 from .settings import settings
 
 
@@ -39,6 +39,7 @@ app.include_router(auth_router.router)
 app.include_router(users_router.router)
 app.include_router(meals_router.router)
 app.include_router(profile_router.router)
+app.include_router(withings_router.router)
 
 
 @app.get("/health")

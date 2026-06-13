@@ -1,6 +1,7 @@
 import {
   API,
   apiFetch,
+  formatDateTime,
   getJsonOrThrow,
   normalizeOptionalNumber,
   setupPage,
@@ -11,6 +12,7 @@ import {
 
 let profileExists = false;
 let cachedProfile = null;
+let cachedWithingsStatus = null;
 
 
 export function buildProfilePayload(form) {
@@ -44,6 +46,7 @@ export function hasCustomOverrides(profile) {
 function fillForm(profile) {
   const form = document.getElementById('profileForm');
   const overrides = document.getElementById('profileOverrides');
+  const weightSource = document.getElementById('profileWeightSource');
   form.height.value = profile?.height_cm ?? '';
   form.weight.value = profile?.weight_kg ?? '';
   form.age.value = profile?.age ?? '';
@@ -58,6 +61,15 @@ function fillForm(profile) {
   form.customFiber.value = profile?.custom_fiber_g ?? '';
   if (overrides) {
     overrides.open = hasCustomOverrides(profile);
+  }
+  if (weightSource) {
+    if (profile?.weight_source === 'withings' && profile?.weight_measured_at) {
+      weightSource.textContent = t('profile.weightSourceWithings', { date: formatDateTime(profile.weight_measured_at) });
+    } else if (profile?.weight_kg !== null && profile?.weight_kg !== undefined) {
+      weightSource.textContent = t('profile.weightSourceManual');
+    } else {
+      weightSource.textContent = t('profile.weightSourceEmpty');
+    }
   }
 }
 
@@ -114,6 +126,138 @@ async function loadProfile() {
 }
 
 
+export function buildWithingsStatusMarkup(status) {
+  if (!status?.configured) {
+    return `<div class="empty-state compact">${t('profile.withingsNotConfigured')}</div>`;
+  }
+
+  if (!status.connected) {
+    return `
+      <div class="empty-state compact">
+        <p>${t('profile.withingsDisconnected')}</p>
+        <button id="connectWithingsButton" type="button" class="btn btn-secondary">${t('button.connectWithings')}</button>
+      </div>
+    `;
+  }
+
+  const latestWeight = status.latest_weight_kg
+    ? t('profile.withingsLatestWeight', { weight: Number(status.latest_weight_kg).toFixed(1) })
+    : t('profile.withingsNoWeight');
+  const lastSync = status.last_sync_at
+    ? t('profile.withingsLastSync', { date: formatDateTime(status.last_sync_at) })
+    : t('profile.withingsNeverSynced');
+
+  return `
+    <div class="detail-list">
+      <div><strong>${t('profile.withingsConnected')}</strong><span>${lastSync}</span></div>
+      <div><strong>${latestWeight}</strong><span>${status.scope || 'user.metrics'}</span></div>
+    </div>
+    <div class="button-row">
+      <button id="syncWithingsButton" type="button" class="btn btn-primary">${t('button.syncWithings')}</button>
+      <button id="disconnectWithingsButton" type="button" class="btn btn-secondary">${t('button.disconnectWithings')}</button>
+    </div>
+  `;
+}
+
+
+function bindWithingsActions() {
+  document.getElementById('connectWithingsButton')?.addEventListener('click', connectWithings);
+  document.getElementById('syncWithingsButton')?.addEventListener('click', syncWithings);
+  document.getElementById('disconnectWithingsButton')?.addEventListener('click', disconnectWithings);
+}
+
+
+function renderWithingsStatus(status) {
+  const panel = document.getElementById('withingsPanel');
+  if (!panel) {
+    return;
+  }
+  panel.innerHTML = buildWithingsStatusMarkup(status);
+  bindWithingsActions();
+}
+
+
+async function loadWithingsStatus() {
+  const response = await apiFetch(`${API.withings}/status`);
+  if (!response.ok) {
+    cachedWithingsStatus = { configured: false, connected: false };
+    renderWithingsStatus(cachedWithingsStatus);
+    return;
+  }
+  cachedWithingsStatus = await response.json();
+  renderWithingsStatus(cachedWithingsStatus);
+}
+
+
+async function connectWithings() {
+  const status = document.getElementById('withingsStatus');
+  showStatus(status, t('profile.withingsConnecting'), 'info');
+  try {
+    const response = await apiFetch(`${API.withings}/auth-url`, { method: 'POST' });
+    const payload = await getJsonOrThrow(response, 'Unable to start Withings authorization');
+    window.location.href = payload.authorization_url;
+  } catch (error) {
+    showStatus(status, error.message, 'danger');
+  }
+}
+
+
+async function syncWithings() {
+  const status = document.getElementById('withingsStatus');
+  showStatus(status, t('profile.withingsSyncing'), 'info');
+  try {
+    const response = await apiFetch(`${API.withings}/sync`, { method: 'POST' });
+    await getJsonOrThrow(response, 'Unable to sync Withings measurements');
+    await loadProfile();
+    await loadWithingsStatus();
+    showStatus(status, t('profile.withingsSynced'), 'success');
+  } catch (error) {
+    showStatus(status, error.message, 'danger');
+  }
+}
+
+
+async function disconnectWithings() {
+  if (!window.confirm(t('profile.withingsDisconnectConfirm'))) {
+    return;
+  }
+
+  const status = document.getElementById('withingsStatus');
+  try {
+    const response = await apiFetch(`${API.withings}/disconnect`, { method: 'DELETE' });
+    if (!response.ok) {
+      await getJsonOrThrow(response, 'Unable to disconnect Withings');
+    }
+    await loadWithingsStatus();
+    showStatus(status, t('profile.withingsDisconnectedMessage'), 'success');
+  } catch (error) {
+    showStatus(status, error.message, 'danger');
+  }
+}
+
+
+function showWithingsCallbackResult() {
+  const params = new URLSearchParams(window.location.search);
+  const result = params.get('withings');
+  if (!result) {
+    return;
+  }
+
+  const status = document.getElementById('withingsStatus');
+  if (result === 'connected') {
+    showStatus(status, t('profile.withingsConnectedMessage'), 'success');
+  } else if (result === 'error') {
+    showStatus(status, t('profile.withingsConnectionFailed'), 'danger');
+  }
+
+  params.delete('withings');
+  params.delete('reason');
+  const nextSearch = params.toString();
+  const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
+  window.history.replaceState({}, '', nextUrl);
+}
+
+
 async function saveProfile(event) {
   event.preventDefault();
   const form = event.currentTarget;
@@ -141,8 +285,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('profileForm').addEventListener('submit', saveProfile);
   document.getElementById('resetProfileButton').addEventListener('click', () => fillForm(cachedProfile));
+  showWithingsCallbackResult();
 
   await loadProfile();
+  await loadWithingsStatus();
 
-  window.addEventListener('food-reader:localechange', loadTargets);
+  window.addEventListener('food-reader:localechange', () => {
+    loadTargets();
+    renderWithingsStatus(cachedWithingsStatus);
+    fillForm(cachedProfile);
+  });
 });

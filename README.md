@@ -9,6 +9,7 @@ Food Reader is a mobile-first nutrition tracking app with a FastAPI backend and 
 - **Review-First Logging**: New meals open into an editable nutrition panel so users can correct values immediately.
 - **History And Metrics**: Browse grouped meal history, daily calorie summaries, and macro trends.
 - **Profile-Based Targets**: Save body metrics and optional custom goals to compare intake against realistic targets.
+- **Withings Scale Sync**: Connect a Withings scale, manually sync body metrics, and update profile weight-based targets from the latest measurement.
 - **Progressive Web App**: Install the app from the browser, cache the shell offline, and keep it on the home screen.
 - **Automated Tests**: Backend API coverage with `pytest` and frontend module coverage with `vitest`.
 - **Docker And Nginx Support**: Static frontend delivery plus backend API proxying in one container setup.
@@ -77,6 +78,8 @@ cd food_reader
 cp calorie-tracker/.env.example calorie-tracker/.env
 # Edit calorie-tracker/.env with your OpenAI API key and other settings
 ```
+
+For Withings scale sync, set `WITHINGS_CLIENT_ID`, `WITHINGS_CLIENT_SECRET`, `WITHINGS_REDIRECT_URI`, and `APP_FRONTEND_URL` in `calorie-tracker/.env`. The redirect URI must match the callback configured in the Withings developer application.
 
 ## Running the Application
 
@@ -184,6 +187,12 @@ npm run test:e2e
 - `PUT /me/meals/{meal_id}` – Update meal details
 - `DELETE /me/meals/{meal_id}` – Delete meal
 - `POST /me/meals/{meal_id}/reanalyze` – Reanalyze a meal with corrections
+- `GET /withings/status` – Get Withings connection status
+- `POST /withings/auth-url` – Start Withings OAuth authorization
+- `GET /withings/callback` – Withings OAuth callback
+- `POST /withings/sync` – Manually sync Withings scale measurements
+- `GET /withings/measurements` – List synced body measurements
+- `DELETE /withings/disconnect` – Remove local Withings connection and synced measurements
 
 ## Logging System
 

@@ -86,6 +86,7 @@ def create_user_profile(
         custom_carbs_g=profile_data.custom_carbs_g,
         custom_fats_g=profile_data.custom_fats_g,
         custom_fiber_g=profile_data.custom_fiber_g,
+        weight_source="manual" if profile_data.weight_kg is not None else None,
     )
     _apply_targets(profile, targets)
 
@@ -107,6 +108,9 @@ def update_user_profile(
     update_data = profile_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(profile, field, value)
+    if "weight_kg" in update_data:
+        profile.weight_source = "manual" if update_data["weight_kg"] is not None else None
+        profile.weight_measured_at = None
 
     _apply_targets(profile, _calculate_profile_targets(profile))
     profile.updated_at = datetime.now(timezone.utc)
@@ -123,6 +127,26 @@ def delete_user_profile(db: Session, user_id: int) -> bool:
     db.delete(profile)
     db.commit()
     return True
+
+
+def apply_withings_profile_weight(
+    db: Session,
+    user_id: int,
+    weight_kg: float,
+    measured_at: datetime,
+) -> models.UserProfile | None:
+    profile = get_user_profile(db, user_id)
+    if not profile:
+        return None
+
+    profile.weight_kg = weight_kg
+    profile.weight_source = "withings"
+    profile.weight_measured_at = measured_at.astimezone(timezone.utc)
+    _apply_targets(profile, _calculate_profile_targets(profile))
+    profile.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(profile)
+    return profile
 
 
 def get_nutrition_targets(db: Session, user_id: int) -> schemas.NutritionTargets | None:

@@ -2,6 +2,7 @@ import {
   API,
   apiFetch,
   bindQuickRangeButtons,
+  formatDateTime,
   getBrowserTimeZone,
   getDefaultDateRange,
   getLocalDateKey,
@@ -23,6 +24,7 @@ let cachedTargets = null;
 let cachedSummaryDays = [];
 let cachedMeals = [];
 let cachedTodayMeals = [];
+let cachedWithingsMeasurements = [];
 
 function formatRangeLabel(from, to) {
   if (!from || !to) {
@@ -146,6 +148,32 @@ export function summarizeTodayGoal(meals, targets = null) {
     headline,
     detail,
     metricBreakdown,
+  };
+}
+
+export function summarizeBodyMetrics(measurements) {
+  const weightMeasurements = [...measurements]
+    .filter((measurement) => measurement.weight_kg !== null && measurement.weight_kg !== undefined)
+    .sort((left, right) => new Date(left.measured_at) - new Date(right.measured_at));
+
+  if (!weightMeasurements.length) {
+    return {
+      hasData: false,
+      count: measurements.length,
+      latest: null,
+      first: null,
+      weightDelta: null,
+    };
+  }
+
+  const first = weightMeasurements[0];
+  const latest = weightMeasurements[weightMeasurements.length - 1];
+  return {
+    hasData: true,
+    count: measurements.length,
+    latest,
+    first,
+    weightDelta: Number((latest.weight_kg - first.weight_kg).toFixed(1)),
   };
 }
 
@@ -291,6 +319,68 @@ function renderProgress(summary, targets) {
     .join('');
 }
 
+function formatSignedKg(value) {
+  if (value === null || value === undefined) {
+    return '-';
+  }
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${Number(value).toFixed(1)}kg`;
+}
+
+function renderBodyMetrics(measurements) {
+  const panel = document.getElementById('bodyMetricsPanel');
+  const summary = summarizeBodyMetrics(measurements);
+
+  if (!summary.hasData) {
+    panel.innerHTML = `
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">${t('metrics.bodyEyebrow')}</p>
+          <h2>${t('metrics.bodyHeading')}</h2>
+        </div>
+      </div>
+      <div class="empty-state compact">${t('metrics.bodyEmpty')}</div>
+    `;
+    return;
+  }
+
+  const latest = summary.latest;
+  const recentRows = [...measurements]
+    .sort((left, right) => new Date(right.measured_at) - new Date(left.measured_at))
+    .slice(0, 8);
+
+  panel.innerHTML = `
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">${t('metrics.bodyEyebrow')}</p>
+        <h2>${t('metrics.bodyHeading')}</h2>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <article class="stat-card"><span>${t('metrics.latestWeight')}</span><strong>${Number(latest.weight_kg).toFixed(1)}kg</strong></article>
+      <article class="stat-card"><span>${t('metrics.weightChange')}</span><strong>${formatSignedKg(summary.weightDelta)}</strong></article>
+      <article class="stat-card"><span>${t('metrics.bodyFat')}</span><strong>${latest.fat_ratio === null || latest.fat_ratio === undefined ? '-' : `${Number(latest.fat_ratio).toFixed(1)}%`}</strong></article>
+      <article class="stat-card"><span>${t('metrics.muscleMass')}</span><strong>${latest.muscle_mass_kg === null || latest.muscle_mass_kg === undefined ? '-' : `${Number(latest.muscle_mass_kg).toFixed(1)}kg`}</strong></article>
+    </div>
+    <p class="panel-note">${summary.count} ${t('metrics.measurements')} · ${t('metrics.measuredAt')} ${formatDateTime(latest.measured_at)}</p>
+    <div class="stack">
+      ${recentRows
+        .map(
+          (measurement) => `
+            <div class="daily-row">
+              <div>
+                <strong>${formatDateTime(measurement.measured_at)}</strong>
+                <span>${measurement.model || t('common.unknown')}</span>
+              </div>
+              <strong>${measurement.weight_kg === null || measurement.weight_kg === undefined ? '-' : `${Number(measurement.weight_kg).toFixed(1)} kg`}</strong>
+            </div>
+          `,
+        )
+        .join('')}
+    </div>
+  `;
+}
+
 function renderNutritionStats(summaryDays, meals) {
   const averages = buildDailyAverages(summaryDays);
   const macroTotals = calculateMacroTotals(meals);
@@ -330,6 +420,7 @@ function rerenderMetrics() {
   renderTargets(cachedTargets);
   renderNutritionStats(cachedSummaryDays, cachedMeals);
   renderProgress(mealSummary, cachedTargets);
+  renderBodyMetrics(cachedWithingsMeasurements);
   renderCalorieBars(document.getElementById('calorieBars'), cachedSummaryDays, cachedTargets?.calories ?? null);
   renderMacroRing(document.getElementById('macroRing'), mealSummary);
   renderDailyList(cachedSummaryDays);
@@ -362,11 +453,12 @@ async function loadMetrics() {
       todayParams.set('to', todayUtcRange.to);
     }
 
-    const [targetsResponse, summaryResponse, mealsResponse, todayMealsResponse] = await Promise.all([
+    const [targetsResponse, summaryResponse, mealsResponse, todayMealsResponse, withingsResponse] = await Promise.all([
       apiFetch(`${API.profile}/targets`),
       apiFetch(`${API.summary}?${params.toString()}&tz_name=${encodeURIComponent(getBrowserTimeZone())}`),
       apiFetch(`${API.meals}?limit=200&${params.toString()}`),
       apiFetch(`${API.meals}?limit=100&${todayParams.toString()}`),
+      apiFetch(`${API.withings}/measurements?limit=100&${params.toString()}`),
     ]);
 
     cachedTargets = targetsResponse.ok ? await targetsResponse.json() : null;
@@ -374,6 +466,7 @@ async function loadMetrics() {
     cachedSummaryDays = summaryData.days;
     cachedMeals = await getJsonOrThrow(mealsResponse, 'Unable to load meals');
     cachedTodayMeals = await getJsonOrThrow(todayMealsResponse, 'Unable to load today meals');
+    cachedWithingsMeasurements = withingsResponse.ok ? await withingsResponse.json() : [];
 
     rerenderMetrics();
     showStatus(status, '', 'info');

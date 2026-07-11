@@ -26,6 +26,8 @@ def client(monkeypatch, tmp_path):
     from backend.app.settings import settings
 
     settings.UPLOAD_DIR = str(tmp_path / "uploads")
+    settings.JWT_SECRET = "test-secret"
+    settings.APP_ENV = "test"
 
     engine = create_engine(
         "sqlite://",
@@ -74,11 +76,12 @@ def register_and_login(client):
 @pytest.fixture
 def ai_stubs(monkeypatch):
     from backend.app.routers import meals_router
+    from backend.app.settings import settings
 
     monkeypatch.setattr(
         meals_router,
         "get_meal_data_from_text",
-        lambda description: (
+        lambda description, correction_examples=None: (
             480,
             32,
             18,
@@ -94,7 +97,7 @@ def ai_stubs(monkeypatch):
     monkeypatch.setattr(
         meals_router,
         "get_meal_data_from_image",
-        lambda image_path, analysis_context=None, refinement_context=None: (
+        lambda image_path, analysis_context=None, refinement_context=None, correction_examples=None: (
             640 if refinement_context else 590,
             44,
             26,
@@ -107,3 +110,11 @@ def ai_stubs(monkeypatch):
             "Updated analysis" if refinement_context else f"Estimated from image: {Path(image_path).name}",
         ),
     )
+
+    async def fake_store_private_meal_image(upload, user_id):
+        target = settings.upload_dir_path / str(user_id) / "test-meal.jpg"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(b"\xff\xd8\xff\xd9")
+        return str(target)
+
+    monkeypatch.setattr(meals_router, "store_private_meal_image", fake_store_private_meal_image)

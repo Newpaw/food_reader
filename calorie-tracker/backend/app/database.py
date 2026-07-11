@@ -16,17 +16,14 @@ def _resolve_database_url(database_url: str) -> str:
         url = make_url(database_url)
     except Exception:
         return database_url
-
     if url.get_backend_name() != "sqlite" or not url.database:
         return database_url
-
     db_path = Path(url.database)
     if db_path.is_absolute():
         if str(db_path).startswith("/app/") and not db_path.parent.exists():
             db_path = PROJECT_ROOT / Path(*db_path.parts[2:])
     else:
         db_path = (PROJECT_ROOT / db_path).resolve()
-
     db_path.parent.mkdir(parents=True, exist_ok=True)
     return f"sqlite:///{db_path.resolve()}"
 
@@ -39,18 +36,14 @@ def _maybe_reset_sqlite_db(database_url: str) -> None:
         url = make_url(database_url)
     except Exception:
         return
-
     if url.get_backend_name() != "sqlite" or not url.database:
         return
-
-    reset_flag = os.getenv("RESET_DB", "false").lower() == "true"
-    if reset_flag and os.path.exists(url.database):
+    if os.getenv("RESET_DB", "false").lower() == "true" and os.path.exists(url.database):
         os.remove(url.database)
         os.makedirs(os.path.dirname(url.database), exist_ok=True)
 
 
 _maybe_reset_sqlite_db(DATABASE_URL)
-
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
@@ -58,26 +51,46 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=engine)
 
 
-def _ensure_profile_schema() -> None:
+def _add_missing_columns(table_name: str, columns: dict[str, str]) -> None:
     inspector = inspect(engine)
-    if "user_profiles" not in inspector.get_table_names():
+    if table_name not in inspector.get_table_names():
         return
-
-    existing_columns = {column["name"] for column in inspector.get_columns("user_profiles")}
-    missing_columns = []
-    if "weight_source" not in existing_columns:
-        missing_columns.append(("weight_source", "VARCHAR"))
-    if "weight_measured_at" not in existing_columns:
-        missing_columns.append(("weight_measured_at", "DATETIME"))
-
-    if not missing_columns:
+    existing = {column["name"] for column in inspector.get_columns(table_name)}
+    missing = [(name, sql_type) for name, sql_type in columns.items() if name not in existing]
+    if not missing:
         return
-
     with engine.begin() as connection:
-        for column_name, column_type in missing_columns:
-            connection.execute(text(f"ALTER TABLE user_profiles ADD COLUMN {column_name} {column_type}"))
+        for name, sql_type in missing:
+            connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {name} {sql_type}"))
+
+
+def _ensure_legacy_sqlite_schema() -> None:
+    if not DATABASE_URL.startswith("sqlite"):
+        return
+    _add_missing_columns(
+        "user_profiles",
+        {
+            "weight_source": "VARCHAR",
+            "weight_measured_at": "DATETIME",
+            "target_weight_kg": "FLOAT",
+            "desired_weekly_loss_percent": "FLOAT",
+        },
+    )
+    _add_missing_columns(
+        "meals",
+        {
+            "food_description": "VARCHAR",
+            "calorie_min": "INTEGER",
+            "calorie_max": "INTEGER",
+            "confidence": "INTEGER",
+            "analysis_json": "TEXT",
+            "analysis_model": "VARCHAR",
+            "prompt_version": "VARCHAR",
+            "confirmed_at": "DATETIME",
+        },
+    )
 
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
-    _ensure_profile_schema()
+    _ensure_legacy_sqlite_schema()

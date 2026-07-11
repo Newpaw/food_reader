@@ -131,7 +131,7 @@ def get_nutrition_targets(db: Session, user_id: int) -> schemas.NutritionTargets
     if not profile or not profile.target_calories:
         return None
     method = (
-        "Custom/adaptive target"
+        "Custom values provided by user"
         if profile.custom_calories
         else "Calculated using Mifflin-St Jeor equation with a sustainable goal adjustment"
     )

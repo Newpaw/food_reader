@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Reader | Kouč hubnutí</title>
+    <meta name="description" content="Denní plán, trend váhy a konkrétní doporučení pro udržitelné hubnutí.">
+    <meta name="theme-color" content="#d96b3b">
+    <link rel="stylesheet" href="styles.css?v=20260711-1">
+    <link rel="stylesheet" href="coach.css?v=20260711-1">
+    <link rel="manifest" href="manifest.webmanifest?v=20260711-1">
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+  </head>
+  <body data-page="coach">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="coach.html">
+            <span class="brand-mark">FR</span>
+            <span class="brand-copy"><strong>Food Reader</strong><small data-coach-key="brand">weight-loss coach</small></span>
+          </a>
+          <nav class="desktop-nav" aria-label="Primary">
+            <a class="active" href="coach.html" data-coach-key="navCoach">Kouč</a>
+            <a href="index.html" data-coach-key="navAdd">Přidat jídlo</a>
+            <a href="history.html" data-coach-key="navHistory">Historie</a>
+            <a href="metrics.html" data-coach-key="navMetrics">Přehled</a>
+            <a href="profile.html" data-coach-key="navProfile">Profil</a>
+          </nav>
+          <div class="topbar-actions">
+            <label class="language-picker"><span class="sr-only">Language</span><select data-language-select><option value="en">EN</option><option value="cs">CZ</option></select></label>
+            <span class="user-chip"><span data-user-greeting>You</span></span>
+            <button class="btn btn-ghost btn-small" data-logout data-coach-key="logout">Odhlásit</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="page coach-page">
+        <section class="coach-hero">
+          <div>
+            <p class="eyebrow" data-coach-key="heroEyebrow">Dnešní řízení</p>
+            <h1 data-coach-key="heroTitle">Co dnes udělat, aby váha šla dolů</h1>
+            <p data-coach-key="heroBody">Nejde o co nejnižší příjem. Jde o úplný záznam, rozumný deficit, dost bílkovin a trend, který lze udržet.</p>
+          </div>
+          <a class="btn btn-primary" href="index.html" data-coach-key="logMeal">Zapsat jídlo</a>
+        </section>
+
+        <p id="coachStatus" class="status" hidden></p>
+
+        <section class="coach-grid coach-grid-primary">
+          <article class="panel coach-action-card">
+            <div class="panel-heading"><div><p class="eyebrow" data-coach-key="nextStep">Nejdůležitější další krok</p><h2 id="actionTitle">—</h2></div><span id="scoreBadge" class="score-badge">—</span></div>
+            <p id="actionBody" class="coach-action-body">—</p>
+            <div id="suggestedFoods" class="chip-row"></div>
+            <div id="warnings" class="coach-warnings"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-coach-key="today">Dnes</p><h2 data-coach-key="targets">Průběh proti cíli</h2></div></div>
+            <div id="todayMetrics" class="coach-metrics"></div>
+          </article>
+        </section>
+
+        <section class="coach-grid">
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-coach-key="checkinEyebrow">Jak se dnes cítíš</p><h2 data-coach-key="checkinTitle">Denní check-in</h2></div></div>
+            <form id="checkinForm" class="stack">
+              <div class="form-grid coach-checkin-grid">
+                <label class="field"><span data-coach-key="hunger">Hlad 1–5</span><input name="hunger" type="number" min="1" max="5"></label>
+                <label class="field"><span data-coach-key="energy">Energie 1–5</span><input name="energy" type="number" min="1" max="5"></label>
+                <label class="field"><span data-coach-key="sleep">Spánek (h)</span><input name="sleepHours" type="number" min="0" max="24" step="0.1"></label>
+                <label class="field"><span data-coach-key="steps">Kroky</span><input name="steps" type="number" min="0" max="100000"></label>
+              </div>
+              <label class="check-row"><input name="trained" type="checkbox"><span data-coach-key="trained">Dnes jsem trénoval</span></label>
+              <label class="field"><span data-coach-key="checkinNote">Poznámka</span><textarea name="note" rows="2"></textarea></label>
+              <button class="btn btn-secondary" type="submit" data-coach-key="saveCheckin">Uložit check-in</button>
+            </form>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-coach-key="goalEyebrow">Směr</p><h2 data-coach-key="goalTitle">Cíl hubnutí</h2></div></div>
+            <form id="goalForm" class="stack">
+              <div id="profileMissing" class="empty-state" hidden><span data-coach-key="profileMissing">Nejdřív vyplň základní profil.</span> <a href="profile.html" data-coach-key="openProfile">Otevřít profil</a></div>
+              <div id="goalFields" class="form-grid">
+                <label class="field"><span data-coach-key="targetWeight">Cílová váha (kg)</span><input name="targetWeight" type="number" min="20" max="500" step="0.1"></label>
+                <label class="field"><span data-coach-key="pace">Tempo (% váhy týdně)</span><input name="pace" type="number" min="0.2" max="1" step="0.1"></label>
+              </div>
+              <button id="saveGoalButton" class="btn btn-secondary" type="submit" data-coach-key="saveGoal">Nastavit hubnutí</button>
+            </form>
+          </article>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading"><div><p class="eyebrow" data-coach-key="weekEyebrow">Posledních 7 dní</p><h2 data-coach-key="weekTitle">Co skutečně funguje</h2></div><button id="refreshCoach" class="btn btn-ghost btn-small" data-coach-key="refresh">Obnovit</button></div>
+          <div id="weeklyMetrics" class="coach-weekly-metrics"></div>
+          <div class="coach-grid coach-grid-insights">
+            <div><h3 data-coach-key="wins">Co se daří</h3><ul id="winsList" class="coach-list"></ul></div>
+            <div><h3 data-coach-key="focus">Priorita dalšího týdne</h3><ul id="focusList" class="coach-list"></ul></div>
+          </div>
+          <div id="adaptiveTarget" class="adaptive-card" hidden>
+            <div><strong id="adaptiveTitle"></strong><p id="adaptiveReason"></p></div>
+            <button id="applyTargetButton" class="btn btn-primary" type="button" data-coach-key="applyTarget">Použít nový cíl</button>
+          </div>
+        </section>
+
+        <section class="coach-grid">
+          <article class="panel coach-chat-panel">
+            <div class="panel-heading"><div><p class="eyebrow">AI</p><h2 data-coach-key="chatTitle">Zeptej se na svůj dnešní plán</h2></div></div>
+            <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+            <form id="chatForm" class="chat-form">
+              <input name="question" maxlength="1000" data-coach-placeholder="chatPlaceholder" placeholder="Co si mám dát večer k vínu?">
+              <button class="btn btn-primary" type="submit" data-coach-key="ask">Zeptat se</button>
+            </form>
+            <div class="chip-row coach-prompts">
+              <button type="button" data-prompt="protein" data-coach-key="promptProtein">Kolik mi chybí bílkovin?</button>
+              <button type="button" data-prompt="dinner" data-coach-key="promptDinner">Co si dát k večeři?</button>
+              <button type="button" data-prompt="stall" data-coach-key="promptStall">Proč váha stojí?</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-coach-key="reminderEyebrow">Důslednost</p><h2 data-coach-key="reminderTitle">Chytré připomenutí</h2></div></div>
+            <p data-coach-key="reminderBody">Aplikace upozorní nejvýše jednou denně, jen když chybí důležitý krok: záznam jídla, bílkoviny nebo dokončení deníku.</p>
+            <button id="enableReminders" class="btn btn-secondary" type="button" data-coach-key="enableReminders">Povolit připomenutí</button>
+            <p id="reminderState" class="panel-note"></p>
+          </article>
+        </section>
+
+        <p class="coach-disclaimer" data-coach-key="disclaimer">Obecné výživové doporučení, nikoli zdravotní péče.</p>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Mobile">
+        <a class="active" href="coach.html" data-coach-key="navCoach">Kouč</a>
+        <a href="index.html" data-coach-key="navAddShort">Přidat</a>
+        <a href="history.html" data-coach-key="navHistory">Historie</a>
+        <a href="metrics.html" data-coach-key="navMetrics">Přehled</a>
+        <a href="profile.html" data-coach-key="navProfile">Profil</a>
+      </nav>
+    </div>
+    <script type="module" src="coach.js?v=20260711-1"></script>
+  </body>
+</html>

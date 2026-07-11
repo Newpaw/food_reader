@@ -16,6 +16,7 @@ ActivityLevelType = Literal[
 GoalType = Literal["weight_loss", "maintenance", "muscle_gain"]
 DietaryPreferenceType = Literal["none", "vegetarian", "vegan", "keto", "high_protein", "low_carb"]
 WeightSourceType = Literal["manual", "withings"]
+CoachPriority = Literal["low", "medium", "high"]
 
 
 class ORMModel(BaseModel):
@@ -54,7 +55,7 @@ class MealBase(BaseModel):
     sodium: int | None = Field(None, ge=0)
     meal_type: MealType
     consumed_at: AwareDatetime = Field(..., description="UTC timestamp with timezone info")
-    notes: str | None = None
+    notes: str | None = Field(None, max_length=4000)
 
 
 class MealCreate(MealBase):
@@ -71,12 +72,26 @@ class MealUpdate(BaseModel):
     sodium: int | None = Field(None, ge=0)
     meal_type: MealType | None = None
     consumed_at: AwareDatetime | None = Field(None, description="UTC timestamp with timezone info")
-    notes: str | None = None
+    notes: str | None = Field(None, max_length=4000)
+    correction_reason: str | None = Field(None, max_length=500)
+
+
+class MealComponent(BaseModel):
+    name: str
+    estimated_grams: int | None = None
+    calories: int
+    protein: int = 0
+    fat: int = 0
+    carbs: int = 0
 
 
 class MealOut(ORMModel):
     id: int
+    food_description: str | None = None
     calories: int
+    calorie_min: int | None = None
+    calorie_max: int | None = None
+    confidence: int | None = None
     protein: int | None = None
     fat: int | None = None
     carbs: int | None = None
@@ -86,11 +101,14 @@ class MealOut(ORMModel):
     meal_type: str
     consumed_at: AwareDatetime = Field(..., description="UTC timestamp with timezone info")
     notes: str | None = None
+    components: list[MealComponent] = Field(default_factory=list)
+    assumptions: list[str] = Field(default_factory=list)
+    clarification_question: str | None = None
     image_url: str | None = None
 
 
 class TextMealCreate(BaseModel):
-    food_description: str = Field(..., min_length=1, description="Text description of the food")
+    food_description: str = Field(..., min_length=1, max_length=2000, description="Text description of the food")
     calories: int | None = Field(None, ge=0)
     protein: int | None = Field(None, ge=0)
     fat: int | None = Field(None, ge=0)
@@ -100,7 +118,7 @@ class TextMealCreate(BaseModel):
     sodium: int | None = Field(None, ge=0)
     meal_type: MealType | None = None
     consumed_at: AwareDatetime | None = Field(None, description="UTC timestamp with timezone info")
-    notes: str | None = None
+    notes: str | None = Field(None, max_length=4000)
 
 
 class MealReanalysis(BaseModel):
@@ -110,10 +128,7 @@ class MealReanalysis(BaseModel):
         max_length=2000,
         description="Optional clarification supplied after the initial analysis",
     )
-    corrections: dict[str, str] | None = Field(
-        None,
-        description="Legacy correction map for the previous analysis",
-    )
+    corrections: dict[str, str] | None = Field(None, description="Legacy correction map for the previous analysis")
 
 
 class DailySummary(BaseModel):
@@ -134,13 +149,15 @@ class UserProfileBase(BaseModel):
     age: int | None = Field(None, ge=10, le=120, description="Age in years")
     gender: GenderType | None = Field(None, description="Gender: male, female, other")
     activity_level: ActivityLevelType | None = Field("sedentary", description="Activity level")
-    goal: GoalType | None = Field("maintenance", description="Fitness goal")
+    goal: GoalType | None = Field("weight_loss", description="Fitness goal")
     dietary_preference: DietaryPreferenceType | None = Field("none", description="Dietary preference")
     custom_calories: int | None = Field(None, ge=0, le=10000)
     custom_protein_g: int | None = Field(None, ge=0, le=1000)
     custom_carbs_g: int | None = Field(None, ge=0, le=2000)
     custom_fats_g: int | None = Field(None, ge=0, le=500)
     custom_fiber_g: int | None = Field(None, ge=0, le=200)
+    target_weight_kg: float | None = Field(None, ge=20, le=500)
+    desired_weekly_loss_percent: float | None = Field(0.6, ge=0.2, le=1.0)
 
 
 class UserProfileCreate(UserProfileBase):
@@ -168,6 +185,8 @@ class UserProfileOut(ORMModel):
     custom_carbs_g: int | None
     custom_fats_g: int | None
     custom_fiber_g: int | None
+    target_weight_kg: float | None
+    desired_weekly_loss_percent: float | None
     bmr: float | None
     tdee: float | None
     target_calories: int | None
@@ -191,6 +210,107 @@ class NutritionTargets(BaseModel):
     bmr: float | None = Field(None, description="Basal Metabolic Rate")
     tdee: float | None = Field(None, description="Total Daily Energy Expenditure")
     last_updated: AwareDatetime = Field(..., description="When profile was last updated")
+
+
+class CoachMetric(BaseModel):
+    current: int
+    target: int | None = None
+    remaining: int | None = None
+    percentage: int | None = None
+
+
+class CoachAction(BaseModel):
+    title: str
+    body: str
+    priority: CoachPriority
+    action_type: str
+    suggested_foods: list[str] = Field(default_factory=list)
+
+
+class DailyCheckinIn(BaseModel):
+    hunger: int | None = Field(None, ge=1, le=5)
+    energy: int | None = Field(None, ge=1, le=5)
+    sleep_hours: float | None = Field(None, ge=0, le=24)
+    steps: int | None = Field(None, ge=0, le=100000)
+    trained: bool = False
+    note: str | None = Field(None, max_length=500)
+    timezone: str | None = Field(None, max_length=64)
+
+
+class DailyCheckinOut(ORMModel):
+    date: date
+    hunger: int | None = None
+    energy: int | None = None
+    sleep_hours: float | None = None
+    steps: int | None = None
+    trained: bool
+    note: str | None = None
+
+
+class CoachTodayOut(BaseModel):
+    date: date
+    goal: str
+    calories: CoachMetric
+    protein: CoachMetric
+    fiber: CoachMetric
+    meals_logged: int
+    logging_complete: bool
+    adherence_score: int
+    next_action: CoachAction
+    warnings: list[str] = Field(default_factory=list)
+    checkin: DailyCheckinOut | None = None
+    disclaimer: str
+
+
+class WeightTrendOut(BaseModel):
+    measurements: int
+    latest_weight_kg: float | None = None
+    change_kg: float | None = None
+    weekly_change_kg: float | None = None
+    weekly_change_percent: float | None = None
+    direction: Literal["down", "stable", "up", "unknown"]
+
+
+class AdaptiveTargetOut(BaseModel):
+    current_target: int | None = None
+    recommended_target: int | None = None
+    adjustment: int = 0
+    reason: str
+    eligible: bool
+
+
+class CoachWeeklyOut(BaseModel):
+    from_date: date
+    to_date: date
+    logged_days: int
+    total_days: int
+    logging_completeness_percent: int
+    average_calories_all_days: int
+    average_calories_logged_days: int
+    average_protein_g: int
+    average_fiber_g: int
+    calorie_target: int | None = None
+    days_on_target: int
+    weight_trend: WeightTrendOut
+    adaptive_target: AdaptiveTargetOut
+    wins: list[str]
+    focus_next_week: list[str]
+    average_hunger: float | None = None
+    average_energy: float | None = None
+    training_days: int = 0
+    estimated_weeks_to_goal: int | None = None
+
+
+class CoachChatIn(BaseModel):
+    question: str = Field(..., min_length=2, max_length=1000)
+    timezone: str | None = Field(None, max_length=64)
+
+
+class CoachChatOut(BaseModel):
+    answer: str
+    actions: list[str] = Field(default_factory=list)
+    grounded_in: list[str] = Field(default_factory=list)
+    disclaimer: str
 
 
 class WithingsAuthUrlOut(BaseModel):

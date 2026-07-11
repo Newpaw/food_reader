@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "backend/uploads"
     OPENAI_API_KEY: str | None = None
     LLM_MODEL: str = "gpt-4o-mini"
+    COACH_MODEL: str | None = None
     WITHINGS_CLIENT_ID: str | None = None
     WITHINGS_CLIENT_SECRET: str | None = None
     WITHINGS_REDIRECT_URI: str | None = None
@@ -41,6 +42,10 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:8080,http://127.0.0.1:8080"
     MAX_REQUEST_BODY_BYTES: int = 5 * 1024 * 1024
+    MAX_IMAGE_BYTES: int = 4 * 1024 * 1024
+    MAX_IMAGE_PIXELS: int = 25_000_000
+    MAX_IMAGE_DIMENSION: int = 1600
+    MEDIA_URL_TTL_SECONDS: int = 30 * 60
     AUTH_RATE_LIMIT_REQUESTS: int = 10
     AUTH_RATE_LIMIT_WINDOW_SECONDS: int = 5 * 60
     ANALYSIS_RATE_LIMIT_REQUESTS: int = 30
@@ -64,9 +69,15 @@ class Settings(BaseSettings):
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
+    @property
+    def coach_model(self) -> str:
+        return self.COACH_MODEL or self.LLM_MODEL
+
     def validate_runtime_security(self) -> None:
-        if self.APP_ENV.lower() in {"production", "prod"} and self.JWT_SECRET == "change-me-in-production":
-            raise RuntimeError("JWT_SECRET must be changed before starting in production.")
+        if self.APP_ENV.lower() in {"production", "prod"} and (self.JWT_SECRET == "change-me-in-production" or len(self.JWT_SECRET) < 32):
+            raise RuntimeError("JWT_SECRET must be a random value of at least 32 characters in production.")
+        if self.APP_ENV.lower() in {"production", "prod"} and not self.cors_origins:
+            raise RuntimeError("CORS_ORIGINS must contain at least one trusted origin in production.")
 
 
 settings = Settings()

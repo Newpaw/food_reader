@@ -1,15 +1,28 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from pydantic import AwareDatetime
+from sqlalchemy.orm import Session
 
+from . import logger as logger_module
+from . import models, schemas
 from .database import init_db
 from .logger import RequestLoggingMiddleware, get_logger
-from .routers import auth_router, meals_router, profile_router, users_router, withings_router
 from .security import SecurityMiddleware
 from .settings import settings
+
+# The timing decorator preserves endpoint annotations on a wrapper defined in
+# logger.py. Register the application-specific annotation names in that module
+# before importing routers so FastAPI can resolve multipart and dependency types.
+logger_module.UploadFile = UploadFile
+logger_module.AwareDatetime = AwareDatetime
+logger_module.Session = Session
+logger_module.models = models
+logger_module.schemas = schemas
+
+from .routers import auth_router, coach_router, meals_router, media_router, profile_router, users_router, withings_router
 
 
 logger = get_logger(__name__)
@@ -24,8 +37,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Calorie Tracker", lifespan=lifespan)
-
+app = FastAPI(title="Food Reader", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -43,13 +55,13 @@ app.add_middleware(
     analysis_window_seconds=settings.ANALYSIS_RATE_LIMIT_WINDOW_SECONDS,
 )
 
-app.mount("/uploads", StaticFiles(directory=str(settings.upload_dir_path)), name="uploads")
-
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
 app.include_router(meals_router.router)
 app.include_router(profile_router.router)
 app.include_router(withings_router.router)
+app.include_router(coach_router.router)
+app.include_router(media_router.router)
 
 
 @app.get("/health")

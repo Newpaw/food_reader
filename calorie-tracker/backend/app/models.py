@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -16,7 +16,7 @@ class ActivityLevel(str, enum.Enum):
     EXTREMELY_ACTIVE = "extremely_active"
 
 
-class Goal(str, enum.Enum):
+class FitnessGoal(str, enum.Enum):
     WEIGHT_LOSS = "weight_loss"
     MAINTENANCE = "maintenance"
     MUSCLE_GAIN = "muscle_gain"
@@ -47,6 +47,8 @@ class User(Base):
     created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     meals = relationship("Meal", back_populates="user", cascade="all, delete-orphan")
+    daily_checkins = relationship("DailyCheckin", back_populates="user", cascade="all, delete-orphan")
+    meal_corrections = relationship("MealCorrection", back_populates="user", cascade="all, delete-orphan")
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     withings_connection = relationship(
         "WithingsConnection",
@@ -73,7 +75,7 @@ class UserProfile(Base):
     gender = Column(String, nullable=True)
 
     activity_level = Column(String, nullable=True, default="sedentary")
-    goal = Column(String, nullable=True, default="maintenance")
+    goal = Column(String, nullable=True, default="weight_loss")
     dietary_preference = Column(String, nullable=True, default="none")
 
     custom_calories = Column(Integer, nullable=True)
@@ -81,6 +83,8 @@ class UserProfile(Base):
     custom_carbs_g = Column(Integer, nullable=True)
     custom_fats_g = Column(Integer, nullable=True)
     custom_fiber_g = Column(Integer, nullable=True)
+    target_weight_kg = Column(Float, nullable=True)
+    desired_weekly_loss_percent = Column(Float, nullable=True, default=0.6)
 
     bmr = Column(Float, nullable=True)
     tdee = Column(Float, nullable=True)
@@ -109,7 +113,11 @@ class Meal(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
     image_path = Column(String, nullable=True)
+    food_description = Column(String, nullable=True)
     calories = Column(Integer, nullable=False)
+    calorie_min = Column(Integer, nullable=True)
+    calorie_max = Column(Integer, nullable=True)
+    confidence = Column(Integer, nullable=True)
     protein = Column(Integer, nullable=True)
     fat = Column(Integer, nullable=True)
     carbs = Column(Integer, nullable=True)
@@ -118,11 +126,50 @@ class Meal(Base):
     sodium = Column(Integer, nullable=True)
     meal_type = Column(String, nullable=False)
     consumed_at = Column(UTCDateTime(), nullable=False)
-    notes = Column(String, nullable=True)
+    notes = Column(Text, nullable=True)
+    analysis_json = Column(Text, nullable=True)
+    analysis_model = Column(String, nullable=True)
+    prompt_version = Column(String, nullable=True)
     created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
+    confirmed_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=True)
     is_text_only = Column(Boolean, default=False, nullable=False)
 
     user = relationship("User", back_populates="meals")
+    corrections = relationship("MealCorrection", back_populates="meal", cascade="all, delete-orphan")
+
+
+class MealCorrection(Base):
+    __tablename__ = "meal_corrections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    meal_id = Column(Integer, ForeignKey("meals.id"), index=True, nullable=False)
+    before_json = Column(Text, nullable=False)
+    after_json = Column(Text, nullable=False)
+    reason = Column(String, nullable=True)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    user = relationship("User", back_populates="meal_corrections")
+    meal = relationship("Meal", back_populates="corrections")
+
+
+class DailyCheckin(Base):
+    __tablename__ = "daily_checkins"
+    __table_args__ = (UniqueConstraint("user_id", "checkin_date", name="uq_daily_checkin_user_date"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    checkin_date = Column(String, nullable=False)
+    hunger = Column(Integer, nullable=True)
+    energy = Column(Integer, nullable=True)
+    sleep_hours = Column(Float, nullable=True)
+    steps = Column(Integer, nullable=True)
+    trained = Column(Boolean, default=False, nullable=False)
+    note = Column(Text, nullable=True)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+    user = relationship("User", back_populates="daily_checkins")
 
 
 class WithingsConnection(Base):

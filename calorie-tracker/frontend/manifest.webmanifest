@@ -1,48 +1,25 @@
 {
-  "name": "Food Reader",
+  "name": "Food Reader – Weight-loss Coach",
   "short_name": "Food Reader",
-  "id": "/",
-  "description": "Mobile-first calorie tracking with photo and text meal capture.",
-  "start_url": "/index.html",
+  "id": "/coach.html",
+  "description": "Private meal tracking, daily coaching and adaptive weight-loss targets.",
+  "start_url": "/coach.html",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "background_color": "#f7f1e3",
   "theme_color": "#d96b3b",
   "prefer_related_applications": false,
+  "shortcuts": [
+    { "name": "Today's coach", "short_name": "Coach", "url": "/coach.html", "icons": [{ "src": "/assets/favicon/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Log a meal", "short_name": "Add meal", "url": "/index.html", "icons": [{ "src": "/assets/favicon/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ],
   "icons": [
-    {
-      "src": "/assets/favicon/favicon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png"
-    },
-    {
-      "src": "/assets/favicon/favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "/assets/favicon/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "/assets/favicon/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/assets/favicon/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/assets/favicon/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    { "src": "/assets/favicon/favicon-16x16.png", "sizes": "16x16", "type": "image/png" },
+    { "src": "/assets/favicon/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/assets/favicon/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/assets/favicon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/favicon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/favicon/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

@@ -1,14 +1,28 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import AwareDatetime
+from sqlalchemy.orm import Session
 
+from . import logger as logger_module
+from . import models, schemas
 from .database import init_db
 from .logger import RequestLoggingMiddleware, get_logger
-from .routers import auth_router, coach_router, meals_router, media_router, profile_router, users_router, withings_router
 from .security import SecurityMiddleware
 from .settings import settings
+
+# The timing decorator preserves endpoint annotations on a wrapper defined in
+# logger.py. Register the application-specific annotation names in that module
+# before importing routers so FastAPI can resolve multipart and dependency types.
+logger_module.UploadFile = UploadFile
+logger_module.AwareDatetime = AwareDatetime
+logger_module.Session = Session
+logger_module.models = models
+logger_module.schemas = schemas
+
+from .routers import auth_router, coach_router, meals_router, media_router, profile_router, users_router, withings_router
 
 
 logger = get_logger(__name__)

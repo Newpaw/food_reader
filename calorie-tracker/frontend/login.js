@@ -70,13 +70,12 @@ async function handleLoginSubmit(event) {
     });
     const data = await getJsonOrThrow(response, 'Unable to sign in');
     setAuthToken(data.access_token);
-    window.location.href = 'index.html';
+    window.location.href = 'coach.html';
   } catch (error) {
     showStatus(status, error.message, 'danger');
     submitButton.disabled = false;
   }
 }
-
 
 async function handleRegisterSubmit(event) {
   event.preventDefault();
@@ -106,12 +105,11 @@ async function handleRegisterSubmit(event) {
   }
 }
 
-
 document.addEventListener('DOMContentLoaded', async () => {
   await setupPage({ requiresAuth: false });
 
   if (isAuthenticated()) {
-    window.location.href = 'index.html';
+    window.location.href = 'coach.html';
     return;
   }
 

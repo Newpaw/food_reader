@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from .database import init_db
 from .logger import RequestLoggingMiddleware, get_logger
 from .routers import auth_router, meals_router, profile_router, users_router, withings_router
+from .security import SecurityMiddleware
 from .settings import settings
 
 
@@ -16,6 +17,7 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    settings.validate_runtime_security()
     os.makedirs(settings.upload_dir_path, exist_ok=True)
     init_db()
     logger.info("Application started")
@@ -26,12 +28,20 @@ app = FastAPI(title="Calorie Tracker", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(
+    SecurityMiddleware,
+    max_body_bytes=settings.MAX_REQUEST_BODY_BYTES,
+    auth_limit=settings.AUTH_RATE_LIMIT_REQUESTS,
+    auth_window_seconds=settings.AUTH_RATE_LIMIT_WINDOW_SECONDS,
+    analysis_limit=settings.ANALYSIS_RATE_LIMIT_REQUESTS,
+    analysis_window_seconds=settings.ANALYSIS_RATE_LIMIT_WINDOW_SECONDS,
+)
 
 app.mount("/uploads", StaticFiles(directory=str(settings.upload_dir_path)), name="uploads")
 

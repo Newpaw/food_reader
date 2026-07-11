@@ -46,7 +46,9 @@ def client(monkeypatch, tmp_path):
 
     app.dependency_overrides[get_db] = override_get_db
 
-    with TestClient(app) as test_client:
+    # Every fixture gets an isolated client IP so the production rate limiter
+    # does not leak request history between otherwise independent tests.
+    with TestClient(app, headers={"X-Forwarded-For": f"pytest-{tmp_path.name}"}) as test_client:
         yield test_client
 
     app.dependency_overrides.clear()

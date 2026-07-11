@@ -26,6 +26,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    APP_ENV: str = "development"
     DATABASE_URL: str = _default_database_url()
     JWT_SECRET: str = "change-me-in-production"
     JWT_ALG: str = "HS256"
@@ -37,6 +38,13 @@ class Settings(BaseSettings):
     WITHINGS_CLIENT_SECRET: str | None = None
     WITHINGS_REDIRECT_URI: str | None = None
     APP_FRONTEND_URL: str = "/profile.html"
+
+    CORS_ORIGINS: str = "http://localhost:8080,http://127.0.0.1:8080"
+    MAX_REQUEST_BODY_BYTES: int = 5 * 1024 * 1024
+    AUTH_RATE_LIMIT_REQUESTS: int = 10
+    AUTH_RATE_LIMIT_WINDOW_SECONDS: int = 5 * 60
+    ANALYSIS_RATE_LIMIT_REQUESTS: int = 30
+    ANALYSIS_RATE_LIMIT_WINDOW_SECONDS: int = 60 * 60
 
     LOG_LEVEL: str = "INFO"
     LOG_DIR: str = "backend/logs"
@@ -51,6 +59,14 @@ class Settings(BaseSettings):
     @property
     def log_dir_path(self) -> Path:
         return _resolve_project_path(self.LOG_DIR)
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
+    def validate_runtime_security(self) -> None:
+        if self.APP_ENV.lower() in {"production", "prod"} and self.JWT_SECRET == "change-me-in-production":
+            raise RuntimeError("JWT_SECRET must be changed before starting in production.")
 
 
 settings = Settings()

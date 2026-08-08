@@ -6,7 +6,7 @@
     <title>Food Reader | Health Insights</title>
     <meta name="description" content="Combine nutrition, Oura recovery, sleep, activity, workouts, and body weight in one personal health dashboard.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260808-oura-2">
+    <link rel="stylesheet" href="styles.css?v=20260808-health-3">
     <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
@@ -44,36 +44,34 @@
         </div>
       </header>
 
-      <main class="page">
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow" id="healthEyebrow">Personal health OS</p>
-              <h1 id="healthHeading">Food + Oura + body data</h1>
-              <p class="panel-note" id="healthSupport">Use your own longitudinal data instead of generic nutrition advice.</p>
-            </div>
+      <main class="page health-page">
+        <section class="panel health-hero-panel">
+          <div class="health-hero-copy">
+            <p class="eyebrow" id="healthEyebrow">Personal health OS</p>
+            <h1 id="healthHeading">Food + Oura + body data</h1>
+            <p class="panel-note" id="healthSupport">Use your own longitudinal data instead of generic nutrition advice.</p>
+          </div>
+          <div class="health-hero-actions">
             <div class="button-row">
               <button id="syncOuraButton" type="button" class="btn btn-primary">Sync Oura</button>
               <button id="connectOuraButton" type="button" class="btn btn-secondary" hidden>Connect Oura</button>
             </div>
+            <div id="ouraConnectionSummary" class="health-connection-strip"></div>
           </div>
-          <div id="ouraConnectionSummary" class="detail-list"></div>
-          <p id="ouraHealthStatus" class="status" hidden></p>
+          <p id="ouraHealthStatus" class="status health-hero-status" hidden></p>
         </section>
 
-        <section class="panel filter-panel">
-          <div class="filter-header">
-            <div>
-              <p class="eyebrow" id="rangeEyebrow">Range</p>
-              <h2 id="rangeHeading">Analysis window</h2>
-            </div>
+        <section class="panel health-filter-panel">
+          <div class="health-filter-copy">
+            <p class="eyebrow" id="rangeEyebrow">Range</p>
+            <h2 id="rangeHeading">Analysis window</h2>
           </div>
-          <div class="button-row quick-row">
+          <div class="button-row quick-row health-quick-range">
             <button type="button" class="btn btn-secondary btn-small" data-health-days="13">14 days</button>
             <button type="button" class="btn btn-secondary btn-small" data-health-days="29">30 days</button>
             <button type="button" class="btn btn-secondary btn-small" data-health-days="89">90 days</button>
           </div>
-          <form id="healthFilters" class="filter-grid compact-filter-form">
+          <form id="healthFilters" class="health-filter-form">
             <label class="field">
               <span id="healthFromLabel">From</span>
               <input id="healthFrom" type="date" required>
@@ -86,44 +84,81 @@
           </form>
         </section>
 
-        <section class="panel">
-          <div class="panel-heading">
+        <section class="health-summary-section">
+          <div class="health-section-heading">
             <div>
               <p class="eyebrow" id="summaryEyebrow">Signals</p>
               <h2 id="summaryHeading">Period summary</h2>
             </div>
+            <p id="healthCoverageNote" class="panel-note"></p>
           </div>
-          <div id="healthSummaryCards" class="stat-grid"></div>
-          <p id="healthCoverageNote" class="panel-note"></p>
+          <div id="healthSummaryCards" class="health-stat-grid"></div>
         </section>
 
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow" id="coachEyebrow">AI interpretation</p>
-              <h2 id="coachHeading">Health Coach</h2>
-              <p class="panel-note" id="coachSupport">One practical recommendation grounded in the selected period.</p>
+        <section class="health-charts-grid" aria-label="Health trends">
+          <article class="panel health-chart-card health-chart-wide">
+            <div class="health-chart-heading">
+              <div>
+                <p class="eyebrow" id="energyChartEyebrow">Energy</p>
+                <h2 id="energyChartHeading">Intake vs expenditure</h2>
+              </div>
+              <div id="energyChartLegend" class="chart-legend"></div>
             </div>
-            <button id="generateCoachButton" type="button" class="btn btn-primary">Generate recommendation</button>
-          </div>
-          <div id="healthCoach" class="stack">
-            <div class="empty-state compact" id="coachEmpty">Generate a recommendation after Oura data is connected.</div>
-          </div>
-          <p id="coachStatus" class="status" hidden></p>
-        </section>
+            <div id="energyChart" class="health-chart" role="img" aria-label="Daily calorie intake and expenditure chart"></div>
+          </article>
 
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow" id="insightsEyebrow">Personal patterns</p>
-              <h2 id="insightsHeading">What your data says</h2>
+          <article class="panel health-chart-card">
+            <div class="health-chart-heading">
+              <div>
+                <p class="eyebrow" id="recoveryChartEyebrow">Recovery</p>
+                <h2 id="recoveryChartHeading">Readiness & sleep</h2>
+              </div>
+              <div id="recoveryChartLegend" class="chart-legend"></div>
             </div>
-          </div>
-          <div id="healthInsights" class="stack"></div>
-          <p class="panel-note" id="correlationWarning">These are correlations in your own data, not medical conclusions or proof of causality.</p>
+            <div id="recoveryChart" class="health-chart" role="img" aria-label="Readiness and sleep score chart"></div>
+          </article>
+
+          <article class="panel health-chart-card">
+            <div class="health-chart-heading">
+              <div>
+                <p class="eyebrow" id="hrvChartEyebrow">Recovery depth</p>
+                <h2 id="hrvChartHeading">HRV trend</h2>
+              </div>
+              <div id="hrvChartLegend" class="chart-legend"></div>
+            </div>
+            <div id="hrvChart" class="health-chart" role="img" aria-label="Average HRV chart"></div>
+          </article>
         </section>
 
-        <section class="panel">
+        <section class="health-lower-grid">
+          <article class="panel health-coach-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow" id="coachEyebrow">AI interpretation</p>
+                <h2 id="coachHeading">Health Coach</h2>
+                <p class="panel-note" id="coachSupport">One practical recommendation grounded in the selected period.</p>
+              </div>
+              <button id="generateCoachButton" type="button" class="btn btn-primary">Generate recommendation</button>
+            </div>
+            <div id="healthCoach" class="stack">
+              <div class="empty-state compact" id="coachEmpty">Generate a recommendation after Oura data is connected.</div>
+            </div>
+            <p id="coachStatus" class="status" hidden></p>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow" id="insightsEyebrow">Personal patterns</p>
+                <h2 id="insightsHeading">What your data says</h2>
+              </div>
+            </div>
+            <div id="healthInsights" class="stack"></div>
+            <p class="panel-note" id="correlationWarning">These are correlations in your own data, not medical conclusions or proof of causality.</p>
+          </article>
+        </section>
+
+        <section class="panel health-daily-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow" id="dailyEyebrow">Daily view</p>
@@ -142,6 +177,6 @@
       </nav>
     </div>
 
-    <script type="module" src="health.js?v=20260808-oura-2"></script>
+    <script type="module" src="health.js?v=20260808-health-3"></script>
   </body>
 </html>

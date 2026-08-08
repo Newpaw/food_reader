@@ -36,7 +36,11 @@ class Settings(BaseSettings):
     WITHINGS_CLIENT_ID: str | None = None
     WITHINGS_CLIENT_SECRET: str | None = None
     WITHINGS_REDIRECT_URI: str | None = None
+    OURA_CLIENT_ID: str | None = None
+    OURA_CLIENT_SECRET: str | None = None
+    OURA_REDIRECT_URI: str | None = None
     APP_FRONTEND_URL: str = "/profile.html"
+    OURA_FRONTEND_URL: str = "/health.html"
 
     LOG_LEVEL: str = "INFO"
     LOG_DIR: str = "backend/logs"

@@ -17,6 +17,15 @@ function copy(cs, en) {
   return isCzech() ? cs : en;
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 function localDateKey(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -48,6 +57,17 @@ function applyStaticCopy() {
   document.getElementById('healthApplyButton').textContent = copy('Přepočítat', 'Refresh');
   document.getElementById('summaryEyebrow').textContent = copy('Signály', 'Signals');
   document.getElementById('summaryHeading').textContent = copy('Souhrn období', 'Period summary');
+  document.getElementById('coachEyebrow').textContent = copy('AI interpretace', 'AI interpretation');
+  document.getElementById('coachHeading').textContent = copy('Health Coach', 'Health Coach');
+  document.getElementById('coachSupport').textContent = copy(
+    'Jedno praktické doporučení opřené o zvolené období a tvoje vlastní data.',
+    'One practical recommendation grounded in the selected period and your own data.',
+  );
+  document.getElementById('generateCoachButton').textContent = copy('Vygenerovat doporučení', 'Generate recommendation');
+  document.getElementById('coachEmpty').textContent = copy(
+    'Po připojení Oury si nech vygenerovat doporučení pro dnešek.',
+    'After connecting Oura, generate a recommendation for today.',
+  );
   document.getElementById('insightsEyebrow').textContent = copy('Osobní vzorce', 'Personal patterns');
   document.getElementById('insightsHeading').textContent = copy('Co říkají tvoje data', 'What your data says');
   document.getElementById('correlationWarning').textContent = copy(
@@ -62,6 +82,7 @@ function renderConnection() {
   const target = document.getElementById('ouraConnectionSummary');
   const syncButton = document.getElementById('syncOuraButton');
   const connectButton = document.getElementById('connectOuraButton');
+  const coachButton = document.getElementById('generateCoachButton');
 
   if (!ouraStatus?.configured) {
     target.innerHTML = `<div class="empty-state compact">${copy(
@@ -70,6 +91,7 @@ function renderConnection() {
     )}</div>`;
     syncButton.hidden = true;
     connectButton.hidden = true;
+    coachButton.disabled = true;
     return;
   }
 
@@ -80,11 +102,13 @@ function renderConnection() {
     )}</div>`;
     syncButton.hidden = true;
     connectButton.hidden = false;
+    coachButton.disabled = true;
     return;
   }
 
   syncButton.hidden = false;
   connectButton.hidden = true;
+  coachButton.disabled = false;
   const lastSync = ouraStatus.last_sync_at ? formatDateTime(ouraStatus.last_sync_at) : '-';
   target.innerHTML = `
     <div><strong>${copy('Stav', 'Status')}</strong><span>${copy('Připojeno', 'Connected')}</span></div>
@@ -131,12 +155,36 @@ function renderInsights() {
     .map(
       (insight) => `
         <article class="subtle-panel">
-          <strong>${insight.title}</strong>
-          <p class="panel-note">${insight.detail}</p>
+          <strong>${escapeHtml(insight.title)}</strong>
+          <p class="panel-note">${escapeHtml(insight.detail)}</p>
         </article>
       `,
     )
     .join('');
+}
+
+function renderCoach(payload) {
+  const target = document.getElementById('healthCoach');
+  const evidence = Array.isArray(payload?.evidence) ? payload.evidence : [];
+  const evidenceHtml = evidence.length
+    ? `<ul>${evidence.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+    : '';
+  target.innerHTML = `
+    <article class="subtle-panel">
+      <p class="eyebrow">${copy('Doporučení pro dnešek', 'Recommendation for today')} · ${copy('jistota', 'confidence')}: ${escapeHtml(payload?.confidence || 'low')}</p>
+      <h3>${escapeHtml(payload?.headline || 'Health Coach')}</h3>
+      <p>${escapeHtml(payload?.recommendation || '')}</p>
+      ${evidenceHtml}
+    </article>
+  `;
+}
+
+function resetCoach() {
+  const target = document.getElementById('healthCoach');
+  target.innerHTML = `<div class="empty-state compact" id="coachEmpty">${copy(
+    'Po připojení Oury si nech vygenerovat doporučení pro dnešek.',
+    'After connecting Oura, generate a recommendation for today.',
+  )}</div>`;
 }
 
 function renderDaily() {
@@ -155,12 +203,12 @@ function renderDaily() {
       return `
         <div class="daily-row">
           <div>
-            <strong>${row.day}</strong>
+            <strong>${escapeHtml(row.day)}</strong>
             <span>${copy('Příjem', 'Intake')} ${nutrition.calories || 0} kcal · ${copy('Výdej', 'Burn')} ${fmt(oura.total_calories, ' kcal')} · ${copy('Bilance', 'Balance')} ${balanceText}</span>
           </div>
           <div>
             <strong>R ${fmt(oura.readiness_score)}</strong>
-            <span>S ${fmt(oura.sleep_score)} · HRV ${fmt(oura.average_hrv_ms, ' ms')} · ${fmt(oura.steps, ' steps')}</span>
+            <span>S ${fmt(oura.sleep_score)} · HRV ${fmt(oura.average_hrv_ms, ' ms')} · ${fmt(oura.steps, copy(' kroků', ' steps'))}</span>
           </div>
         </div>
       `;
@@ -175,6 +223,7 @@ async function loadStatus() {
 }
 
 async function loadHealthSummary() {
+  resetCoach();
   if (!ouraStatus?.connected) {
     healthSummary = null;
     renderSummary();
@@ -193,6 +242,41 @@ async function loadHealthSummary() {
   renderSummary();
   renderInsights();
   renderDaily();
+}
+
+function analysisParams() {
+  const from = document.getElementById('healthFrom').value;
+  const to = document.getElementById('healthTo').value;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Prague';
+  const locale = isCzech() ? 'cs' : 'en';
+  return `start_date=${encodeURIComponent(from)}&end_date=${encodeURIComponent(to)}&timezone=${encodeURIComponent(timezone)}&locale=${locale}`;
+}
+
+async function generateCoach() {
+  const status = document.getElementById('coachStatus');
+  const button = document.getElementById('generateCoachButton');
+  if (!ouraStatus?.connected) {
+    showStatus(status, copy('Nejdřív připoj Ouru.', 'Connect Oura first.'), 'info');
+    return;
+  }
+  button.disabled = true;
+  showStatus(status, copy('Analyzuji tvoje vlastní trendy…', 'Analyzing your personal trends…'), 'info');
+  try {
+    const response = await apiFetch(`/oura/coach?${analysisParams()}`, { method: 'POST' });
+    const payload = await getJsonOrThrow(response, copy('Health Coach selhal', 'Health Coach failed'));
+    renderCoach(payload);
+    showStatus(
+      status,
+      payload.available
+        ? copy('Doporučení vychází z aktuálně zvolených dat.', 'Recommendation is grounded in the selected data.')
+        : payload.recommendation,
+      payload.available ? 'success' : 'info',
+    );
+  } catch (error) {
+    showStatus(status, error.message, 'danger');
+  } finally {
+    button.disabled = !ouraStatus?.connected;
+  }
 }
 
 async function connectOura() {
@@ -225,17 +309,28 @@ async function syncOura() {
 function showCallbackResult() {
   const params = new URLSearchParams(window.location.search);
   const result = params.get('oura');
+  const syncResult = params.get('sync');
   if (!result) {
     return;
   }
   const status = document.getElementById('ouraHealthStatus');
-  if (result === 'connected') {
+  if (result === 'connected' && syncResult === 'warning') {
+    showStatus(
+      status,
+      copy(
+        'Oura je připojená, ale první synchronizace nedoběhla. Použij tlačítko Synchronizovat Ouru.',
+        'Oura is connected, but the initial sync did not complete. Use Sync Oura.',
+      ),
+      'info',
+    );
+  } else if (result === 'connected') {
     showStatus(status, copy('Oura je připojená a první historie byla synchronizovaná.', 'Oura is connected and initial history was synced.'), 'success');
   } else {
     showStatus(status, copy('Připojení Oury se nepodařilo.', 'Oura connection failed.'), 'danger');
   }
   params.delete('oura');
   params.delete('reason');
+  params.delete('sync');
   const search = params.toString();
   window.history.replaceState({}, '', `${window.location.pathname}${search ? `?${search}` : ''}`);
 }
@@ -248,6 +343,7 @@ async function init() {
 
   document.getElementById('connectOuraButton').addEventListener('click', connectOura);
   document.getElementById('syncOuraButton').addEventListener('click', syncOura);
+  document.getElementById('generateCoachButton').addEventListener('click', generateCoach);
   document.getElementById('healthFilters').addEventListener('submit', async (event) => {
     event.preventDefault();
     await loadHealthSummary();

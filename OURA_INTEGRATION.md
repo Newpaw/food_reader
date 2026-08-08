@@ -20,6 +20,7 @@ Food Reader can connect an Oura account through OAuth 2.0, store selected daily 
   - protein vs next-day readiness
   - calorie intake vs next-day readiness
   - late last meal (21:00+) vs next-day sleep score
+- Optional **Health Coach** using the application's existing OpenAI configuration to turn the deterministic metrics into one short recommendation for today
 - Czech and English dashboard copy
 
 The analytics intentionally require a minimum number of observations before calculating correlations. Correlations are displayed as patterns in the user's own data, not as medical conclusions or proof of causality.
@@ -62,12 +63,19 @@ daily workout personal
 | POST | `/oura/sync` | Import/refresh Oura data |
 | GET | `/oura/daily` | Read locally stored daily Oura metrics |
 | GET | `/oura/health-summary` | Combined nutrition/recovery analytics |
+| POST | `/oura/coach` | Generate one data-grounded Health Coach recommendation |
 | DELETE | `/oura/disconnect` | Remove local Oura tokens and imported Oura data |
 
 Example health summary:
 
 ```text
 GET /oura/health-summary?start_date=2026-07-01&end_date=2026-08-01&timezone=Europe/Prague&locale=cs
+```
+
+Example coach request:
+
+```text
+POST /oura/coach?start_date=2026-07-01&end_date=2026-08-01&timezone=Europe/Prague&locale=cs
 ```
 
 ## Data model
@@ -77,6 +85,20 @@ GET /oura/health-summary?start_date=2026-07-01&end_date=2026-08-01&timezone=Euro
 `oura_daily_metrics` stores one normalized row per user and local Oura day. This keeps dashboard requests fast and prevents the frontend from depending directly on Oura availability.
 
 Meals stay in the existing `meals` table. The Health Insights service aggregates meals in the browser's IANA timezone and joins them to Oura's daily metrics by date.
+
+## Health Coach and data sent to OpenAI
+
+The Health Coach is an interpretation layer. It does **not** calculate the source metrics itself: Food Reader first calculates the energy balance, coverage and personal correlations deterministically and only then asks the configured LLM to summarize the most useful action.
+
+When the user explicitly selects **Generate recommendation**, the backend sends a compact aggregated context to the OpenAI API configured through the existing `OPENAI_API_KEY` / `LLM_MODEL` settings. The context contains:
+
+- selected date range and aggregate summary
+- deterministic insight text
+- at most the latest 14 days of numeric signals: calories, protein, last-meal time, energy balance, readiness, sleep score, HRV, steps and workout count
+
+It intentionally does **not** send meal photos, meal descriptions, notes, upload paths, Oura OAuth credentials or raw access/refresh tokens. If no OpenAI API key is configured, Health Coach returns a safe unavailable state and the deterministic dashboard continues to work normally.
+
+The Health Coach prompt explicitly forbids diagnosis, claiming causality, medication/supplement recommendations and extreme restriction. Its output should still be treated as a wellness interpretation of the user's own data, not medical advice.
 
 ## Energy balance caveat
 
@@ -94,7 +116,7 @@ This first integration performs a historical import when OAuth completes and exp
 
 ## Tests
 
-Oura backend coverage is in `tests/backend/test_oura.py` and covers:
+Oura/Health Coach backend coverage is in `tests/backend/test_oura.py` and `tests/backend/test_health_coach.py` and covers:
 
 - missing configuration
 - OAuth callback and initial sync
@@ -102,3 +124,5 @@ Oura backend coverage is in `tests/backend/test_oura.py` and covers:
 - Food Reader + Oura health summary
 - user data isolation
 - disconnect cleanup
+- Health Coach context minimization (raw meal text/photos/paths are not included)
+- Health Coach fallback when OpenAI is unavailable

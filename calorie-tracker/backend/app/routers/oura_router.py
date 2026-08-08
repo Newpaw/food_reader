@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from .. import models
 from ..deps import get_current_user, get_db
+from ..health_coach import generate_health_coach
 from ..health_service import build_health_summary
 from ..oura_models import OuraConnection, OuraDailyMetric
 from ..oura_service import (
@@ -27,6 +28,28 @@ router = APIRouter(prefix="/oura", tags=["oura"])
 def _frontend_redirect(**params: str) -> RedirectResponse:
     separator = "&" if "?" in settings.OURA_FRONTEND_URL else "?"
     return RedirectResponse(f"{settings.OURA_FRONTEND_URL}{separator}{urlencode(params)}")
+
+
+def _build_summary(
+    db: Session,
+    user_id: int,
+    *,
+    start_date: date,
+    end_date: date,
+    timezone_name: str,
+    locale: str,
+):
+    try:
+        return build_health_summary(
+            db,
+            user_id,
+            start_date=start_date,
+            end_date=end_date,
+            timezone_name=timezone_name,
+            locale=locale,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/status")
@@ -155,17 +178,34 @@ def health_summary(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    try:
-        return build_health_summary(
-            db,
-            current_user.id,
-            start_date=start_date,
-            end_date=end_date,
-            timezone_name=timezone_name,
-            locale=locale,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return _build_summary(
+        db,
+        current_user.id,
+        start_date=start_date,
+        end_date=end_date,
+        timezone_name=timezone_name,
+        locale=locale,
+    )
+
+
+@router.post("/coach")
+def health_coach(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    timezone_name: str = Query("Europe/Prague", alias="timezone"),
+    locale: str = Query("cs", pattern="^(cs|en)$"),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    summary = _build_summary(
+        db,
+        current_user.id,
+        start_date=start_date,
+        end_date=end_date,
+        timezone_name=timezone_name,
+        locale=locale,
+    )
+    return generate_health_coach(summary, locale=locale)
 
 
 @router.delete("/disconnect", status_code=status.HTTP_204_NO_CONTENT)

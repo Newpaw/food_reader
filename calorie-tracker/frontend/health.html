@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Reader | Health Insights</title>
+    <meta name="description" content="Combine nutrition, Oura recovery, sleep, activity, workouts, and body weight in one personal health dashboard.">
+    <meta name="theme-color" content="#d96b3b">
+    <link rel="stylesheet" href="styles.css?v=20260808-oura-1">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  </head>
+  <body data-page="health">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="index.html">
+            <span class="brand-mark">FR</span>
+            <span class="brand-copy">
+              <strong data-i18n="brand.name">Food Reader</strong>
+              <small data-i18n="brand.tagline">mobile nutrition log</small>
+            </span>
+          </a>
+          <nav class="desktop-nav" aria-label="Primary">
+            <a href="index.html" data-nav="add" data-i18n="nav.add">Add Meal</a>
+            <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+            <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+            <a href="health.html" aria-current="page">Health</a>
+            <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
+          </nav>
+          <div class="topbar-actions">
+            <label class="language-picker">
+              <span class="sr-only" data-i18n="label.language">Language</span>
+              <select data-language-select aria-label="Language">
+                <option value="en">EN</option>
+                <option value="cs">CZ</option>
+              </select>
+            </label>
+            <span class="user-chip"><span data-user-greeting>You</span></span>
+            <button class="btn btn-ghost btn-small" data-logout data-i18n="button.logout">Log out</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" id="healthEyebrow">Personal health OS</p>
+              <h1 id="healthHeading">Food + Oura + body data</h1>
+              <p class="panel-note" id="healthSupport">Use your own longitudinal data instead of generic nutrition advice.</p>
+            </div>
+            <div class="button-row">
+              <button id="syncOuraButton" type="button" class="btn btn-primary">Sync Oura</button>
+              <button id="connectOuraButton" type="button" class="btn btn-secondary" hidden>Connect Oura</button>
+            </div>
+          </div>
+          <div id="ouraConnectionSummary" class="detail-list"></div>
+          <p id="ouraHealthStatus" class="status" hidden></p>
+        </section>
+
+        <section class="panel filter-panel">
+          <div class="filter-header">
+            <div>
+              <p class="eyebrow" id="rangeEyebrow">Range</p>
+              <h2 id="rangeHeading">Analysis window</h2>
+            </div>
+          </div>
+          <div class="button-row quick-row">
+            <button type="button" class="btn btn-secondary btn-small" data-health-days="13">14 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-health-days="29">30 days</button>
+            <button type="button" class="btn btn-secondary btn-small" data-health-days="89">90 days</button>
+          </div>
+          <form id="healthFilters" class="filter-grid compact-filter-form">
+            <label class="field">
+              <span id="healthFromLabel">From</span>
+              <input id="healthFrom" type="date" required>
+            </label>
+            <label class="field">
+              <span id="healthToLabel">To</span>
+              <input id="healthTo" type="date" required>
+            </label>
+            <button id="healthApplyButton" type="submit" class="btn btn-primary">Refresh</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" id="summaryEyebrow">Signals</p>
+              <h2 id="summaryHeading">Period summary</h2>
+            </div>
+          </div>
+          <div id="healthSummaryCards" class="stat-grid"></div>
+          <p id="healthCoverageNote" class="panel-note"></p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" id="insightsEyebrow">Personal patterns</p>
+              <h2 id="insightsHeading">What your data says</h2>
+            </div>
+          </div>
+          <div id="healthInsights" class="stack"></div>
+          <p class="panel-note" id="correlationWarning">These are correlations in your own data, not medical conclusions or proof of causality.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" id="dailyEyebrow">Daily view</p>
+              <h2 id="dailyHeading">Food vs expenditure and recovery</h2>
+            </div>
+          </div>
+          <div id="healthDailyList" class="stack"></div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Mobile">
+        <a href="index.html" data-nav="add" data-i18n="nav.addShort">Add</a>
+        <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
+        <a href="metrics.html" data-nav="metrics" data-i18n="nav.metrics">Metrics</a>
+        <a href="health.html" aria-current="page">Health</a>
+        <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
+      </nav>
+    </div>
+
+    <script type="module" src="health.js?v=20260808-oura-1"></script>
+  </body>
+</html>

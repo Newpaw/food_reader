@@ -9,6 +9,14 @@ import {
 let ouraStatus = null;
 let healthSummary = null;
 
+const CHART_COLORS = {
+  intake: '#d96b3b',
+  burn: '#5e7a66',
+  readiness: '#2f6f62',
+  sleep: '#7c6aa6',
+  hrv: '#c47b2c',
+};
+
 function isCzech() {
   return (document.documentElement.lang || '').toLowerCase().startsWith('cs');
 }
@@ -57,6 +65,12 @@ function applyStaticCopy() {
   document.getElementById('healthApplyButton').textContent = copy('Přepočítat', 'Refresh');
   document.getElementById('summaryEyebrow').textContent = copy('Signály', 'Signals');
   document.getElementById('summaryHeading').textContent = copy('Souhrn období', 'Period summary');
+  document.getElementById('energyChartEyebrow').textContent = copy('Energie', 'Energy');
+  document.getElementById('energyChartHeading').textContent = copy('Příjem vs. výdej', 'Intake vs expenditure');
+  document.getElementById('recoveryChartEyebrow').textContent = copy('Regenerace', 'Recovery');
+  document.getElementById('recoveryChartHeading').textContent = copy('Readiness & spánek', 'Readiness & sleep');
+  document.getElementById('hrvChartEyebrow').textContent = copy('Hloubka regenerace', 'Recovery depth');
+  document.getElementById('hrvChartHeading').textContent = copy('Trend HRV', 'HRV trend');
   document.getElementById('coachEyebrow').textContent = copy('AI interpretace', 'AI interpretation');
   document.getElementById('coachHeading').textContent = copy('Health Coach', 'Health Coach');
   document.getElementById('coachSupport').textContent = copy(
@@ -64,10 +78,13 @@ function applyStaticCopy() {
     'One practical recommendation grounded in the selected period and your own data.',
   );
   document.getElementById('generateCoachButton').textContent = copy('Vygenerovat doporučení', 'Generate recommendation');
-  document.getElementById('coachEmpty').textContent = copy(
-    'Po připojení Oury si nech vygenerovat doporučení pro dnešek.',
-    'After connecting Oura, generate a recommendation for today.',
-  );
+  const coachEmpty = document.getElementById('coachEmpty');
+  if (coachEmpty) {
+    coachEmpty.textContent = copy(
+      'Po připojení Oury si nech vygenerovat doporučení pro dnešek.',
+      'After connecting Oura, generate a recommendation for today.',
+    );
+  }
   document.getElementById('insightsEyebrow').textContent = copy('Osobní vzorce', 'Personal patterns');
   document.getElementById('insightsHeading').textContent = copy('Co říkají tvoje data', 'What your data says');
   document.getElementById('correlationWarning').textContent = copy(
@@ -85,9 +102,9 @@ function renderConnection() {
   const coachButton = document.getElementById('generateCoachButton');
 
   if (!ouraStatus?.configured) {
-    target.innerHTML = `<div class="empty-state compact">${copy(
-      'Oura není na serveru nakonfigurovaná. Doplň OURA_CLIENT_ID, OURA_CLIENT_SECRET a OURA_REDIRECT_URI.',
-      'Oura is not configured on the server. Set OURA_CLIENT_ID, OURA_CLIENT_SECRET and OURA_REDIRECT_URI.',
+    target.innerHTML = `<div class="health-connection-message">${copy(
+      'Oura není nakonfigurovaná. Doplň serverové OAuth proměnné.',
+      'Oura is not configured. Add the server OAuth variables.',
     )}</div>`;
     syncButton.hidden = true;
     connectButton.hidden = true;
@@ -96,9 +113,9 @@ function renderConnection() {
   }
 
   if (!ouraStatus.connected) {
-    target.innerHTML = `<div class="empty-state compact">${copy(
-      'Oura účet zatím není připojený. OAuth přístup drží tokeny pouze na backendu.',
-      'Oura is not connected yet. OAuth keeps tokens on the backend only.',
+    target.innerHTML = `<div class="health-connection-message">${copy(
+      'Oura účet zatím není připojený.',
+      'Oura account is not connected yet.',
     )}</div>`;
     syncButton.hidden = true;
     connectButton.hidden = false;
@@ -111,10 +128,9 @@ function renderConnection() {
   coachButton.disabled = false;
   const lastSync = ouraStatus.last_sync_at ? formatDateTime(ouraStatus.last_sync_at) : '-';
   target.innerHTML = `
-    <div><strong>${copy('Stav', 'Status')}</strong><span>${copy('Připojeno', 'Connected')}</span></div>
-    <div><strong>${copy('Poslední sync', 'Last sync')}</strong><span>${lastSync}</span></div>
-    <div><strong>${copy('Uložené dny', 'Stored days')}</strong><span>${ouraStatus.synced_days ?? 0}</span></div>
-    <div><strong>${copy('Poslední readiness', 'Latest readiness')}</strong><span>${ouraStatus.latest_readiness ?? '-'}</span></div>
+    <div class="health-connection-item"><span>${copy('Oura', 'Oura')}</span><strong class="health-connected-dot">${copy('Připojeno', 'Connected')}</strong></div>
+    <div class="health-connection-item"><span>${copy('Sync', 'Sync')}</span><strong>${escapeHtml(lastSync)}</strong></div>
+    <div class="health-connection-item"><span>${copy('Historie', 'History')}</span><strong>${ouraStatus.synced_days ?? 0} ${copy('dní', 'days')}</strong></div>
   `;
 }
 
@@ -132,16 +148,158 @@ function renderSummary() {
     return;
   }
   const balance = summary.average_energy_balance_kcal;
+  const balanceClass = balance === null ? '' : balance < 0 ? 'health-stat-negative' : 'health-stat-positive';
   cards.innerHTML = `
-    <article class="stat-card"><span>${copy('Prům. bilance', 'Avg balance')}</span><strong>${balance === null ? '-' : `${balance > 0 ? '+' : ''}${balance} kcal`}</strong></article>
-    <article class="stat-card"><span>${copy('Prům. readiness', 'Avg readiness')}</span><strong>${fmt(summary.average_readiness)}</strong></article>
-    <article class="stat-card"><span>${copy('Prům. sleep score', 'Avg sleep score')}</span><strong>${fmt(summary.average_sleep_score)}</strong></article>
-    <article class="stat-card"><span>${copy('Poslední váha', 'Latest weight')}</span><strong>${fmt(summary.latest_weight_kg, ' kg')}</strong></article>
+    <article class="health-stat-card ${balanceClass}">
+      <span>${copy('Prům. bilance', 'Avg balance')}</span>
+      <strong>${balance === null ? '-' : `${balance > 0 ? '+' : ''}${balance}`}</strong>
+      <small>kcal / ${copy('den', 'day')}</small>
+    </article>
+    <article class="health-stat-card">
+      <span>${copy('Readiness', 'Readiness')}</span>
+      <strong>${fmt(summary.average_readiness)}</strong>
+      <small>${copy('průměr', 'average')}</small>
+    </article>
+    <article class="health-stat-card">
+      <span>${copy('Sleep score', 'Sleep score')}</span>
+      <strong>${fmt(summary.average_sleep_score)}</strong>
+      <small>${copy('průměr', 'average')}</small>
+    </article>
+    <article class="health-stat-card">
+      <span>${copy('Poslední váha', 'Latest weight')}</span>
+      <strong>${fmt(summary.latest_weight_kg)}</strong>
+      <small>kg</small>
+    </article>
   `;
   note.textContent = copy(
-    `Pokrytí: jídlo ${summary.days_with_food} dní, Oura ${summary.days_with_oura} dní. Energetická bilance = zaznamenaný příjem − Oura total calories.`,
-    `Coverage: food ${summary.days_with_food} days, Oura ${summary.days_with_oura} days. Energy balance = logged intake − Oura total calories.`,
+    `Pokrytí dat: jídlo ${summary.days_with_food} dní · Oura ${summary.days_with_oura} dní`,
+    `Data coverage: food ${summary.days_with_food} days · Oura ${summary.days_with_oura} days`,
   );
+}
+
+function chartLegend(targetId, items) {
+  const target = document.getElementById(targetId);
+  target.innerHTML = items
+    .map((item) => `<span><i style="--legend-color:${item.color}"></i>${escapeHtml(item.label)}</span>`)
+    .join('');
+}
+
+function chartEmpty(targetId) {
+  document.getElementById(targetId).innerHTML = `<div class="health-chart-empty">${copy(
+    'Pro tento graf zatím nejsou data.',
+    'No data for this chart yet.',
+  )}</div>`;
+}
+
+function renderLineChart(targetId, rows, series, options = {}) {
+  const target = document.getElementById(targetId);
+  const width = 800;
+  const height = 260;
+  const padding = { top: 18, right: 18, bottom: 38, left: 54 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+
+  const values = [];
+  rows.forEach((row) => {
+    series.forEach((item) => {
+      const value = item.value(row);
+      if (Number.isFinite(value)) values.push(Number(value));
+    });
+  });
+
+  if (!rows.length || !values.length) {
+    chartEmpty(targetId);
+    return;
+  }
+
+  let min = Number.isFinite(options.min) ? options.min : Math.min(...values);
+  let max = Number.isFinite(options.max) ? options.max : Math.max(...values);
+  if (options.includeZero) min = Math.min(0, min);
+  if (min === max) {
+    min -= 1;
+    max += 1;
+  }
+  if (!Number.isFinite(options.min) && !options.includeZero) {
+    const spread = max - min;
+    min = Math.max(0, min - spread * 0.12);
+    max += spread * 0.12;
+  }
+
+  const x = (index) => padding.left + (rows.length === 1 ? plotWidth / 2 : (index / (rows.length - 1)) * plotWidth);
+  const y = (value) => padding.top + ((max - value) / (max - min)) * plotHeight;
+  const gridLines = 4;
+  const grid = [];
+  for (let i = 0; i <= gridLines; i += 1) {
+    const value = max - ((max - min) * i) / gridLines;
+    const yy = padding.top + (plotHeight * i) / gridLines;
+    grid.push(`<line x1="${padding.left}" y1="${yy}" x2="${width - padding.right}" y2="${yy}" class="chart-grid-line" />`);
+    grid.push(`<text x="${padding.left - 10}" y="${yy + 4}" text-anchor="end" class="chart-axis-label">${Math.round(value)}</text>`);
+  }
+
+  const paths = series.map((item) => {
+    const points = rows
+      .map((row, index) => {
+        const value = item.value(row);
+        return Number.isFinite(value) ? `${x(index).toFixed(1)},${y(Number(value)).toFixed(1)}` : null;
+      })
+      .filter(Boolean)
+      .join(' ');
+
+    const dots = rows.length <= 35
+      ? rows.map((row, index) => {
+          const value = item.value(row);
+          if (!Number.isFinite(value)) return '';
+          const day = row.day || '';
+          return `<circle cx="${x(index)}" cy="${y(Number(value))}" r="3.2" fill="${item.color}" class="chart-dot"><title>${escapeHtml(day)} · ${escapeHtml(item.label)}: ${Math.round(Number(value) * 10) / 10}${item.suffix || ''}</title></circle>`;
+        }).join('')
+      : '';
+
+    return `<polyline points="${points}" fill="none" stroke="${item.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="chart-line" />${dots}`;
+  }).join('');
+
+  const labelIndexes = rows.length <= 2 ? rows.map((_, index) => index) : [0, Math.floor((rows.length - 1) / 2), rows.length - 1];
+  const xLabels = [...new Set(labelIndexes)].map((index) => {
+    const day = rows[index]?.day || '';
+    const shortDay = day.length >= 10 ? `${day.slice(8, 10)}.${day.slice(5, 7)}.` : day;
+    return `<text x="${x(index)}" y="${height - 12}" text-anchor="middle" class="chart-axis-label">${escapeHtml(shortDay)}</text>`;
+  }).join('');
+
+  target.innerHTML = `
+    <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" class="health-chart-svg" aria-hidden="true">
+      ${grid.join('')}
+      ${paths}
+      ${xLabels}
+    </svg>
+  `;
+}
+
+function renderCharts() {
+  const rows = healthSummary?.days || [];
+
+  chartLegend('energyChartLegend', [
+    { label: copy('Příjem', 'Intake'), color: CHART_COLORS.intake },
+    { label: copy('Výdej', 'Expenditure'), color: CHART_COLORS.burn },
+  ]);
+  renderLineChart('energyChart', rows, [
+    { label: copy('Příjem', 'Intake'), color: CHART_COLORS.intake, suffix: ' kcal', value: (row) => Number(row.nutrition?.calories) || null },
+    { label: copy('Výdej', 'Expenditure'), color: CHART_COLORS.burn, suffix: ' kcal', value: (row) => Number(row.oura?.total_calories) || null },
+  ], { includeZero: true });
+
+  chartLegend('recoveryChartLegend', [
+    { label: 'Readiness', color: CHART_COLORS.readiness },
+    { label: copy('Spánek', 'Sleep'), color: CHART_COLORS.sleep },
+  ]);
+  renderLineChart('recoveryChart', rows, [
+    { label: 'Readiness', color: CHART_COLORS.readiness, value: (row) => Number(row.oura?.readiness_score) || null },
+    { label: copy('Spánek', 'Sleep'), color: CHART_COLORS.sleep, value: (row) => Number(row.oura?.sleep_score) || null },
+  ], { min: 0, max: 100 });
+
+  chartLegend('hrvChartLegend', [
+    { label: 'HRV', color: CHART_COLORS.hrv },
+  ]);
+  renderLineChart('hrvChart', rows, [
+    { label: 'HRV', color: CHART_COLORS.hrv, suffix: ' ms', value: (row) => Number(row.oura?.average_hrv_ms) || null },
+  ]);
 }
 
 function renderInsights() {
@@ -154,7 +312,7 @@ function renderInsights() {
   target.innerHTML = insights
     .map(
       (insight) => `
-        <article class="subtle-panel">
+        <article class="subtle-panel health-insight-card">
           <strong>${escapeHtml(insight.title)}</strong>
           <p class="panel-note">${escapeHtml(insight.detail)}</p>
         </article>
@@ -167,10 +325,10 @@ function renderCoach(payload) {
   const target = document.getElementById('healthCoach');
   const evidence = Array.isArray(payload?.evidence) ? payload.evidence : [];
   const evidenceHtml = evidence.length
-    ? `<ul>${evidence.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
+    ? `<ul class="health-coach-evidence">${evidence.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
     : '';
   target.innerHTML = `
-    <article class="subtle-panel">
+    <article class="health-coach-card">
       <p class="eyebrow">${copy('Doporučení pro dnešek', 'Recommendation for today')} · ${copy('jistota', 'confidence')}: ${escapeHtml(payload?.confidence || 'low')}</p>
       <h3>${escapeHtml(payload?.headline || 'Health Coach')}</h3>
       <p>${escapeHtml(payload?.recommendation || '')}</p>
@@ -200,15 +358,21 @@ function renderDaily() {
       const oura = row.oura || {};
       const balance = row.energy_balance_kcal;
       const balanceText = balance === null || balance === undefined ? '-' : `${balance > 0 ? '+' : ''}${balance} kcal`;
+      const balanceClass = Number(balance) < 0 ? 'daily-balance-negative' : Number(balance) > 0 ? 'daily-balance-positive' : '';
       return `
-        <div class="daily-row">
-          <div>
+        <div class="daily-row health-daily-row">
+          <div class="health-daily-date">
             <strong>${escapeHtml(row.day)}</strong>
-            <span>${copy('Příjem', 'Intake')} ${nutrition.calories || 0} kcal · ${copy('Výdej', 'Burn')} ${fmt(oura.total_calories, ' kcal')} · ${copy('Bilance', 'Balance')} ${balanceText}</span>
+            <span>${copy('Protein', 'Protein')} ${fmt(nutrition.protein_g, ' g')}</span>
           </div>
-          <div>
-            <strong>R ${fmt(oura.readiness_score)}</strong>
-            <span>S ${fmt(oura.sleep_score)} · HRV ${fmt(oura.average_hrv_ms, ' ms')} · ${fmt(oura.steps, copy(' kroků', ' steps'))}</span>
+          <div class="health-daily-energy">
+            <span>${copy('Příjem', 'Intake')} <strong>${nutrition.calories || 0}</strong></span>
+            <span>${copy('Výdej', 'Burn')} <strong>${fmt(oura.total_calories)}</strong></span>
+            <span class="${balanceClass}">${copy('Bilance', 'Balance')} <strong>${balanceText}</strong></span>
+          </div>
+          <div class="health-daily-recovery">
+            <strong>R ${fmt(oura.readiness_score)} · S ${fmt(oura.sleep_score)}</strong>
+            <span>HRV ${fmt(oura.average_hrv_ms, ' ms')} · ${fmt(oura.steps, copy(' kroků', ' steps'))}</span>
           </div>
         </div>
       `;
@@ -227,6 +391,7 @@ async function loadHealthSummary() {
   if (!ouraStatus?.connected) {
     healthSummary = null;
     renderSummary();
+    renderCharts();
     renderInsights();
     renderDaily();
     return;
@@ -240,6 +405,7 @@ async function loadHealthSummary() {
   );
   healthSummary = await getJsonOrThrow(response, copy('Nepodařilo se načíst health summary', 'Unable to load health summary'));
   renderSummary();
+  renderCharts();
   renderInsights();
   renderDaily();
 }

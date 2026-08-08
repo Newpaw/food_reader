@@ -73,14 +73,20 @@ def oauth_callback(
         return _frontend_redirect(oura="error", reason=error)
     if not code or not state:
         return _frontend_redirect(oura="error", reason="missing_code_or_state")
+
     try:
         user_id = decode_oauth_state(state)
         save_connection_from_code(db, user_id, code)
-        sync_oura_data(db, user_id)
     except OuraConfigError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     except OuraAPIError:
-        return _frontend_redirect(oura="error", reason="authorization_or_sync_failed")
+        return _frontend_redirect(oura="error", reason="authorization_failed")
+
+    try:
+        sync_oura_data(db, user_id)
+    except OuraAPIError:
+        return _frontend_redirect(oura="connected", sync="warning")
+
     return _frontend_redirect(oura="connected")
 
 

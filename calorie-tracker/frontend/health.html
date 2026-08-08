@@ -6,7 +6,7 @@
     <title>Food Reader | Health Insights</title>
     <meta name="description" content="Combine nutrition, Oura recovery, sleep, activity, workouts, and body weight in one personal health dashboard.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260808-oura-1">
+    <link rel="stylesheet" href="styles.css?v=20260808-oura-2">
     <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
@@ -100,6 +100,21 @@
         <section class="panel">
           <div class="panel-heading">
             <div>
+              <p class="eyebrow" id="coachEyebrow">AI interpretation</p>
+              <h2 id="coachHeading">Health Coach</h2>
+              <p class="panel-note" id="coachSupport">One practical recommendation grounded in the selected period.</p>
+            </div>
+            <button id="generateCoachButton" type="button" class="btn btn-primary">Generate recommendation</button>
+          </div>
+          <div id="healthCoach" class="stack">
+            <div class="empty-state compact" id="coachEmpty">Generate a recommendation after Oura data is connected.</div>
+          </div>
+          <p id="coachStatus" class="status" hidden></p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
               <p class="eyebrow" id="insightsEyebrow">Personal patterns</p>
               <h2 id="insightsHeading">What your data says</h2>
             </div>
@@ -127,6 +142,6 @@
       </nav>
     </div>
 
-    <script type="module" src="health.js?v=20260808-oura-1"></script>
+    <script type="module" src="health.js?v=20260808-oura-2"></script>
   </body>
 </html>

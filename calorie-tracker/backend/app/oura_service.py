@@ -290,6 +290,10 @@ def _metric(db: Session, user_id: int, day: str) -> OuraDailyMetric:
     if metric is None:
         metric = OuraDailyMetric(user_id=user_id, day=day)
         db.add(metric)
+        # SessionLocal disables autoflush. Flush here so subsequent Oura
+        # collections for the same day resolve this row instead of creating
+        # another pending row that violates the unique user/day constraint.
+        db.flush()
     metric.updated_at = datetime.now(timezone.utc)
     return metric
 

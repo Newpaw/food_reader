@@ -85,7 +85,7 @@ async function mockApi(page) {
   });
 }
 
-for (const width of [320, 390, 768, 1440]) {
+for (const width of [320, 390, 768, 979, 980, 1440]) {
   test(`adaptive profile and metrics fit at ${width}px`, async ({ page }) => {
     await mockApi(page);
     await page.setViewportSize({ width, height: 900 });
@@ -97,6 +97,24 @@ for (const width of [320, 390, 768, 1440]) {
     expect(toggle.height).toBeGreaterThanOrEqual(44);
     const profileWidth = await page.evaluate(() => Math.max(document.body.scrollWidth, document.documentElement.scrollWidth));
     expect(profileWidth).toBe(width);
+
+    const profilePanels = page.locator('.profile-page-layout > .panel');
+    const inputPanel = await profilePanels.nth(0).boundingBox();
+    const targetPanel = await profilePanels.nth(1).boundingBox();
+    const devicesPanel = await profilePanels.nth(2).boundingBox();
+    expect(inputPanel).not.toBeNull();
+    expect(targetPanel).not.toBeNull();
+    expect(devicesPanel).not.toBeNull();
+
+    if (width < 980) {
+      expect(Math.abs(targetPanel.x - inputPanel.x)).toBeLessThanOrEqual(2);
+      expect(targetPanel.y).toBeGreaterThan(inputPanel.y);
+      expect(Math.abs(devicesPanel.x - inputPanel.x)).toBeLessThanOrEqual(2);
+    } else {
+      expect(targetPanel.x).toBeGreaterThan(inputPanel.x);
+      expect(Math.abs(devicesPanel.x - targetPanel.x)).toBeLessThanOrEqual(2);
+      expect(devicesPanel.y).toBeGreaterThan(targetPanel.y);
+    }
 
     if (width < 980) {
       await expect(page.locator('.bottom-nav')).toBeVisible();

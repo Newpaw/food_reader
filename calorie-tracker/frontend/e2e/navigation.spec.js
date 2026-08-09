@@ -68,6 +68,17 @@ test('mobile navigation stays fixed and visible on every main page', async ({ pa
     expect(layout.right).toBeLessThanOrEqual(layout.viewportWidth);
     expect(layout.bottom).toBeLessThanOrEqual(layout.viewportHeight);
     expect(layout.documentWidth).toBe(layout.viewportWidth);
+
+    const touchTargets = await navigation.locator('a').evaluateAll((links) =>
+      links.map((link) => {
+        const rect = link.getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+      }),
+    );
+    touchTargets.forEach(({ width, height }) => {
+      expect(width).toBeGreaterThanOrEqual(44);
+      expect(height).toBeGreaterThanOrEqual(44);
+    });
   }
 });
 

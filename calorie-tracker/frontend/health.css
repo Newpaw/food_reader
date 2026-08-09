@@ -1,5 +1,5 @@
 body[data-page="health"] {
-  overflow-x: hidden;
+  overflow-x: clip;
   touch-action: pan-y pinch-zoom;
   background:
     radial-gradient(circle at 8% 0%, rgba(217, 107, 59, 0.1), transparent 25%),
@@ -22,7 +22,7 @@ body[data-page="health"] article {
   grid-template-columns: minmax(0, 1fr);
   gap: 0.65rem;
   width: min(760px, calc(100% - 0.75rem));
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .health-copy-en { display: inline; }

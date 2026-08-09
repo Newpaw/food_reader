@@ -7,7 +7,7 @@
   body {
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   body[data-page] .app-shell {
@@ -21,6 +21,7 @@
     width: calc(100% - 0.7rem) !important;
     max-width: calc(100% - 0.7rem) !important;
     min-width: 0;
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
     padding-top: 0.45rem;
     padding-bottom: calc(var(--fr-mobile-nav-height, 4.15rem) + 1.25rem + env(safe-area-inset-bottom, 0px));
   }
@@ -40,13 +41,14 @@
   /* Keep all six destinations visible in one viewport. */
   .bottom-nav {
     position: fixed !important;
-    left: 50% !important;
-    right: auto !important;
+    left: max(0.45rem, env(safe-area-inset-left, 0px)) !important;
+    right: max(0.45rem, env(safe-area-inset-right, 0px)) !important;
     bottom: max(0.45rem, env(safe-area-inset-bottom, 0px)) !important;
-    width: min(46rem, calc(100vw - 0.9rem)) !important;
-    max-width: calc(100vw - 0.9rem) !important;
-    transform: translateX(-50%) !important;
-    z-index: 1000 !important;
+    width: auto !important;
+    max-width: 46rem !important;
+    margin-inline: auto;
+    transform: none !important;
+    z-index: var(--z-navigation) !important;
     display: grid !important;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
     gap: 0.18rem !important;
@@ -628,6 +630,7 @@
 
   .modal-card {
     width: min(42rem, 100%);
+    max-height: calc(100vh - 1.3rem - env(safe-area-inset-bottom, 0px));
     max-height: calc(100dvh - 1.3rem - env(safe-area-inset-bottom, 0px));
     overscroll-behavior: contain;
   }
@@ -649,12 +652,11 @@
     display: none;
   }
 
-  .profile-basics-grid,
-  .profile-lifestyle-grid {
-    grid-template-columns: minmax(0, 1fr);
+  .bottom-nav {
+    left: max(0.2rem, env(safe-area-inset-left, 0px)) !important;
+    right: max(0.2rem, env(safe-area-inset-right, 0px)) !important;
+    gap: 0 !important;
+    padding: 0.18rem !important;
   }
 
-  .field-span-2 {
-    grid-column: auto;
-  }
 }

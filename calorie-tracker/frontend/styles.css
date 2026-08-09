@@ -16,6 +16,13 @@
   --radius-small: 14px;
   --font-body: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-heading: Georgia, "Palatino Linotype", serif;
+  --z-sticky: 40;
+  --z-floating: 60;
+  --z-navigation: 70;
+  --z-install: 75;
+  --z-modal: 80;
+  --z-overlay: 90;
+  --z-toast: 100;
 }
 
 *,
@@ -33,6 +40,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100svh;
   font-family: var(--font-body);
   line-height: 1.45;
   color: var(--ink);
@@ -40,7 +48,6 @@ body {
     radial-gradient(circle at 8% -8%, rgba(223, 107, 56, 0.16), transparent 30rem),
     radial-gradient(circle at 100% 100%, rgba(84, 112, 94, 0.16), transparent 32rem),
     linear-gradient(180deg, #fbf7f1 0%, var(--cream) 100%);
-  background-attachment: fixed;
 }
 
 body.modal-open {
@@ -72,6 +79,10 @@ button {
   border: 0;
 }
 
+:where(a, button, select, summary) {
+  touch-action: manipulation;
+}
+
 :where(a, button, input, select, textarea, summary):focus-visible {
   outline: 3px solid rgba(223, 107, 56, 0.38);
   outline-offset: 3px;
@@ -96,12 +107,14 @@ textarea {
 .app-shell,
 .auth-shell {
   min-height: 100vh;
+  min-height: 100svh;
+  isolation: isolate;
 }
 
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: var(--z-sticky);
   backdrop-filter: blur(20px) saturate(135%);
   -webkit-backdrop-filter: blur(20px) saturate(135%);
   background: rgba(251, 247, 241, 0.86);
@@ -112,7 +125,7 @@ textarea {
   width: min(1120px, calc(100% - 1.25rem));
   margin: 0 auto;
   min-height: 4.5rem;
-  padding: 0.55rem 0;
+  padding: 0.55rem env(safe-area-inset-right, 0px) 0.55rem env(safe-area-inset-left, 0px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -229,7 +242,7 @@ textarea {
 .page-hero h1 {
   margin: 0.35rem 0 0.75rem;
   font-family: var(--font-heading);
-  font-size: clamp(1.9rem, 10vw, 3.8rem);
+  font-size: clamp(1.9rem, 1.1rem + 4vw, 3.8rem);
   line-height: 1.02;
   max-width: 11ch;
 }
@@ -286,11 +299,11 @@ textarea {
 .modal-card h2 {
   margin: 0.25rem 0 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-size: clamp(1.4rem, 1.15rem + 1.25vw, 2rem);
 }
 
 .panel h1 {
-  font-size: clamp(1.8rem, 7vw, 2.55rem);
+  font-size: clamp(1.8rem, 1.45rem + 1.75vw, 2.55rem);
   line-height: 1.02;
 }
 
@@ -344,7 +357,7 @@ body.capture-photo-ready .page {
 .analysis-loading-overlay {
   position: fixed;
   inset: 0;
-  z-index: 95;
+  z-index: var(--z-overlay);
   display: grid;
   place-items: center;
   padding: 1.1rem;
@@ -426,7 +439,7 @@ body.capture-photo-ready .page {
 }
 
 .analysis-loading-copy strong {
-  font-size: clamp(1.35rem, 5vw, 1.8rem);
+  font-size: clamp(1.35rem, 1.15rem + 1vw, 1.8rem);
   line-height: 1.04;
   font-family: var(--font-heading);
 }
@@ -485,7 +498,7 @@ body.capture-photo-ready .page {
 .metrics-today-title {
   margin: 0.2rem 0 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-size: clamp(1.8rem, 1.35rem + 2.25vw, 2.8rem);
   line-height: 1.02;
 }
 
@@ -520,7 +533,7 @@ body.capture-photo-ready .page {
 }
 
 .goal-kcal-block strong {
-  font-size: clamp(2.6rem, 10vw, 4rem);
+  font-size: clamp(2.6rem, 2rem + 3vw, 4rem);
   line-height: 0.95;
   font-family: var(--font-heading);
 }
@@ -754,12 +767,14 @@ body.capture-photo-ready .page {
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
-.btn:hover {
-  transform: translateY(-1px);
-}
-
 .btn:active {
   transform: translateY(0) scale(0.985);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    transform: translateY(-1px);
+  }
 }
 
 .btn:disabled {
@@ -986,7 +1001,7 @@ body.capture-photo-ready .page {
   left: 0.7rem;
   right: 0.7rem;
   bottom: calc(4.95rem + env(safe-area-inset-bottom, 0px));
-  z-index: 39;
+  z-index: var(--z-floating);
   padding: 0.7rem 0.75rem 0;
   pointer-events: none;
 }
@@ -1022,7 +1037,7 @@ body.capture-photo-ready .page {
 
 .analysis-preview-copy h2 {
   margin: 0;
-  font-size: clamp(2rem, 9vw, 3.2rem);
+  font-size: clamp(2rem, 1.5rem + 2.5vw, 3.2rem);
   line-height: 0.95;
   max-width: 12ch;
 }
@@ -1068,7 +1083,7 @@ body.capture-photo-ready .page {
 }
 
 .analysis-metric-card strong {
-  font-size: clamp(1.7rem, 7vw, 2.6rem);
+  font-size: clamp(1.7rem, 1.3rem + 2vw, 2.6rem);
   line-height: 1;
 }
 
@@ -1244,6 +1259,7 @@ body.capture-photo-ready .page {
 
 .stat-card {
   display: grid;
+  min-width: 0;
   gap: 0.35rem;
   padding: 1rem;
   border-radius: var(--radius-small);
@@ -1257,7 +1273,8 @@ body.capture-photo-ready .page {
 }
 
 .stat-card strong {
-  font-size: clamp(1.5rem, 4vw, 2.15rem);
+  font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2.15rem);
+  overflow-wrap: anywhere;
 }
 
 .status {
@@ -1466,7 +1483,7 @@ body.capture-photo-ready .page {
   left: 0.55rem;
   right: 0.55rem;
   bottom: max(0.55rem, env(safe-area-inset-bottom, 0px));
-  z-index: 1000;
+  z-index: var(--z-navigation);
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.2rem;
@@ -1517,7 +1534,7 @@ body.capture-photo-ready .page {
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: var(--z-modal);
   display: grid;
   place-items: end center;
   padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
@@ -1528,6 +1545,7 @@ body.capture-photo-ready .page {
   position: relative;
   width: min(42rem, 100%);
   max-height: min(90vh, 52rem);
+  max-height: min(90svh, 52rem);
   overflow: auto;
   padding: 1rem;
   border-radius: var(--radius);
@@ -1558,7 +1576,7 @@ body.capture-photo-ready .page {
   left: 0;
   right: 0;
   bottom: calc(5.9rem + env(safe-area-inset-bottom, 0px));
-  z-index: 90;
+  z-index: var(--z-install);
   padding: 0 0.75rem;
   pointer-events: none;
 }
@@ -1622,7 +1640,7 @@ body.capture-photo-ready .page {
 .install-prompt-copy h2 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.5rem, 6vw, 2.2rem);
+  font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.2rem);
   line-height: 0.98;
   max-width: 12ch;
 }
@@ -1709,7 +1727,7 @@ body.capture-photo-ready .page {
 .auth-intro h1 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 10vw, 3rem);
+  font-size: clamp(2rem, 1.55rem + 2.25vw, 3rem);
   line-height: 0.96;
 }
 
@@ -1768,6 +1786,10 @@ body.capture-photo-ready .page {
 
 .profile-page-layout {
   gap: 0.85rem;
+}
+
+.profile-page-layout > * {
+  min-width: 0;
 }
 
 .profile-form {
@@ -1947,7 +1969,8 @@ body.capture-photo-ready .page {
 
 .profile-basics-grid,
 .profile-lifestyle-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Component behavior: pair fields when each can keep a useful measure, otherwise stack. */
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr));
 }
 
 .profile-form .field {
@@ -2004,10 +2027,19 @@ body.capture-photo-ready .page {
   .topbar-inner {
     width: min(1120px, calc(100% - 1rem));
     min-height: 3.8rem;
+    padding-top: max(0.45rem, env(safe-area-inset-top, 0px));
+    padding-bottom: 0.45rem;
+  }
+
+  .page,
+  .auth-page {
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
   }
 
   .brand {
     gap: 0.6rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
   }
 
   .brand-mark {
@@ -2030,7 +2062,12 @@ body.capture-photo-ready .page {
 
   .topbar-actions [data-logout] {
     padding-inline: 0.25rem;
-    min-height: 2.15rem;
+    min-height: 2.75rem;
+  }
+
+  .language-picker select,
+  .upload-actions .upload-link-button {
+    min-height: 2.75rem;
   }
 }
 
@@ -2060,7 +2097,7 @@ body.capture-photo-ready .page {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
-  z-index: 100;
+  z-index: var(--z-toast);
 }
 
 .app-toast.visible {
@@ -2121,6 +2158,11 @@ body.capture-photo-ready .page {
   .dashboard-grid,
   .auth-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Profile remains a comfortable editing flow through tablet widths. */
+  .profile-page-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .primary-capture-panel .upload-preview {
@@ -2253,10 +2295,32 @@ body.capture-photo-ready .page {
 
   .profile-page-layout {
     grid-template-columns: 1.1fr 0.9fr;
+    grid-template-areas:
+      "inputs targets"
+      "inputs devices";
+    align-items: start;
+  }
+
+  .profile-page-layout > :nth-child(1) {
+    grid-area: inputs;
+  }
+
+  .profile-page-layout > :nth-child(2) {
+    grid-area: targets;
+  }
+
+  .profile-page-layout > :nth-child(3) {
+    grid-area: devices;
   }
 
   .profile-overrides-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 980px) and (hover: hover) and (pointer: fine) {
+  body {
+    background-attachment: fixed;
   }
 }
 
@@ -2282,6 +2346,15 @@ body.capture-photo-ready .page {
 
   .brand-copy {
     display: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .bottom-nav {
+    left: max(0.2rem, env(safe-area-inset-left, 0px));
+    right: max(0.2rem, env(safe-area-inset-right, 0px));
+    gap: 0;
+    padding: 0.18rem;
   }
 }
 

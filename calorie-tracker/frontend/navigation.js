@@ -1,7 +1,7 @@
 import './mobile-ux.js?v=20260809-4';
 
-const MOBILE_POLISH_VERSION = '20260809-2';
-const RESPONSIVE_FIX_VERSION = '20260809-4';
+const MOBILE_POLISH_VERSION = '20260809-3';
+const RESPONSIVE_FIX_VERSION = '20260809-5';
 
 function ensureSharedStylesheets() {
   // Health owns its responsive layout in health.css. Do not stack the older

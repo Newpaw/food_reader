@@ -280,7 +280,7 @@
   }
 
   .assistant-chat-toolbar .btn {
-    min-height: 2.25rem;
+    min-height: 2.75rem;
     padding: 0.4rem 0.58rem;
     flex: 0 0 auto;
     font-size: 0.75rem;
@@ -293,6 +293,7 @@
   }
 
   .assistant-suggestions button {
+    min-height: 2.75rem;
     padding: 0.46rem 0.62rem;
     font-size: 0.73rem;
   }
@@ -338,7 +339,7 @@
     resize: none;
     border-radius: 0.9rem;
     padding: 0.68rem 0.72rem;
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
 
   .assistant-composer .btn {

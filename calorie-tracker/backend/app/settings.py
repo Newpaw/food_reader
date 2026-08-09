@@ -32,7 +32,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 7 * 24 * 60
     UPLOAD_DIR: str = "backend/uploads"
     OPENAI_API_KEY: str | None = None
-    LLM_MODEL: str = "gpt-4o-mini"
+
+    # Model routing. LLM_MODEL is the backwards-compatible fallback for every AI workload.
+    # Individual workloads can be overridden independently from .env without code changes.
+    LLM_MODEL: str = "gpt-5.6-terra"
+    MEAL_ANALYSIS_MODEL: str | None = None
+    HEALTH_COACH_MODEL: str | None = None
+    ASSISTANT_MODEL: str | None = None
+
     WITHINGS_CLIENT_ID: str | None = None
     WITHINGS_CLIENT_SECRET: str | None = None
     WITHINGS_REDIRECT_URI: str | None = None
@@ -47,6 +54,18 @@ class Settings(BaseSettings):
     LOG_FILE_MAX_SIZE: int = 10 * 1024 * 1024
     LOG_FILE_BACKUP_COUNT: int = 5
     LOG_ACCESS_TO_CONSOLE: bool = False
+
+    @property
+    def meal_analysis_model(self) -> str:
+        return self.MEAL_ANALYSIS_MODEL or self.LLM_MODEL
+
+    @property
+    def health_coach_model(self) -> str:
+        return self.HEALTH_COACH_MODEL or self.LLM_MODEL
+
+    @property
+    def assistant_model(self) -> str:
+        return self.ASSISTANT_MODEL or self.LLM_MODEL
 
     @property
     def upload_dir_path(self) -> Path:

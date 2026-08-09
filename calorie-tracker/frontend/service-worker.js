@@ -1,5 +1,5 @@
-const CACHE_NAME = 'food-reader-v18';
-const ASSET_VERSION = '20260809-3';
+const CACHE_NAME = 'food-reader-v19';
+const ASSET_VERSION = '20260809-4';
 const withVersion = (path) => `${path}?v=${ASSET_VERSION}`;
 const APP_SHELL = [
   '/',
@@ -14,7 +14,6 @@ const APP_SHELL = [
   withVersion('/styles.css'),
   withVersion('/assistant.css'),
   withVersion('/health.css'),
-  withVersion('/health-action.css'),
   withVersion('/mobile-polish.css'),
   withVersion('/responsive-fix.css'),
   withVersion('/common.js'),

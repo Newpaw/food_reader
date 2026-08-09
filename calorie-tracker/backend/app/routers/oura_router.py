@@ -1,5 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 from urllib.parse import urlencode
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
@@ -50,6 +51,13 @@ def _build_summary(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+def _now_for_timezone(timezone_name: str) -> str:
+    try:
+        return datetime.now(ZoneInfo(timezone_name)).isoformat(timespec="minutes")
+    except (ZoneInfoNotFoundError, ValueError):
+        return datetime.now().astimezone().isoformat(timespec="minutes")
 
 
 @router.get("/status")
@@ -205,6 +213,7 @@ def health_coach(
         timezone_name=timezone_name,
         locale=locale,
     )
+    summary["now_local"] = _now_for_timezone(timezone_name)
     return generate_health_coach(summary, locale=locale)
 
 

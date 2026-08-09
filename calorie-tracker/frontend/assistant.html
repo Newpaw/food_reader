@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Reader | AI Assistant</title>
+    <meta name="description" content="Chat with a private AI assistant that can read your Food Reader, Oura, and Withings data.">
+    <meta name="theme-color" content="#d96b3b">
+    <link rel="stylesheet" href="styles.css?v=20260403-11">
+    <link rel="stylesheet" href="assistant.css?v=20260809-1">
+    <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+  </head>
+  <body data-page="assistant">
+    <div class="app-shell assistant-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="index.html">
+            <span class="brand-mark">FR</span>
+            <span class="brand-copy">
+              <strong>Food Reader</strong>
+              <small>personal health data</small>
+            </span>
+          </a>
+          <nav class="desktop-nav" aria-label="Primary">
+            <a href="index.html">Add Meal</a>
+            <a href="history.html">History</a>
+            <a href="metrics.html">Metrics</a>
+            <a href="health.html">Health</a>
+            <a href="assistant.html" class="active" aria-current="page">AI Assistant</a>
+            <a href="profile.html">Profile</a>
+          </nav>
+          <div class="topbar-actions">
+            <label class="language-picker">
+              <span class="sr-only">Language</span>
+              <select data-language-select aria-label="Language">
+                <option value="en">EN</option>
+                <option value="cs">CZ</option>
+              </select>
+            </label>
+            <span class="user-chip"><span data-user-greeting>You</span></span>
+            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="page assistant-page">
+        <section class="assistant-hero">
+          <div>
+            <p class="eyebrow" id="assistantEyebrow">Your private data copilot</p>
+            <h1 id="assistantHeading">Ask Food Reader anything about your data.</h1>
+            <p id="assistantSupport">The assistant can query your meals, targets, Oura recovery and sleep, Withings measurements, and combined health trends.</p>
+          </div>
+          <div class="assistant-data-badges" aria-label="Available data sources">
+            <span>Meals</span>
+            <span>Profile</span>
+            <span>Oura</span>
+            <span>Withings</span>
+          </div>
+        </section>
+
+        <section class="assistant-chat-card">
+          <div class="assistant-chat-toolbar">
+            <div>
+              <strong id="assistantName">Food Reader AI</strong>
+              <span id="assistantPrivacy">Read-only · scoped to your account</span>
+            </div>
+            <button id="clearAssistantButton" class="btn btn-ghost btn-small" type="button">Clear chat</button>
+          </div>
+
+          <div id="assistantSuggestions" class="assistant-suggestions">
+            <button type="button" data-prompt-cs="Jak jsem jedl posledních 7 dní a co bych měl změnit?" data-prompt-en="How did I eat over the last 7 days and what should I change?">7-day review</button>
+            <button type="button" data-prompt-cs="Najdi vztah mezi mým jídlem, spánkem a readiness za posledních 30 dní." data-prompt-en="Find patterns between my food, sleep and readiness over the last 30 days.">Food × recovery</button>
+            <button type="button" data-prompt-cs="Jak se vyvíjí moje váha a tělesné složení?" data-prompt-en="How are my weight and body composition trending?">Weight trend</button>
+            <button type="button" data-prompt-cs="Co o mně aktuálně víš z dat ve Food Readeru?" data-prompt-en="What do you currently know about me from Food Reader data?">Data overview</button>
+          </div>
+
+          <div id="assistantMessages" class="assistant-messages" aria-live="polite"></div>
+
+          <form id="assistantForm" class="assistant-composer">
+            <label class="sr-only" for="assistantInput">Message</label>
+            <textarea id="assistantInput" rows="2" maxlength="4000" placeholder="Ask about your meals, weight, sleep, recovery, trends…" required></textarea>
+            <button id="assistantSendButton" class="btn btn-primary" type="submit">Send</button>
+          </form>
+          <p id="assistantStatus" class="status" hidden></p>
+          <p class="assistant-disclaimer" id="assistantDisclaimer">Health insights are informational. Wearable and calorie estimates are not exact measurements or medical diagnoses.</p>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Mobile">
+        <a href="index.html">Add</a>
+        <a href="history.html">History</a>
+        <a href="health.html">Health</a>
+        <a href="profile.html">Profile</a>
+      </nav>
+    </div>
+
+    <script type="module" src="assistant.js?v=20260809-1"></script>
+  </body>
+</html>

@@ -40,8 +40,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Check health dashboard JavaScript
-        run: node --check calorie-tracker/frontend/health.js
+      - name: Check frontend JavaScript
+        run: |
+          node --check calorie-tracker/frontend/health.js
+          node --check calorie-tracker/frontend/assistant.js
+          node --check calorie-tracker/frontend/service-worker.js
 
   docker:
     name: Docker build

@@ -57,6 +57,10 @@ def _day_range(start_date: date, end_date: date) -> list[date]:
     return days
 
 
+def _effective_target(custom_value, calculated_value):
+    return custom_value if custom_value is not None else calculated_value
+
+
 def _aggregate_meals(
     db: Session,
     user_id: int,
@@ -268,10 +272,24 @@ def build_health_summary(
         .first()
     )
 
+    profile = db.query(models.UserProfile).filter(models.UserProfile.user_id == user_id).first()
+    targets = None
+    if profile is not None:
+        targets = {
+            "calories": _effective_target(profile.custom_calories, profile.target_calories),
+            "protein_g": _effective_target(profile.custom_protein_g, profile.target_protein_g),
+            "carbs_g": _effective_target(profile.custom_carbs_g, profile.target_carbs_g),
+            "fat_g": _effective_target(profile.custom_fats_g, profile.target_fats_g),
+            "fiber_g": _effective_target(profile.custom_fiber_g, profile.target_fiber_g),
+            "goal": profile.goal,
+            "dietary_preference": profile.dietary_preference,
+        }
+
     return {
         "from": start_date.isoformat(),
         "to": end_date.isoformat(),
         "timezone": timezone_name,
+        "targets": targets,
         "days": rows,
         "summary": {
             "days_with_food": sum(1 for row in rows if row["nutrition"]["meal_count"] > 0),

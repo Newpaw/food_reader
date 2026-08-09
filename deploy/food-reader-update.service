@@ -1,0 +1,10 @@
+[Unit]
+Description=Update Food Reader container from GHCR
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/food-reader
+ExecStart=/opt/food-reader/update-food-reader.sh

@@ -7,13 +7,13 @@
     <meta name="description" content="Chat with a private AI assistant that can read your Food Reader, Oura, and Withings data.">
     <meta name="theme-color" content="#d96b3b">
     <link rel="stylesheet" href="styles.css?v=20260403-11">
-    <link rel="stylesheet" href="assistant.css?v=20260809-mobile-1">
+    <link rel="stylesheet" href="assistant.css?v=20260809-mobile-2">
     <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
   </head>
-  <body>
+  <body data-page="assistant">
     <div class="app-shell assistant-shell">
       <header class="topbar">
         <div class="topbar-inner">
@@ -71,10 +71,10 @@
           </div>
 
           <div id="assistantSuggestions" class="assistant-suggestions">
-            <button type="button" data-prompt-cs="Jak jsem jedl posledních 7 dní a co bych měl změnit?" data-prompt-en="How did I eat over the last 7 days and what should I change?">7-day review</button>
-            <button type="button" data-prompt-cs="Najdi vztah mezi mým jídlem, spánkem a readiness za posledních 30 dní." data-prompt-en="Find patterns between my food, sleep and readiness over the last 30 days.">Food × recovery</button>
-            <button type="button" data-prompt-cs="Jak se vyvíjí moje váha a tělesné složení?" data-prompt-en="How are my weight and body composition trending?">Weight trend</button>
-            <button type="button" data-prompt-cs="Co o mně aktuálně víš z dat ve Food Readeru?" data-prompt-en="What do you currently know about me from Food Reader data?">Data overview</button>
+            <button type="button" data-prompt-cs="Podívej se na moje dnešní jídlo, cíle a Oura data. Řekni mi jen jednu konkrétní věc, kterou mám udělat teď." data-prompt-en="Look at today's food, targets and Oura data. Tell me only the single most useful thing I should do right now.">Co teď?</button>
+            <button type="button" data-prompt-cs="Kolik mi dnes ještě chybí kalorií a bílkovin a co konkrétně si mám dát? Odpověz maximálně dvěma větami." data-prompt-en="How many calories and grams of protein do I still need today, and what exactly should I eat? Maximum two sentences.">Co ještě sníst?</button>
+            <button type="button" data-prompt-cs="Podle dnešní readiness, spánku a aktivity řekni, jestli mám dnes ještě cvičit. Pokud ano, napiš přesně co a jak dlouho. Maximálně dvě věty." data-prompt-en="Based on today's readiness, sleep and activity, tell me whether I should still exercise today. If yes, say exactly what and for how long. Maximum two sentences.">Mám cvičit?</button>
+            <button type="button" data-prompt-cs="Z dnešních dat vyber jednu věc, která nejvíc pomůže zítřku. Jen konkrétní doporučení a jeden důvod." data-prompt-en="From today's data choose the one thing most likely to help tomorrow. Give only the concrete action and one reason.">Pro lepší zítřek</button>
           </div>
 
           <div id="assistantMessages" class="assistant-messages" aria-live="polite"></div>

@@ -1,19 +1,27 @@
-import './mobile-ux.js?v=20260809-2';
+import './mobile-ux.js?v=20260809-3';
 
 const MOBILE_POLISH_VERSION = '20260809-2';
+const RESPONSIVE_FIX_VERSION = '20260809-3';
 
-function ensureMobilePolishStylesheet() {
-  if (document.getElementById('food-reader-mobile-polish')) {
-    return;
+function ensureSharedStylesheets() {
+  if (!document.getElementById('food-reader-mobile-polish')) {
+    const polish = document.createElement('link');
+    polish.id = 'food-reader-mobile-polish';
+    polish.rel = 'stylesheet';
+    polish.href = `mobile-polish.css?v=${MOBILE_POLISH_VERSION}`;
+    document.head.appendChild(polish);
   }
-  const link = document.createElement('link');
-  link.id = 'food-reader-mobile-polish';
-  link.rel = 'stylesheet';
-  link.href = `mobile-polish.css?v=${MOBILE_POLISH_VERSION}`;
-  document.head.appendChild(link);
+
+  if (!document.getElementById('food-reader-responsive-fix')) {
+    const responsiveFix = document.createElement('link');
+    responsiveFix.id = 'food-reader-responsive-fix';
+    responsiveFix.rel = 'stylesheet';
+    responsiveFix.href = `responsive-fix.css?v=${RESPONSIVE_FIX_VERSION}`;
+    document.head.appendChild(responsiveFix);
+  }
 }
 
-ensureMobilePolishStylesheet();
+ensureSharedStylesheets();
 
 const NAV_ITEMS = [
   {
@@ -138,6 +146,12 @@ function renderNavigation() {
   document.querySelectorAll('.bottom-nav').forEach((nav) => {
     nav.setAttribute('aria-label', locale === 'cs' ? 'Mobilní navigace' : 'Mobile navigation');
     nav.innerHTML = renderLinks('mobile', locale, currentPage);
+
+    // Keep fixed navigation outside any page container that might establish a
+    // containing block or horizontal overflow. This makes it truly viewport-fixed.
+    if (nav.parentElement !== document.body) {
+      document.body.appendChild(nav);
+    }
   });
 
   ensureMobileNavigationStyle();

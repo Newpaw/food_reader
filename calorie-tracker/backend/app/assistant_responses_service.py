@@ -38,6 +38,13 @@ Meal logging exception to the base read-only rule:
 """.strip()
 
 ALL_TOOLS = [*TOOLS, *MEAL_MUTATION_TOOLS]
+ACTIVE_SYSTEM_PROMPT = SYSTEM_PROMPT.replace(
+    "private read-only assistant",
+    "private nutrition and health assistant",
+).replace(
+    "- The assistant is read-only. Do not claim to edit, delete, sync, or create Food Reader records.",
+    "- Meal records may be created, updated, or deleted only through the dedicated meal mutation tools. Other Food Reader data remains read-only.",
+)
 
 
 def _response_tools() -> list[dict[str, Any]]:
@@ -91,7 +98,7 @@ def _runtime_instructions(user: models.User, *, timezone_name: str, locale: str,
         f"Browser timezone: {timezone_name}. Locale: {locale}. "
         f"Available data inventory: {json.dumps(inventory, ensure_ascii=False, default=str)}"
     )
-    return f"{SYSTEM_PROMPT}\n\n{MEAL_WRITE_RULES}\n\n{ACTION_FIRST_GUARD}\n\nRuntime context:\n{runtime}"
+    return f"{ACTIVE_SYSTEM_PROMPT}\n\n{MEAL_WRITE_RULES}\n\n{ACTION_FIRST_GUARD}\n\nRuntime context:\n{runtime}"
 
 
 def _conversation_input(history: list[dict[str, str]], message: str) -> list[dict[str, str]]:

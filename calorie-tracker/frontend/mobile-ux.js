@@ -1,4 +1,4 @@
-const MOBILE_QUERY = '(max-width: 759px)';
+const MOBILE_QUERY = '(max-width: 979px)';
 const mobileMedia = window.matchMedia(MOBILE_QUERY);
 let copyApplyScheduled = false;
 

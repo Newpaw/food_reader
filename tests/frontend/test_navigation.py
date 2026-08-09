@@ -9,7 +9,7 @@ PAGES = {
     "history.html": "history",
     "metrics.html": "metrics",
     "health.html": "health",
-    "assistant.html": "assistant",
+    "assistant.html": None,
     "profile.html": "profile",
 }
 
@@ -30,6 +30,8 @@ def main() -> None:
         assert f"id: '{nav_id}'" in navigation_source, f"missing nav id: {nav_id}"
         assert f"href: '{href}'" in navigation_source, f"missing nav href: {href}"
 
+    assert "window.localStorage.getItem('food-reader:locale')" in navigation_source
+    assert "window.navigator?.language" in navigation_source
     assert "cs: 'Zdraví'" in navigation_source
     assert "cs: 'AI asistent'" in navigation_source
     assert "repeat(6, minmax(0, 1fr))" in navigation_source
@@ -39,9 +41,14 @@ def main() -> None:
     for filename, page_id in PAGES.items():
         source = (FRONTEND / filename).read_text(encoding="utf-8")
         assert source.count(script_tag) == 1, f"{filename} must load shared navigation exactly once"
-        assert f'data-page="{page_id}"' in source, f"{filename} has wrong or missing data-page"
+        if page_id is not None:
+            assert f'data-page="{page_id}"' in source, f"{filename} has wrong or missing data-page"
         assert 'class="desktop-nav"' in source, f"{filename} is missing desktop navigation"
         assert 'class="bottom-nav"' in source, f"{filename} is missing mobile navigation"
+
+    assistant_source = (FRONTEND / "assistant.html").read_text(encoding="utf-8")
+    assert '<title>Food Reader | AI Assistant</title>' in assistant_source
+    assert '<body data-page="assistant">' not in assistant_source
 
     print("navigation regression tests: OK")
 

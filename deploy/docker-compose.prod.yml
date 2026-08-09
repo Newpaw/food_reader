@@ -17,7 +17,9 @@ services:
       - "${BACKEND_PORT:-18000}:8000"
       - "${FRONTEND_PORT:-18080}:8080"
     networks:
-      - cloudflare
+      cloudflare:
+        aliases:
+          - calorie-tracker
     healthcheck:
       test:
         - CMD

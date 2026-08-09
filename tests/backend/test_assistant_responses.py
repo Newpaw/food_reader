@@ -70,7 +70,8 @@ def test_assistant_uses_responses_api_and_round_trips_tool_output(
 
     assert len(calls) == 2
     assert calls[0]["model"] == "gpt-5.6-terra"
-    assert calls[0]["reasoning"] == {"effort": "low"}
+    assert calls[0]["reasoning"] == {"effort": "low", "context": "current_turn"}
+    assert calls[0]["text"] == {"verbosity": "low"}
     assert calls[0]["store"] is False
     assert calls[0]["tools"][0]["type"] == "function"
     assert "function" not in calls[0]["tools"][0]

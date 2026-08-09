@@ -1,5 +1,6 @@
 const MOBILE_QUERY = '(max-width: 759px)';
 const mobileMedia = window.matchMedia(MOBILE_QUERY);
+let copyApplyScheduled = false;
 
 function isCzech() {
   return (document.documentElement.lang || '').toLowerCase().startsWith('cs');
@@ -7,8 +8,8 @@ function isCzech() {
 
 function setButtonText(button, text, ariaLabel = text) {
   if (!button) return;
-  button.textContent = text;
-  button.setAttribute('aria-label', ariaLabel);
+  if (button.textContent !== text) button.textContent = text;
+  if (button.getAttribute('aria-label') !== ariaLabel) button.setAttribute('aria-label', ariaLabel);
 }
 
 function applyCompactRangeCopy() {
@@ -16,6 +17,9 @@ function applyCompactRangeCopy() {
   const cs = isCzech();
 
   document.querySelectorAll('[data-days]').forEach((button) => {
+    // Shared mobile copy owns these labels so common.js cannot expand them again
+    // after setupPage() applies the generic desktop translations.
+    button.removeAttribute('data-i18n');
     const days = button.dataset.days;
     const shortLabels = cs
       ? { '0': 'Dnes', '6': '7 dní', '29': '30 dní', '89': '90 dní' }
@@ -29,6 +33,9 @@ function applyCompactRangeCopy() {
 
   const historyCustom = document.getElementById('historyToggleCustomRange');
   const metricsCustom = document.getElementById('metricsToggleCustomRange');
+  historyCustom?.removeAttribute('data-i18n');
+  metricsCustom?.removeAttribute('data-i18n');
+
   if (mobile) {
     setButtonText(historyCustom, cs ? 'Vlastní' : 'Custom', cs ? 'Vlastní datumy' : 'Custom dates');
     setButtonText(metricsCustom, cs ? 'Vlastní' : 'Custom', cs ? 'Vlastní datumy' : 'Custom dates');
@@ -45,9 +52,10 @@ function applyHealthMobileCopy() {
   const refreshButton = document.getElementById('generateCoachButton');
 
   if (coachHeading) {
-    coachHeading.textContent = mobile
+    const label = mobile
       ? (cs ? 'Co teď?' : 'What now?')
       : (cs ? 'Co mám udělat teď?' : 'What should I do now?');
+    if (coachHeading.textContent !== label) coachHeading.textContent = label;
   }
 
   if (refreshButton) {
@@ -66,6 +74,21 @@ function applyHealthMobileCopy() {
 function applyResponsiveCopy() {
   applyCompactRangeCopy();
   applyHealthMobileCopy();
+}
+
+function scheduleResponsiveCopy() {
+  if (copyApplyScheduled) return;
+  copyApplyScheduled = true;
+  requestAnimationFrame(() => {
+    copyApplyScheduled = false;
+    applyResponsiveCopy();
+  });
+}
+
+function setupCopyGuard() {
+  if (!document.body || !['history', 'metrics', 'health'].includes(document.body.dataset.page)) return;
+  const observer = new MutationObserver(scheduleResponsiveCopy);
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
 function syncAssistantViewport() {
@@ -104,7 +127,11 @@ function setupAssistantViewport() {
 
 function init() {
   applyResponsiveCopy();
+  setupCopyGuard();
   setupAssistantViewport();
+  // Page modules call setupPage() asynchronously and may localize after DOMContentLoaded.
+  // Re-apply once the initial render settles; the observer handles later dynamic updates.
+  requestAnimationFrame(() => requestAnimationFrame(applyResponsiveCopy));
 }
 
 if (document.readyState === 'loading') {
@@ -113,9 +140,7 @@ if (document.readyState === 'loading') {
   init();
 }
 
-window.addEventListener('food-reader:localechange', () => {
-  requestAnimationFrame(applyResponsiveCopy);
-});
+window.addEventListener('food-reader:localechange', scheduleResponsiveCopy);
 
 mobileMedia.addEventListener?.('change', () => {
   applyResponsiveCopy();

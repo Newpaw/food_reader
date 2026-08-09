@@ -7,7 +7,7 @@
     <meta name="description" content="Combine nutrition, Oura recovery, sleep, activity, workouts, and body weight in one personal health dashboard.">
     <meta name="theme-color" content="#d96b3b">
     <link rel="stylesheet" href="styles.css?v=20260808-health-3">
-    <link rel="stylesheet" href="health.css?v=20260808-health-3">
+    <link rel="stylesheet" href="health.css?v=20260809-mobile-1">
     <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
@@ -55,7 +55,7 @@
           </div>
           <div class="health-hero-actions">
             <div class="button-row">
-              <a href="assistant.html" class="btn btn-secondary">AI Assistant</a>
+              <a href="assistant.html" class="btn btn-secondary health-assistant-link">AI Assistant</a>
               <button id="syncOuraButton" type="button" class="btn btn-primary">Sync Oura</button>
               <button id="connectOuraButton" type="button" class="btn btn-secondary" hidden>Connect Oura</button>
             </div>
@@ -74,17 +74,23 @@
             <button type="button" class="btn btn-secondary btn-small" data-health-days="29">30 days</button>
             <button type="button" class="btn btn-secondary btn-small" data-health-days="89">90 days</button>
           </div>
-          <form id="healthFilters" class="health-filter-form">
-            <label class="field">
-              <span id="healthFromLabel">From</span>
-              <input id="healthFrom" type="date" required>
-            </label>
-            <label class="field">
-              <span id="healthToLabel">To</span>
-              <input id="healthTo" type="date" required>
-            </label>
-            <button id="healthApplyButton" type="submit" class="btn btn-primary">Refresh</button>
-          </form>
+          <details class="health-range-details">
+            <summary>
+              <span class="health-copy-cs">Vlastní období</span>
+              <span class="health-copy-en">Custom range</span>
+            </summary>
+            <form id="healthFilters" class="health-filter-form">
+              <label class="field">
+                <span id="healthFromLabel">From</span>
+                <input id="healthFrom" type="date" required>
+              </label>
+              <label class="field">
+                <span id="healthToLabel">To</span>
+                <input id="healthTo" type="date" required>
+              </label>
+              <button id="healthApplyButton" type="submit" class="btn btn-primary">Refresh</button>
+            </form>
+          </details>
         </section>
 
         <section class="health-summary-section">

@@ -9,7 +9,7 @@ PAGES = {
     "history.html": "history",
     "metrics.html": "metrics",
     "health.html": "health",
-    "assistant.html": None,
+    "assistant.html": "assistant",
     "profile.html": "profile",
 }
 
@@ -41,14 +41,13 @@ def main() -> None:
     for filename, page_id in PAGES.items():
         source = (FRONTEND / filename).read_text(encoding="utf-8")
         assert source.count(script_tag) == 1, f"{filename} must load shared navigation exactly once"
-        if page_id is not None:
-            assert f'data-page="{page_id}"' in source, f"{filename} has wrong or missing data-page"
+        assert f'data-page="{page_id}"' in source, f"{filename} has wrong or missing data-page"
         assert 'class="desktop-nav"' in source, f"{filename} is missing desktop navigation"
         assert 'class="bottom-nav"' in source, f"{filename} is missing mobile navigation"
 
     assistant_source = (FRONTEND / "assistant.html").read_text(encoding="utf-8")
     assert '<title>Food Reader | AI Assistant</title>' in assistant_source
-    assert '<body data-page="assistant">' not in assistant_source
+    assert '<body data-page="assistant">' in assistant_source
 
     print("navigation regression tests: OK")
 

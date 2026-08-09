@@ -1,0 +1,239 @@
+.assistant-page {
+  max-width: 980px;
+}
+
+.assistant-hero {
+  display: grid;
+  gap: 1rem;
+  padding: 0.7rem 0 1rem;
+}
+
+.assistant-hero h1 {
+  margin: 0.35rem 0 0.65rem;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 8vw, 3.8rem);
+  line-height: 1.02;
+  max-width: 13ch;
+}
+
+.assistant-hero p:last-child {
+  margin: 0;
+  max-width: 64ch;
+  color: var(--muted);
+}
+
+.assistant-data-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.assistant-data-badges span,
+.assistant-source-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(94, 122, 102, 0.12);
+  color: var(--sage);
+  border: 1px solid rgba(94, 122, 102, 0.18);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.assistant-chat-card {
+  min-height: min(68vh, 760px);
+  display: grid;
+  grid-template-rows: auto auto 1fr auto auto auto;
+  gap: 0.8rem;
+  background: rgba(255, 253, 249, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.9rem;
+}
+
+.assistant-chat-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.15rem 0.1rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.assistant-chat-toolbar > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.assistant-chat-toolbar span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.assistant-suggestions {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.15rem 0 0.25rem;
+  scrollbar-width: thin;
+}
+
+.assistant-suggestions button {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  background: var(--sage-soft);
+  color: var(--ink);
+  border: 1px solid rgba(94, 122, 102, 0.16);
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.assistant-messages {
+  min-height: 18rem;
+  max-height: 58vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.25rem 0.1rem;
+  scroll-behavior: smooth;
+}
+
+.assistant-empty {
+  margin: auto;
+  max-width: 34rem;
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem 1rem;
+}
+
+.assistant-message {
+  display: grid;
+  gap: 0.35rem;
+  max-width: min(46rem, 92%);
+}
+
+.assistant-message.user {
+  align-self: flex-end;
+}
+
+.assistant-message.assistant {
+  align-self: flex-start;
+}
+
+.assistant-bubble {
+  padding: 0.8rem 0.9rem;
+  border-radius: 1.15rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.48;
+}
+
+.assistant-message.user .assistant-bubble {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  border-bottom-right-radius: 0.35rem;
+}
+
+.assistant-message.assistant .assistant-bubble {
+  background: rgba(94, 122, 102, 0.09);
+  border: 1px solid rgba(94, 122, 102, 0.14);
+  border-bottom-left-radius: 0.35rem;
+}
+
+.assistant-message-meta {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  padding-inline: 0.2rem;
+}
+
+.assistant-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 3.8rem;
+}
+
+.assistant-thinking span {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--sage);
+  animation: assistant-pulse 1.15s infinite ease-in-out;
+}
+
+.assistant-thinking span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.assistant-thinking span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes assistant-pulse {
+  0%, 70%, 100% { opacity: 0.25; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-0.18rem); }
+}
+
+.assistant-composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.65rem;
+  align-items: end;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--line);
+}
+
+.assistant-composer textarea {
+  width: 100%;
+  min-height: 3.2rem;
+  max-height: 10rem;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 0.8rem 0.9rem;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+}
+
+.assistant-composer .btn {
+  min-height: 3.2rem;
+}
+
+.assistant-disclaimer {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+@media (min-width: 760px) {
+  .assistant-hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .assistant-chat-card {
+    padding: 1.15rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .assistant-composer {
+    grid-template-columns: 1fr;
+  }
+
+  .assistant-composer .btn {
+    width: 100%;
+  }
+
+  .assistant-chat-toolbar {
+    align-items: flex-start;
+  }
+}

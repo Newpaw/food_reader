@@ -10,10 +10,10 @@ def test_assistant_requires_authentication(client):
 
 
 def test_assistant_gracefully_handles_missing_openai(client, register_and_login, monkeypatch):
-    from backend.app import assistant_service
+    from backend.app import assistant_responses_service
 
     headers = register_and_login()
-    monkeypatch.setattr(assistant_service, "get_openai_client", lambda: None)
+    monkeypatch.setattr(assistant_responses_service, "get_openai_client", lambda: None)
 
     response = client.post(
         "/assistant/chat",

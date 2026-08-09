@@ -23,7 +23,7 @@ def test_runtime_instructions_treat_missing_log_as_unknown():
     from backend.app import models
     from backend.app.assistant_responses_service import _runtime_instructions
 
-    user = models.User(name="Test", email="test@example.com", hashed_password="x")
+    user = models.User(name="Test", email="test@example.com", password_hash="x")
     instructions = _runtime_instructions(
         user,
         timezone_name="Europe/Prague",

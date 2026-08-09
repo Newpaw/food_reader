@@ -8,22 +8,20 @@ The product direction is deliberately **action first**: the app should answer **
 
 1. **Mobile / PWA first** – phone and installed-app flows are the primary design target.
 2. **Action before analysis** – today’s useful action and current state come before trends.
-3. **Progressive disclosure** – detailed filters and drill-down data stay compact until requested.
+3. **Progressive disclosure** – charts, filters and detailed rows stay collapsed until requested.
 4. **Stable navigation** – all six main destinations stay visible in one bottom navigation bar on narrow screens.
-5. **Readable state changes** – success, info and error states require explicit contrast.
-6. **One scroll owner** – complex screens should have one obvious scroll region; the AI chat scrolls messages, not the whole page.
-7. **User data before generic advice** – recommendations are grounded in the authenticated user’s own food, goals and wearable data.
-8. **Deterministic metrics first, LLM second** – calculations happen in application code; the LLM interprets them.
-9. **Read-only AI tools** – the assistant can inspect user-scoped data but does not modify meals, profile or OAuth connections.
+5. **No accidental horizontal document scroll** – application pages must fit the visual viewport; intentional scrollers must be explicit and local.
+6. **Readable state changes** – success, info and error states require explicit contrast.
+7. **One scroll owner** – complex screens should have one obvious scroll region; the AI chat scrolls messages, not the whole page.
+8. **User data before generic advice** – recommendations are grounded in the authenticated user’s own food, goals and wearable data.
+9. **Deterministic metrics first, LLM second** – calculations happen in application code; the LLM interprets them.
 10. **Privacy by design** – OAuth tokens are encrypted locally and the AI assistant uses the Responses API with `store=false`.
 
-## Responsive UX contract
+## Responsive UX architecture
 
-The desktop navigation starts at `980px`. Therefore Food Reader treats the entire range below that breakpoint as **narrow-screen app UI**, not just very small phones.
+Desktop navigation starts at `980px`. Everything below that breakpoint is treated as narrow-screen app UI.
 
-This is important because Android browsers, display scaling and PWA/browser chrome can produce effective CSS viewports wider than a typical 360–430px phone layout. A previous split where mobile overrides ended at `759px` while tablet/Health rules started around `700–720px` created a broken 760–979px zone. The current shared layer explicitly closes that gap.
-
-Shared responsive behavior lives in:
+Shared navigation and responsive behavior lives in:
 
 ```text
 calorie-tracker/frontend/navigation.js
@@ -31,8 +29,6 @@ calorie-tracker/frontend/mobile-polish.css
 calorie-tracker/frontend/responsive-fix.css
 calorie-tracker/frontend/mobile-ux.js
 ```
-
-`navigation.js` loads the shared styles/scripts on every main application page.
 
 ### Bottom navigation
 
@@ -45,14 +41,30 @@ The narrow-screen navigation always contains:
 - AI
 - Profile
 
-Rules:
+`navigation.js` renders the six destinations, moves the mobile nav directly under `body`, and pins it with `left/right` viewport offsets rather than a fixed pixel width. This keeps the bar independent of page containers and page-level overflow.
 
-- one row of six destinations,
-- fixed to the visual viewport above the safe area,
-- appended directly under `body` so page containers cannot become its containing block,
-- high stacking order,
-- page content reserves bottom space,
-- horizontal page overflow is blocked while nested horizontal scrollers can still be used where intentional.
+### Health is intentionally isolated
+
+Health previously accumulated several overlapping responsive layers (`health.css`, `health-action.css`, shared mobile CSS and tablet breakpoints). That produced conflicting rules and a horizontal-scroll failure on Android.
+
+The current contract is simpler:
+
+- `health.html` loads **one Health stylesheet: `health.css`**,
+- `health-action.css` was removed,
+- generic `mobile-polish.css` / `responsive-fix.css` are **not layered on top of Health**,
+- `health.css` is mobile-first and has only one desktop transition at `980px`,
+- the Health document blocks accidental horizontal scrolling and uses vertical touch panning,
+- `mobile-ux.js` resets stale horizontal scroll position on Health when needed.
+
+Health hierarchy on narrow screens:
+
+1. compact Health/Oura header,
+2. **What now?** Health Coach,
+3. today-at-a-glance 2×2 grid,
+4. collapsed **Trends & patterns** section,
+5. collapsed detailed daily data.
+
+Charts and personal correlations are therefore secondary content. Opening **Trends & patterns** reveals range controls, energy/recovery/HRV charts and personal patterns. There are no horizontal summary-card carousels on Health.
 
 ### History
 
@@ -61,37 +73,22 @@ On narrow screens:
 - active range + **Custom** share the first row,
 - Today / 7 / 30 / 90-day presets use one compact row,
 - custom date inputs appear only when requested,
-- the three top summary metrics fit in one row.
+- the three summary metrics fit in one row.
 
 ### Overview / Metrics
 
-The Today card is a compact control panel, not a billboard. Duplicate calorie information and oversized progress areas are reduced so the user can reach the actual macro status quickly.
-
-### Health
-
-The narrow-screen hierarchy is:
-
-1. compact Health/Oura header,
-2. **What now?** Health Coach,
-3. today-at-a-glance cards,
-4. trend window,
-5. single-column charts and personal patterns,
-6. collapsed detailed daily data.
-
-Health deliberately stays one-column below `980px`. This prevents half-width chart cards and horizontal document overflow on phones with unusually wide effective CSS viewports.
-
-The Health Coach recommendation is concise. Routine “advice is current” success banners are suppressed on narrow screens because they duplicate the visible recommendation; warnings/errors remain visible.
+The Today card is a compact control panel, not a billboard. Duplicate calorie information and oversized progress areas are reduced so the actual macro status is visible sooner.
 
 ### AI Assistant
 
 The AI Assistant behaves like an app-sized chat window:
 
-- the shell is pinned to the current `window.visualViewport`,
+- the shell is pinned to `window.visualViewport`,
 - keyboard resize/offset is tracked,
 - the full chat card stays inside the visible viewport,
 - only the messages area scrolls,
 - the composer remains visible,
-- the bottom navigation hides while the input has focus,
+- the bottom navigation hides while the text input has focus,
 - routine success/info banners are suppressed while errors remain visible.
 
 ## Main features
@@ -123,7 +120,7 @@ Important rule: **missing logged food means unknown intake, not zero intake**. I
 
 `assistant.html` is a read-only chat over the authenticated user’s Food Reader data.
 
-Available data tools cover:
+Available tools cover:
 
 - data inventory,
 - profile and targets,
@@ -238,7 +235,7 @@ food_reader/
 │  │  ├─ index.html / home.js
 │  │  ├─ history.html / history.js
 │  │  ├─ metrics.html / metrics.js
-│  │  ├─ health.html / health.js / health.css / health-action.css
+│  │  ├─ health.html / health.js / health.css
 │  │  ├─ assistant.html / assistant.js / assistant.css
 │  │  ├─ profile.html / profile.js
 │  │  ├─ navigation.js
@@ -357,7 +354,7 @@ The workflow:
 6. publishes `ghcr.io/newpaw/food_reader:latest` plus a commit tag,
 7. attaches provenance and SBOM metadata.
 
-The service worker uses a versioned app-shell cache. Current responsive assets, including `responsive-fix.css`, are included so installed PWA clients refresh the same UI contract as browser clients.
+The service worker uses a versioned app-shell cache. Health CSS, shared responsive assets and JavaScript are versioned so installed PWA clients refresh the same UI contract as browser clients.
 
 ## Testing
 
@@ -466,13 +463,13 @@ Interpret this mainly over multi-day trends rather than as a precise single-day 
 
 ## Troubleshooting
 
-### Narrow-screen UI looks like a broken tablet layout
+### Health can be moved sideways or shows only part of the screen
 
-The narrow-screen contract must apply through `979px`. Verify that the latest `navigation.js`, `responsive-fix.css` and `mobile-ux.js` are served. If a client is installed as a PWA, also verify that the latest service worker activated.
+Health should never have document-level horizontal scrolling. Verify that the current `health.html` loads only `health.css` for Health-specific styling and that the current `mobile-ux.js` is active. `health-action.css` should not exist or be referenced.
 
 ### Bottom navigation is incomplete or horizontally shifted
 
-Verify `navigation.js` loaded and that `responsive-fix.css` is present. The navigation should contain six items, be appended under `body`, use viewport width, and remain independent of page-level horizontal overflow.
+Verify `navigation.js` loaded. It should render six items, append the nav directly under `body`, and use fixed `left/right` offsets on narrow screens.
 
 ### Mobile chat jumps when the keyboard opens
 

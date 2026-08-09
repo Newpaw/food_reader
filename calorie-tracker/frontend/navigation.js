@@ -48,19 +48,22 @@ const PAGE_BY_FILE = {
 };
 
 function getLocale() {
-  const documentLocale = (document.documentElement.lang || '').toLowerCase();
-  if (documentLocale.startsWith('cs')) {
-    return 'cs';
-  }
-  if (documentLocale.startsWith('en')) {
-    return 'en';
+  try {
+    const storedLocale = window.localStorage.getItem('food-reader:locale');
+    if (storedLocale === 'cs' || storedLocale === 'en') {
+      return storedLocale;
+    }
+  } catch {
+    // Fall through to the same browser-language default used by common.js.
   }
 
-  try {
-    return window.localStorage.getItem('food-reader:locale') === 'cs' ? 'cs' : 'en';
-  } catch {
-    return 'en';
+  const browserLocale = (window.navigator?.language || '').toLowerCase();
+  if (browserLocale.startsWith('cs')) {
+    return 'cs';
   }
+
+  const documentLocale = (document.documentElement.lang || '').toLowerCase();
+  return documentLocale.startsWith('cs') ? 'cs' : 'en';
 }
 
 function getCurrentPage() {

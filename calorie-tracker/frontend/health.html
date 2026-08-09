@@ -7,8 +7,7 @@
     <meta name="description" content="Combine nutrition, Oura recovery, sleep, activity, workouts, and body weight in one personal health dashboard.">
     <meta name="theme-color" content="#d96b3b">
     <link rel="stylesheet" href="styles.css?v=20260808-health-3">
-    <link rel="stylesheet" href="health.css?v=20260809-mobile-1">
-    <link rel="stylesheet" href="health-action.css?v=20260809-1">
+    <link rel="stylesheet" href="health.css?v=20260809-mobile-4">
     <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
@@ -66,13 +65,13 @@
         </section>
 
         <section class="panel health-coach-panel health-coach-priority">
-          <div class="panel-heading health-coach-heading">
+          <div class="health-coach-heading">
             <div>
               <p class="eyebrow" id="coachEyebrow">Today</p>
-              <h2 id="coachHeading">What should I do now?</h2>
+              <h2 id="coachHeading">What now?</h2>
               <p class="panel-note" id="coachSupport">One concrete action from today's food, targets and Oura data.</p>
             </div>
-            <button id="generateCoachButton" type="button" class="btn btn-primary btn-small">Refresh advice</button>
+            <button id="generateCoachButton" type="button" class="btn btn-small">Refresh</button>
           </div>
           <div id="healthCoach" class="stack">
             <div class="empty-state compact" id="coachEmpty">Preparing today's recommendation…</div>
@@ -91,103 +90,118 @@
           <div id="healthSummaryCards" class="health-stat-grid"></div>
         </section>
 
-        <section class="panel health-filter-panel">
-          <div class="health-filter-copy">
-            <p class="eyebrow" id="rangeEyebrow">Trends</p>
-            <h2 id="rangeHeading">Analysis window</h2>
-          </div>
-          <div class="button-row quick-row health-quick-range">
-            <button type="button" class="btn btn-secondary btn-small" data-health-days="13">14 days</button>
-            <button type="button" class="btn btn-secondary btn-small" data-health-days="29">30 days</button>
-            <button type="button" class="btn btn-secondary btn-small" data-health-days="89">90 days</button>
-          </div>
-          <details class="health-range-details">
-            <summary>
-              <span class="health-copy-cs">Vlastní období</span>
-              <span class="health-copy-en">Custom range</span>
-            </summary>
-            <form id="healthFilters" class="health-filter-form">
-              <label class="field">
-                <span id="healthFromLabel">From</span>
-                <input id="healthFrom" type="date" required>
-              </label>
-              <label class="field">
-                <span id="healthToLabel">To</span>
-                <input id="healthTo" type="date" required>
-              </label>
-              <button id="healthApplyButton" type="submit" class="btn btn-primary">Refresh</button>
-            </form>
-          </details>
-        </section>
-
-        <section class="health-charts-grid" aria-label="Health trends">
-          <article class="panel health-chart-card health-chart-wide">
-            <div class="health-chart-heading">
-              <div>
-                <p class="eyebrow" id="energyChartEyebrow">Energy</p>
-                <h2 id="energyChartHeading">Intake vs expenditure</h2>
-              </div>
-              <div id="energyChartLegend" class="chart-legend"></div>
-            </div>
-            <div id="energyChart" class="health-chart" role="img" aria-label="Daily calorie intake and expenditure chart"></div>
-          </article>
-
-          <article class="panel health-chart-card">
-            <div class="health-chart-heading">
-              <div>
-                <p class="eyebrow" id="recoveryChartEyebrow">Recovery</p>
-                <h2 id="recoveryChartHeading">Readiness & sleep</h2>
-              </div>
-              <div id="recoveryChartLegend" class="chart-legend"></div>
-            </div>
-            <div id="recoveryChart" class="health-chart" role="img" aria-label="Readiness and sleep score chart"></div>
-          </article>
-
-          <article class="panel health-chart-card">
-            <div class="health-chart-heading">
-              <div>
-                <p class="eyebrow" id="hrvChartEyebrow">Recovery depth</p>
-                <h2 id="hrvChartHeading">HRV trend</h2>
-              </div>
-              <div id="hrvChartLegend" class="chart-legend"></div>
-            </div>
-            <div id="hrvChart" class="health-chart" role="img" aria-label="Average HRV chart"></div>
-          </article>
-        </section>
-
-        <section class="panel health-insights-panel">
-          <div class="panel-heading">
+        <details class="panel health-trends-details">
+          <summary class="health-trends-summary">
             <div>
-              <p class="eyebrow" id="insightsEyebrow">Personal patterns</p>
-              <h2 id="insightsHeading">What your data says</h2>
+              <p class="eyebrow"><span class="health-copy-cs">Analýza</span><span class="health-copy-en">Analysis</span></p>
+              <h2><span class="health-copy-cs">Trendy a souvislosti</span><span class="health-copy-en">Trends & patterns</span></h2>
             </div>
+            <span class="health-trends-summary-hint health-copy-cs">Zobrazit</span>
+            <span class="health-trends-summary-hint health-copy-en">Show</span>
+          </summary>
+
+          <div class="health-trends-body">
+            <section class="panel health-filter-panel">
+              <div class="health-filter-copy">
+                <p class="eyebrow" id="rangeEyebrow">Trends</p>
+                <h2 id="rangeHeading">Analysis window</h2>
+              </div>
+              <div class="button-row quick-row health-quick-range">
+                <button type="button" class="btn btn-secondary btn-small" data-health-days="13">14 days</button>
+                <button type="button" class="btn btn-secondary btn-small" data-health-days="29">30 days</button>
+                <button type="button" class="btn btn-secondary btn-small" data-health-days="89">90 days</button>
+              </div>
+              <details class="health-range-details">
+                <summary>
+                  <span class="health-copy-cs">Vlastní období</span>
+                  <span class="health-copy-en">Custom range</span>
+                </summary>
+                <form id="healthFilters" class="health-filter-form">
+                  <label class="field">
+                    <span id="healthFromLabel">From</span>
+                    <input id="healthFrom" type="date" required>
+                  </label>
+                  <label class="field">
+                    <span id="healthToLabel">To</span>
+                    <input id="healthTo" type="date" required>
+                  </label>
+                  <button id="healthApplyButton" type="submit" class="btn btn-primary">Refresh</button>
+                </form>
+              </details>
+            </section>
+
+            <section class="health-charts-grid" aria-label="Health trends">
+              <article class="panel health-chart-card health-chart-wide">
+                <div class="health-chart-heading">
+                  <div>
+                    <p class="eyebrow" id="energyChartEyebrow">Energy</p>
+                    <h2 id="energyChartHeading">Intake vs expenditure</h2>
+                  </div>
+                  <div id="energyChartLegend" class="chart-legend"></div>
+                </div>
+                <div id="energyChart" class="health-chart" role="img" aria-label="Daily calorie intake and expenditure chart"></div>
+              </article>
+
+              <article class="panel health-chart-card">
+                <div class="health-chart-heading">
+                  <div>
+                    <p class="eyebrow" id="recoveryChartEyebrow">Recovery</p>
+                    <h2 id="recoveryChartHeading">Readiness & sleep</h2>
+                  </div>
+                  <div id="recoveryChartLegend" class="chart-legend"></div>
+                </div>
+                <div id="recoveryChart" class="health-chart" role="img" aria-label="Readiness and sleep score chart"></div>
+              </article>
+
+              <article class="panel health-chart-card">
+                <div class="health-chart-heading">
+                  <div>
+                    <p class="eyebrow" id="hrvChartEyebrow">Recovery depth</p>
+                    <h2 id="hrvChartHeading">HRV trend</h2>
+                  </div>
+                  <div id="hrvChartLegend" class="chart-legend"></div>
+                </div>
+                <div id="hrvChart" class="health-chart" role="img" aria-label="Average HRV chart"></div>
+              </article>
+            </section>
+
+            <section class="panel health-insights-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow" id="insightsEyebrow">Personal patterns</p>
+                  <h2 id="insightsHeading">What your data says</h2>
+                </div>
+              </div>
+              <div id="healthInsights" class="stack"></div>
+              <p class="panel-note" id="correlationWarning">These are correlations in your own data, not medical conclusions or proof of causality.</p>
+            </section>
           </div>
-          <div id="healthInsights" class="stack"></div>
-          <p class="panel-note" id="correlationWarning">These are correlations in your own data, not medical conclusions or proof of causality.</p>
-        </section>
+        </details>
 
         <details class="panel health-daily-panel health-daily-details">
           <summary class="health-daily-summary">
             <div>
               <p class="eyebrow" id="dailyEyebrow">Daily view</p>
-              <h2 id="dailyHeading">Food vs expenditure and recovery</h2>
+              <h2 id="dailyHeading">Detailed data</h2>
             </div>
-            <span class="health-daily-summary-hint health-copy-cs">Zobrazit data</span>
-            <span class="health-daily-summary-hint health-copy-en">Show data</span>
+            <span class="health-daily-summary-hint health-copy-cs">Zobrazit</span>
+            <span class="health-daily-summary-hint health-copy-en">Show</span>
           </summary>
           <div id="healthDailyList" class="stack"></div>
         </details>
       </main>
 
       <nav class="bottom-nav" aria-label="Mobile">
-        <a href="index.html" data-nav="add" data-i18n="nav.addShort">Add</a>
-        <a href="history.html" data-nav="history" data-i18n="nav.history">History</a>
-        <a href="health.html" aria-current="page">Health</a>
-        <a href="profile.html" data-nav="profile" data-i18n="nav.profile">Profile</a>
+        <a href="index.html" data-nav="add">Add</a>
+        <a href="history.html" data-nav="history">History</a>
+        <a href="metrics.html" data-nav="metrics">Metrics</a>
+        <a href="health.html" data-nav="health" aria-current="page">Health</a>
+        <a href="assistant.html" data-nav="assistant">AI</a>
+        <a href="profile.html" data-nav="profile">Profile</a>
       </nav>
     </div>
 
     <script type="module" src="navigation.js?v=20260809-1"></script>
-    <script type="module" src="health.js?v=20260809-action-1"></script>
+    <script type="module" src="health.js?v=20260809-action-2"></script>
   </body>
 </html>

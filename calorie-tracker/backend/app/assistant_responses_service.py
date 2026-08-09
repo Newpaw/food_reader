@@ -16,7 +16,7 @@ MAX_TOOL_ROUNDS = 8
 
 
 def _response_tools() -> list[dict[str, Any]]:
-    """Convert the legacy Chat Completions function schema to Responses API tools."""
+    """Convert the shared function schema to Responses API tools."""
     response_tools: list[dict[str, Any]] = []
     for tool in TOOLS:
         function = tool["function"]
@@ -26,6 +26,8 @@ def _response_tools() -> list[dict[str, Any]]:
                 "name": function["name"],
                 "description": function.get("description", ""),
                 "parameters": function.get("parameters", {"type": "object", "properties": {}}),
+                # Existing Food Reader schemas contain optional fields. Keep best-effort
+                # function calling until those schemas are converted to strict mode.
                 "strict": False,
             }
         )
@@ -45,12 +47,15 @@ def _request_options(model: str) -> dict[str, Any]:
         "tools": _response_tools(),
         "tool_choice": "auto",
         "max_output_tokens": 1000,
+        "text": {"verbosity": "low"},
         # Food Reader handles conversation state itself. Do not persist private health
         # conversations as Responses API application state.
         "store": False,
     }
     if model.startswith("gpt-5"):
-        options["reasoning"] = {"effort": "low"}
+        # Tool decisions benefit from light reasoning, while current_turn avoids
+        # carrying hidden reasoning across separate user turns managed by the app.
+        options["reasoning"] = {"effort": "low", "context": "current_turn"}
     return options
 
 
@@ -129,8 +134,8 @@ def chat_with_food_reader(
                     "model": model,
                 }
 
-            # With store=False, manually carry forward all output items, including
-            # reasoning items, before returning function results to the model.
+            # With store=False, replay every output item before returning function
+            # results. This preserves encrypted reasoning items across tool rounds.
             input_items.extend(_response_item_to_input(item) for item in response.output)
 
             for call in function_calls:

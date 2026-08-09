@@ -55,6 +55,9 @@ jobs:
           node --check calorie-tracker/frontend/assistant.js
           node --check calorie-tracker/frontend/service-worker.js
 
+      - name: Check navigation integration
+        run: python tests/frontend/test_navigation.py
+
   publish:
     name: Build and publish Docker image
     runs-on: ubuntu-latest

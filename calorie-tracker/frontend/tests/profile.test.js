@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildProfilePayload, buildWithingsStatusMarkup, hasCustomOverrides } from '../profile.js';
+import {
+  buildAdaptiveTargetMarkup,
+  buildProfilePayload,
+  buildWithingsStatusMarkup,
+  hasCustomOverrides,
+} from '../profile.js';
 
 
 describe('profile payload builder', () => {
@@ -18,12 +23,14 @@ describe('profile payload builder', () => {
       customCarbs: { value: '' },
       customFats: { value: '80' },
       customFiber: { value: '' },
+      adaptiveCaloriesEnabled: { checked: true },
     });
 
     expect(payload.height_cm).toBe(180);
     expect(payload.custom_calories).toBeNull();
     expect(payload.custom_protein_g).toBe(190);
     expect(payload.custom_fiber_g).toBeNull();
+    expect(payload.adaptive_calories_enabled).toBe(true);
   });
 
   it('detects whether advanced override fields should open', () => {
@@ -50,5 +57,39 @@ describe('profile payload builder', () => {
 
   it('renders Withings configuration errors', () => {
     expect(buildWithingsStatusMarkup({ configured: false, connected: false })).toContain('not configured');
+  });
+
+  it('renders adaptive target states and active breakdown', () => {
+    expect(buildAdaptiveTargetMarkup({
+      base_calories: 2200,
+      adaptive: { status: 'not_connected', enabled: true, applied: false, data_days: 0 },
+    })).toContain('Oura is not connected');
+
+    expect(buildAdaptiveTargetMarkup({
+      base_calories: 2200,
+      adaptive: { status: 'warming_up', enabled: true, applied: false, data_days: 7 },
+    })).toContain('7 of 10 complete days');
+
+    const active = buildAdaptiveTargetMarkup({
+      base_calories: 2200,
+      adaptive: {
+        status: 'active',
+        enabled: true,
+        applied: true,
+        data_days: 12,
+        burn_baseline: 2450,
+        adjustment_kcal: 75,
+        recommended_min_calories: 2175,
+        recommended_max_calories: 2375,
+      },
+    });
+    expect(active).toContain('Adaptive target is active');
+    expect(active).toContain('+75 kcal');
+    expect(active).toContain('2175–2375 kcal');
+
+    expect(buildAdaptiveTargetMarkup({
+      base_calories: 2200,
+      adaptive: { status: 'custom_override', enabled: true, applied: false },
+    })).toContain('Custom calorie target is active');
   });
 });

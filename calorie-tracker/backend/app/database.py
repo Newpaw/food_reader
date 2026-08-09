@@ -69,6 +69,12 @@ def _ensure_profile_schema() -> None:
         missing_columns.append(("weight_source", "VARCHAR"))
     if "weight_measured_at" not in existing_columns:
         missing_columns.append(("weight_measured_at", "DATETIME"))
+    if "adaptive_calories_enabled" not in existing_columns:
+        missing_columns.append(("adaptive_calories_enabled", "BOOLEAN NOT NULL DEFAULT 0"))
+    if "adaptive_target_calories" not in existing_columns:
+        missing_columns.append(("adaptive_target_calories", "INTEGER"))
+    if "adaptive_target_updated_on" not in existing_columns:
+        missing_columns.append(("adaptive_target_updated_on", "DATE"))
 
     if not missing_columns:
         return

@@ -189,3 +189,31 @@ def test_oura_data_is_isolated_and_disconnect_removes_local_data(client, registe
         params={"start_date": "2026-08-01", "end_date": "2026-08-01"},
     )
     assert user_one_daily.json() == []
+
+
+def test_oura_disconnect_disables_adaptive_calories(client, register_and_login, monkeypatch):
+    from backend.app.settings import settings
+
+    _configure_oura(settings)
+    headers = register_and_login(email="adaptive-disconnect@example.com")
+    profile_response = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "height_cm": 180,
+            "weight_kg": 82,
+            "age": 31,
+            "gender": "male",
+            "adaptive_calories_enabled": True,
+        },
+    )
+    assert profile_response.status_code == 201
+    _connect_oura(client, headers, monkeypatch)
+
+    disconnect_response = client.delete("/oura/disconnect", headers=headers)
+    assert disconnect_response.status_code == 204
+    profile = client.get("/profile", headers=headers).json()
+    targets = client.get("/profile/targets", headers=headers).json()
+    assert profile["adaptive_calories_enabled"] is False
+    assert profile["adaptive_target_calories"] is None
+    assert targets["adaptive"]["status"] == "disabled"

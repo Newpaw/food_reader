@@ -12,7 +12,7 @@ import {
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-11';
+} from './common.js?v=20260809-adaptive-1';
 import {
   buildDailyAverages,
   calculateMacroTotals,
@@ -188,6 +188,9 @@ function renderTodayGoal(todayMeals, targets) {
   const progressFill = summary.targetCalories
     ? `<span class="goal-progress-fill" style="width:${summary.progressPercent}%"></span>`
     : '';
+  const adaptiveNote = targets?.adaptive?.applied
+    ? `<p class="adaptive-goal-chip"><strong>${t('metrics.adaptiveTarget')}</strong><span>${t('metrics.adaptiveTargetDetail')}</span></p>`
+    : '';
 
   panel.innerHTML = `
     <div class="panel-heading">
@@ -205,6 +208,7 @@ function renderTodayGoal(todayMeals, targets) {
           <span>${consumedLabel}</span>
         </div>
         <p class="panel-note">${summary.detail}</p>
+        ${adaptiveNote}
       </div>
       <div class="goal-progress-card">
         <div class="goal-progress-track">
@@ -283,8 +287,19 @@ function renderTargets(targets) {
       <article class="stat-card"><span>${t('metrics.fat')}</span><strong>${targets.fats_g}g</strong></article>
       <article class="stat-card"><span>${t('metrics.fiber')}</span><strong>${targets.fiber_g}g</strong></article>
     </div>
-    <p class="panel-note">${targets.calculation_method}</p>
+    ${targets.adaptive?.applied ? `<p class="adaptive-goal-chip"><strong>${t('metrics.adaptiveTarget')}</strong><span>${t('metrics.adaptiveTargetDetail')}</span></p>` : ''}
+    <p class="panel-note">${localizedTargetMethod(targets)}</p>
   `;
+}
+
+function localizedTargetMethod(targets) {
+  const methods = {
+    profile: 'profile.methodProfile',
+    custom: 'profile.methodCustom',
+    adaptive: 'profile.methodAdaptive',
+  };
+  const key = methods[targets?.calculation_method_code];
+  return key ? t(key) : targets?.calculation_method || '';
 }
 
 function renderProgress(summary, targets) {
@@ -454,7 +469,7 @@ async function loadMetrics() {
     }
 
     const [targetsResponse, summaryResponse, mealsResponse, todayMealsResponse, withingsResponse] = await Promise.all([
-      apiFetch(`${API.profile}/targets`),
+      apiFetch(`${API.profile}/targets?timezone=${encodeURIComponent(getBrowserTimeZone())}`),
       apiFetch(`${API.summary}?${params.toString()}&tz_name=${encodeURIComponent(getBrowserTimeZone())}`),
       apiFetch(`${API.meals}?limit=200&${params.toString()}`),
       apiFetch(`${API.meals}?limit=100&${todayParams.toString()}`),

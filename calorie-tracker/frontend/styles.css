@@ -1796,6 +1796,148 @@ body.capture-photo-ready .page {
   margin: 0;
 }
 
+.adaptive-settings-section {
+  padding: clamp(0.85rem, 2.5vw, 1rem);
+  border: 1px solid rgba(84, 112, 94, 0.2);
+  border-radius: var(--radius-small);
+  background: rgba(220, 232, 223, 0.42);
+}
+
+.adaptive-toggle-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+}
+
+.adaptive-toggle-card input {
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.adaptive-toggle-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+  overflow-wrap: anywhere;
+}
+
+.adaptive-toggle-copy small,
+.adaptive-connect-note {
+  color: var(--muted);
+}
+
+.adaptive-connect-note {
+  margin: 0;
+}
+
+.adaptive-connect-note a {
+  color: var(--accent-deep);
+  font-weight: 750;
+}
+
+.adaptive-target-card {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+  padding: clamp(0.8rem, 2vw, 1rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  background: rgba(255, 255, 255, 0.7);
+  min-width: 0;
+}
+
+.adaptive-target-card[data-status="active"] {
+  border-color: rgba(84, 112, 94, 0.34);
+  background: rgba(220, 232, 223, 0.42);
+}
+
+.adaptive-target-heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.adaptive-target-heading > div {
+  min-width: 0;
+}
+
+.adaptive-target-heading p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.adaptive-status-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-top: 0.28rem;
+  border-radius: 50%;
+  background: #b9a98f;
+}
+
+.adaptive-target-card[data-status="active"] .adaptive-status-dot {
+  background: var(--sage);
+  box-shadow: 0 0 0 0.25rem rgba(84, 112, 94, 0.12);
+}
+
+.adaptive-target-card[data-status="stale"] .adaptive-status-dot,
+.adaptive-target-card[data-status="not_connected"] .adaptive-status-dot {
+  background: var(--accent);
+}
+
+.adaptive-breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(8.5rem, 100%), 1fr));
+  gap: 0.55rem;
+}
+
+.adaptive-breakdown > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+  padding: 0.65rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.adaptive-breakdown span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.adaptive-breakdown strong {
+  overflow-wrap: anywhere;
+}
+
+.adaptive-goal-chip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.55rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0.35rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  background: rgba(220, 232, 223, 0.6);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.adaptive-goal-chip span {
+  color: var(--muted);
+}
+
 .profile-basics-grid,
 .profile-lifestyle-grid,
 .profile-overrides-grid {

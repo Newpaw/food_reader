@@ -426,6 +426,10 @@ def sync_oura_data(
     connection.updated_at = connection.last_sync_at
     db.commit()
 
+    from .adaptive_targets import refresh_adaptive_target
+
+    refresh_adaptive_target(db, user_id, today=today)
+
     return {
         "synced_days": len(touched_days),
         "start_date": sync_start.isoformat(),

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
@@ -66,10 +66,11 @@ async def delete_profile(
 
 @router.get("/targets", response_model=schemas.NutritionTargets | None)
 async def get_nutrition_targets(
+    timezone_name: str = Query("UTC", alias="timezone"),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return crud.get_nutrition_targets(db, current_user.id)
+    return crud.get_nutrition_targets(db, current_user.id, timezone_name=timezone_name)
 
 
 @router.get("/activity-levels")

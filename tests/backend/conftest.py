@@ -26,6 +26,7 @@ def client(monkeypatch, tmp_path):
     from backend.app.settings import settings
 
     settings.UPLOAD_DIR = str(tmp_path / "uploads")
+    settings.JWT_SECRET = "test-secret"
 
     engine = create_engine(
         "sqlite://",

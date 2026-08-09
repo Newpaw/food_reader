@@ -86,6 +86,7 @@ def create_user_profile(
         custom_carbs_g=profile_data.custom_carbs_g,
         custom_fats_g=profile_data.custom_fats_g,
         custom_fiber_g=profile_data.custom_fiber_g,
+        adaptive_calories_enabled=profile_data.adaptive_calories_enabled,
         weight_source="manual" if profile_data.weight_kg is not None else None,
     )
     _apply_targets(profile, targets)
@@ -93,6 +94,11 @@ def create_user_profile(
     db.add(profile)
     db.commit()
     db.refresh(profile)
+    if profile.adaptive_calories_enabled:
+        from .adaptive_targets import refresh_adaptive_target
+
+        refresh_adaptive_target(db, user_id)
+        db.refresh(profile)
     return profile
 
 
@@ -105,6 +111,7 @@ def update_user_profile(
     if not profile:
         return None
 
+    previous_target = profile.target_calories
     update_data = profile_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(profile, field, value)
@@ -113,9 +120,21 @@ def update_user_profile(
         profile.weight_measured_at = None
 
     _apply_targets(profile, _calculate_profile_targets(profile))
+    if (
+        not profile.adaptive_calories_enabled
+        or profile.custom_calories is not None
+        or profile.target_calories != previous_target
+    ):
+        profile.adaptive_target_calories = None
+        profile.adaptive_target_updated_on = None
     profile.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(profile)
+    if profile.adaptive_calories_enabled:
+        from .adaptive_targets import refresh_adaptive_target
+
+        refresh_adaptive_target(db, user_id)
+        db.refresh(profile)
     return profile
 
 
@@ -143,30 +162,25 @@ def apply_withings_profile_weight(
     profile.weight_source = "withings"
     profile.weight_measured_at = measured_at.astimezone(timezone.utc)
     _apply_targets(profile, _calculate_profile_targets(profile))
+    profile.adaptive_target_calories = None
+    profile.adaptive_target_updated_on = None
     profile.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(profile)
+    if profile.adaptive_calories_enabled:
+        from .adaptive_targets import refresh_adaptive_target
+
+        refresh_adaptive_target(db, user_id)
+        db.refresh(profile)
     return profile
 
 
-def get_nutrition_targets(db: Session, user_id: int) -> schemas.NutritionTargets | None:
-    profile = get_user_profile(db, user_id)
-    if not profile or not profile.target_calories:
-        return None
+def get_nutrition_targets(
+    db: Session,
+    user_id: int,
+    *,
+    timezone_name: str = "UTC",
+) -> schemas.NutritionTargets | None:
+    from .adaptive_targets import resolve_nutrition_targets
 
-    if profile.custom_calories:
-        method = "Custom values provided by user"
-    else:
-        method = f"Calculated using Mifflin-St Jeor equation (BMR: {profile.bmr:.0f} cal, TDEE: {profile.tdee:.0f} cal)"
-
-    return schemas.NutritionTargets(
-        calories=profile.target_calories,
-        protein_g=profile.target_protein_g,
-        carbs_g=profile.target_carbs_g,
-        fats_g=profile.target_fats_g,
-        fiber_g=profile.target_fiber_g,
-        calculation_method=method,
-        bmr=profile.bmr,
-        tdee=profile.tdee,
-        last_updated=profile.updated_at,
-    )
+    return resolve_nutrition_targets(db, user_id, timezone_name=timezone_name)

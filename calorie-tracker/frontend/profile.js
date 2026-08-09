@@ -2,12 +2,13 @@ import {
   API,
   apiFetch,
   formatDateTime,
+  getBrowserTimeZone,
   getJsonOrThrow,
   normalizeOptionalNumber,
   setupPage,
   showStatus,
   t,
-} from './common.js?v=20260403-11';
+} from './common.js?v=20260809-adaptive-1';
 
 
 let profileExists = false;
@@ -29,6 +30,7 @@ export function buildProfilePayload(form) {
     custom_carbs_g: normalizeOptionalNumber(form.customCarbs.value),
     custom_fats_g: normalizeOptionalNumber(form.customFats.value),
     custom_fiber_g: normalizeOptionalNumber(form.customFiber.value),
+    adaptive_calories_enabled: Boolean(form.adaptiveCaloriesEnabled?.checked),
   };
 }
 
@@ -59,6 +61,7 @@ function fillForm(profile) {
   form.customCarbs.value = profile?.custom_carbs_g ?? '';
   form.customFats.value = profile?.custom_fats_g ?? '';
   form.customFiber.value = profile?.custom_fiber_g ?? '';
+  form.adaptiveCaloriesEnabled.checked = Boolean(profile?.adaptive_calories_enabled);
   if (overrides) {
     overrides.open = hasCustomOverrides(profile);
   }
@@ -71,6 +74,75 @@ function fillForm(profile) {
       weightSource.textContent = t('profile.weightSourceEmpty');
     }
   }
+}
+
+
+function adaptiveStatusCopy(adaptive) {
+  const status = adaptive?.status || 'disabled';
+  const titles = {
+    disabled: 'profile.adaptiveStatusDisabled',
+    not_connected: 'profile.adaptiveStatusNotConnected',
+    warming_up: 'profile.adaptiveStatusWarmingUp',
+    stale: 'profile.adaptiveStatusStale',
+    custom_override: 'profile.adaptiveStatusCustom',
+    active: 'profile.adaptiveStatusActive',
+  };
+  const details = {
+    disabled: 'profile.adaptiveDetailDisabled',
+    not_connected: 'profile.adaptiveDetailNotConnected',
+    warming_up: 'profile.adaptiveDetailWarmingUp',
+    stale: 'profile.adaptiveDetailStale',
+    custom_override: 'profile.adaptiveDetailCustom',
+    active: 'profile.adaptiveDetailActive',
+  };
+  return {
+    status,
+    title: t(titles[status] || titles.disabled),
+    detail: t(details[status] || details.disabled, { days: adaptive?.data_days ?? 0 }),
+  };
+}
+
+
+export function buildAdaptiveTargetMarkup(targets) {
+  const adaptive = targets?.adaptive || { status: 'disabled', enabled: false, applied: false };
+  const copy = adaptiveStatusCopy(adaptive);
+  const signedAdjustment = adaptive.adjustment_kcal > 0
+    ? `+${adaptive.adjustment_kcal}`
+    : `${adaptive.adjustment_kcal || 0}`;
+  const activeBreakdown = adaptive.applied
+    ? `
+      <div class="adaptive-breakdown">
+        <div><span>${t('profile.adaptiveBase')}</span><strong>${targets.base_calories} kcal</strong></div>
+        <div><span>${t('profile.adaptiveBurn')}</span><strong>${adaptive.burn_baseline} kcal</strong></div>
+        <div><span>${t('profile.adaptiveAdjustment')}</span><strong>${signedAdjustment} kcal</strong></div>
+        <div><span>${t('profile.adaptiveRange')}</span><strong>${adaptive.recommended_min_calories}–${adaptive.recommended_max_calories} kcal</strong></div>
+      </div>
+    `
+    : '';
+
+  return `
+    <section class="adaptive-target-card" data-status="${copy.status}">
+      <div class="adaptive-target-heading">
+        <span class="adaptive-status-dot" aria-hidden="true"></span>
+        <div>
+          <strong>${copy.title}</strong>
+          <p>${copy.detail}</p>
+        </div>
+      </div>
+      ${activeBreakdown}
+    </section>
+  `;
+}
+
+
+function localizedCalculationMethod(targets) {
+  const methods = {
+    profile: 'profile.methodProfile',
+    custom: 'profile.methodCustom',
+    adaptive: 'profile.methodAdaptive',
+  };
+  const key = methods[targets?.calculation_method_code];
+  return key ? t(key) : targets.calculation_method;
 }
 
 
@@ -92,14 +164,16 @@ function renderTargets(targets) {
     <div class="detail-list">
       <div><strong>${t('profile.bmr')}</strong><span>${targets.bmr ? Math.round(targets.bmr) : '-'}</span></div>
       <div><strong>${t('profile.tdee')}</strong><span>${targets.tdee ? Math.round(targets.tdee) : '-'}</span></div>
-      <div><strong>${t('profile.method')}</strong><span>${targets.calculation_method}</span></div>
+      <div><strong>${t('profile.method')}</strong><span>${localizedCalculationMethod(targets)}</span></div>
     </div>
+    ${buildAdaptiveTargetMarkup(targets)}
   `;
 }
 
 
 async function loadTargets() {
-  const response = await apiFetch(`${API.profile}/targets`);
+  const timezone = encodeURIComponent(getBrowserTimeZone());
+  const response = await apiFetch(`${API.profile}/targets?timezone=${timezone}`);
   if (!response.ok) {
     renderTargets(null);
     return;

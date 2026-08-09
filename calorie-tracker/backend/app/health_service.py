@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy.orm import Session
 
 from . import models
+from .adaptive_targets import resolve_nutrition_targets
 from .oura_models import OuraDailyMetric
 
 
@@ -55,10 +56,6 @@ def _day_range(start_date: date, end_date: date) -> list[date]:
         days.append(current)
         current += timedelta(days=1)
     return days
-
-
-def _effective_target(custom_value, calculated_value):
-    return custom_value if custom_value is not None else calculated_value
 
 
 def _aggregate_meals(
@@ -273,16 +270,19 @@ def build_health_summary(
     )
 
     profile = db.query(models.UserProfile).filter(models.UserProfile.user_id == user_id).first()
+    resolved_targets = resolve_nutrition_targets(db, user_id, timezone_name=timezone_name)
     targets = None
-    if profile is not None:
+    if profile is not None and resolved_targets is not None:
         targets = {
-            "calories": _effective_target(profile.custom_calories, profile.target_calories),
-            "protein_g": _effective_target(profile.custom_protein_g, profile.target_protein_g),
-            "carbs_g": _effective_target(profile.custom_carbs_g, profile.target_carbs_g),
-            "fat_g": _effective_target(profile.custom_fats_g, profile.target_fats_g),
-            "fiber_g": _effective_target(profile.custom_fiber_g, profile.target_fiber_g),
+            "calories": resolved_targets.calories,
+            "base_calories": resolved_targets.base_calories,
+            "protein_g": resolved_targets.protein_g,
+            "carbs_g": resolved_targets.carbs_g,
+            "fat_g": resolved_targets.fats_g,
+            "fiber_g": resolved_targets.fiber_g,
             "goal": profile.goal,
             "dietary_preference": profile.dietary_preference,
+            "adaptive": resolved_targets.adaptive.model_dump(),
         }
 
     return {

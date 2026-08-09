@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Food Reader | Profile</title>
     <meta name="description" content="Set body data, activity, and custom nutrition targets in a mobile-first profile workspace.">
     <meta name="theme-color" content="#d96b3b">
@@ -131,6 +131,26 @@
                 </div>
               </section>
 
+              <section class="profile-section adaptive-settings-section">
+                <div class="profile-section-header">
+                  <div>
+                    <h3 data-i18n="profile.adaptiveHeading">Adaptive calorie target</h3>
+                    <p class="panel-note" data-i18n="profile.adaptiveBody">Optionally refine the calculated target from completed activity days. Your profile target remains the fallback.</p>
+                  </div>
+                </div>
+                <label class="adaptive-toggle-card" for="adaptiveCaloriesEnabled">
+                  <input id="adaptiveCaloriesEnabled" name="adaptiveCaloriesEnabled" type="checkbox">
+                  <span class="adaptive-toggle-copy">
+                    <strong data-i18n="profile.adaptiveToggle">Refine my calorie target from activity</strong>
+                    <small data-i18n="profile.adaptiveToggleHint">Uses Oura only when at least 10 recent complete days are available.</small>
+                  </span>
+                </label>
+                <p class="panel-note adaptive-connect-note">
+                  <span data-i18n="profile.adaptiveConnectPrefix">Oura is optional.</span>
+                  <a href="health.html" data-i18n="profile.adaptiveConnectLink">Connect or manage it in Health.</a>
+                </p>
+              </section>
+
               <details id="profileOverrides" class="subtle-panel profile-overrides">
                 <summary class="profile-overrides-summary">
                   <div>
@@ -213,6 +233,6 @@
     </div>
 
     <script type="module" src="navigation.js?v=20260809-2"></script>
-    <script type="module" src="profile.js?v=20260403-11"></script>
+    <script type="module" src="profile.js?v=20260809-adaptive-1"></script>
   </body>
 </html>

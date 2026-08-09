@@ -18,6 +18,7 @@ def test_profile_create_update_and_targets(client, register_and_login):
     profile = create_response.json()
     assert profile["target_calories"] is not None
     assert profile["target_protein_g"] is not None
+    assert profile["adaptive_calories_enabled"] is False
     assert profile["created_at"].endswith("Z")
     assert profile["updated_at"].endswith("Z")
 
@@ -25,6 +26,8 @@ def test_profile_create_update_and_targets(client, register_and_login):
     assert targets_response.status_code == 200
     targets = targets_response.json()
     assert targets["calories"] > 0
+    assert targets["base_calories"] == targets["calories"]
+    assert targets["adaptive"]["status"] == "disabled"
     assert "Calculated using Mifflin-St Jeor equation" in targets["calculation_method"]
     assert targets["last_updated"].endswith("Z")
 
@@ -45,6 +48,17 @@ def test_profile_create_update_and_targets(client, register_and_login):
     custom_targets_response = client.get("/profile/targets", headers=headers)
     assert custom_targets_response.status_code == 200
     assert custom_targets_response.json()["calculation_method"] == "Custom values provided by user"
+
+    adaptive_response = client.put(
+        "/profile",
+        headers=headers,
+        json={"custom_calories": None, "adaptive_calories_enabled": True},
+    )
+    assert adaptive_response.status_code == 200
+    assert adaptive_response.json()["adaptive_calories_enabled"] is True
+    adaptive_targets = client.get("/profile/targets", headers=headers).json()
+    assert adaptive_targets["adaptive"]["status"] == "not_connected"
+    assert adaptive_targets["calories"] == adaptive_targets["base_calories"]
 
 
 def test_profile_targets_disappear_when_required_biometrics_are_removed(client, register_and_login):

@@ -16,6 +16,14 @@ ActivityLevelType = Literal[
 GoalType = Literal["weight_loss", "maintenance", "muscle_gain"]
 DietaryPreferenceType = Literal["none", "vegetarian", "vegan", "keto", "high_protein", "low_carb"]
 WeightSourceType = Literal["manual", "withings"]
+AdaptiveCaloriesStatusType = Literal[
+    "disabled",
+    "not_connected",
+    "warming_up",
+    "stale",
+    "custom_override",
+    "active",
+]
 
 
 class ORMModel(BaseModel):
@@ -141,6 +149,7 @@ class UserProfileBase(BaseModel):
     custom_carbs_g: int | None = Field(None, ge=0, le=2000)
     custom_fats_g: int | None = Field(None, ge=0, le=500)
     custom_fiber_g: int | None = Field(None, ge=0, le=200)
+    adaptive_calories_enabled: bool = False
 
 
 class UserProfileCreate(UserProfileBase):
@@ -151,6 +160,7 @@ class UserProfileUpdate(UserProfileBase):
     activity_level: ActivityLevelType | None = None
     goal: GoalType | None = None
     dietary_preference: DietaryPreferenceType | None = None
+    adaptive_calories_enabled: bool | None = None
 
 
 class UserProfileOut(ORMModel):
@@ -175,22 +185,40 @@ class UserProfileOut(ORMModel):
     target_carbs_g: int | None
     target_fats_g: int | None
     target_fiber_g: int | None
+    adaptive_calories_enabled: bool
+    adaptive_target_calories: int | None
+    adaptive_target_updated_on: date | None
     weight_source: str | None
     weight_measured_at: AwareDatetime | None
     created_at: AwareDatetime
     updated_at: AwareDatetime
 
 
+class AdaptiveCaloriesOut(BaseModel):
+    enabled: bool
+    applied: bool
+    status: AdaptiveCaloriesStatusType
+    source: Literal["oura"] | None = None
+    data_days: int = 0
+    burn_baseline: int | None = None
+    adjustment_kcal: int = 0
+    recommended_min_calories: int | None = None
+    recommended_max_calories: int | None = None
+
+
 class NutritionTargets(BaseModel):
     calories: int
+    base_calories: int
     protein_g: int
     carbs_g: int
     fats_g: int
     fiber_g: int
     calculation_method: str = Field(..., description="Method used for calculation")
+    calculation_method_code: Literal["profile", "custom", "adaptive"]
     bmr: float | None = Field(None, description="Basal Metabolic Rate")
     tdee: float | None = Field(None, description="Total Daily Energy Expenditure")
     last_updated: AwareDatetime = Field(..., description="When profile was last updated")
+    adaptive: AdaptiveCaloriesOut
 
 
 class WithingsAuthUrlOut(BaseModel):

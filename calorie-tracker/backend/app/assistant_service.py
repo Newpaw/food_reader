@@ -7,6 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from . import models
+from .adaptive_targets import resolve_nutrition_targets
 from .ai_analyzer import get_openai_client
 from .health_service import build_health_summary
 from .oura_models import OuraConnection, OuraDailyMetric
@@ -204,10 +205,11 @@ def _inventory(db: Session, user_id: int) -> dict[str, Any]:
     }
 
 
-def _profile(db: Session, user: models.User) -> dict[str, Any]:
+def _profile(db: Session, user: models.User, timezone_name: str = "UTC") -> dict[str, Any]:
     profile = db.query(models.UserProfile).filter(models.UserProfile.user_id == user.id).first()
     if profile is None:
         return {"name": user.name, "profile": None}
+    targets = resolve_nutrition_targets(db, user.id, timezone_name=timezone_name)
     return {
         "name": user.name,
         "profile": {
@@ -220,11 +222,14 @@ def _profile(db: Session, user: models.User) -> dict[str, Any]:
             "dietary_preference": profile.dietary_preference,
             "bmr": profile.bmr,
             "tdee": profile.tdee,
-            "target_calories": profile.target_calories,
-            "target_protein_g": profile.target_protein_g,
-            "target_carbs_g": profile.target_carbs_g,
-            "target_fats_g": profile.target_fats_g,
-            "target_fiber_g": profile.target_fiber_g,
+            "target_calories": targets.calories if targets else profile.target_calories,
+            "base_target_calories": targets.base_calories if targets else profile.target_calories,
+            "target_protein_g": targets.protein_g if targets else profile.target_protein_g,
+            "target_carbs_g": targets.carbs_g if targets else profile.target_carbs_g,
+            "target_fats_g": targets.fats_g if targets else profile.target_fats_g,
+            "target_fiber_g": targets.fiber_g if targets else profile.target_fiber_g,
+            "adaptive_calories_enabled": profile.adaptive_calories_enabled,
+            "adaptive_calories": targets.adaptive.model_dump() if targets else None,
             "custom_calories": profile.custom_calories,
             "custom_protein_g": profile.custom_protein_g,
             "custom_carbs_g": profile.custom_carbs_g,
@@ -357,7 +362,7 @@ def execute_tool(
         if tool_name == "get_data_inventory":
             return _inventory(db, user.id)
         if tool_name == "get_profile":
-            return _profile(db, user)
+            return _profile(db, user, timezone_name)
         if tool_name == "get_meals":
             return _meals(db, user.id, args, timezone_name)
         if tool_name == "get_withings_measurements":

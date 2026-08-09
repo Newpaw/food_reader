@@ -226,5 +226,10 @@ def disconnect(
     connection = db.query(OuraConnection).filter(OuraConnection.user_id == current_user.id).first()
     if connection:
         db.delete(connection)
+    profile = db.query(models.UserProfile).filter(models.UserProfile.user_id == current_user.id).first()
+    if profile:
+        profile.adaptive_calories_enabled = False
+        profile.adaptive_target_calories = None
+        profile.adaptive_target_updated_on = None
     db.commit()
     return None

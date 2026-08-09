@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, Column, Date, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -89,6 +89,9 @@ class UserProfile(Base):
     target_carbs_g = Column(Integer, nullable=True)
     target_fats_g = Column(Integer, nullable=True)
     target_fiber_g = Column(Integer, nullable=True)
+    adaptive_calories_enabled = Column(Boolean, nullable=False, default=False)
+    adaptive_target_calories = Column(Integer, nullable=True)
+    adaptive_target_updated_on = Column(Date, nullable=True)
     weight_source = Column(String, nullable=True, default="manual")
     weight_measured_at = Column(UTCDateTime(), nullable=True)
 

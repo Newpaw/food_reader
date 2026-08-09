@@ -5,15 +5,15 @@
 .assistant-hero {
   display: grid;
   gap: 1rem;
-  padding: 0.7rem 0 1rem;
+  padding: 0.45rem 0 0.8rem;
 }
 
 .assistant-hero h1 {
-  margin: 0.35rem 0 0.65rem;
+  margin: 0.3rem 0 0.5rem;
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 8vw, 3.8rem);
+  font-size: clamp(2rem, 5vw, 3rem);
   line-height: 1.02;
-  max-width: 13ch;
+  max-width: 16ch;
 }
 
 .assistant-hero p:last-child {
@@ -43,7 +43,7 @@
 }
 
 .assistant-chat-card {
-  min-height: min(68vh, 760px);
+  min-height: min(72vh, 780px);
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
   gap: 0.8rem;
@@ -220,6 +220,20 @@
   line-height: 1.4;
 }
 
+@media (max-width: 1099px) {
+  .assistant-hero {
+    display: none;
+  }
+
+  .assistant-page {
+    padding-top: 0.55rem;
+  }
+
+  .assistant-chat-card {
+    min-height: calc(100dvh - 8.5rem);
+  }
+}
+
 @media (max-width: 759px) {
   body {
     overflow: hidden;
@@ -235,10 +249,6 @@
     height: calc(100dvh - 4.25rem);
     padding: 0.45rem 0 calc(5.25rem + env(safe-area-inset-bottom, 0px));
     overflow: hidden;
-  }
-
-  .assistant-hero {
-    display: none;
   }
 
   .assistant-chat-card {
@@ -350,7 +360,7 @@
   }
 }
 
-@media (min-width: 760px) {
+@media (min-width: 1100px) {
   .assistant-hero {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;

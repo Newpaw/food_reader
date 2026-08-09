@@ -101,14 +101,17 @@ def generate_health_coach(health_summary: dict[str, Any], *, locale: str = "cs")
     )
 
     try:
+        model = settings.health_coach_model
+        completion_options: dict[str, Any] = {"max_completion_tokens": 700}
+        if model.startswith("gpt-5.6"):
+            completion_options["reasoning_effort"] = "low"
         response = client.chat.completions.create(
-            model=settings.health_coach_model,
+            model=model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.1,
-            max_tokens=220,
+            **completion_options,
         )
         raw = response.choices[0].message.content or "{}"
         start = raw.find("{")

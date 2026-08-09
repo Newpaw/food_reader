@@ -36,6 +36,13 @@ def main() -> None:
     assert "cs: 'AI asistent'" in navigation_source
     assert "repeat(6, minmax(0, 1fr))" in navigation_source
     assert "food-reader:localechange" in navigation_source
+    assert "mobile-ux.js?v=20260809-2" in navigation_source
+    assert "mobile-polish.css" in navigation_source
+
+    mobile_polish = FRONTEND / "mobile-polish.css"
+    mobile_ux = FRONTEND / "mobile-ux.js"
+    assert mobile_polish.exists(), "shared mobile polish stylesheet is missing"
+    assert mobile_ux.exists(), "shared mobile UX script is missing"
 
     script_tag = '<script type="module" src="navigation.js?v=20260809-1"></script>'
     for filename, page_id in PAGES.items():

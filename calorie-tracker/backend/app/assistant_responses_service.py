@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from datetime import datetime
 from typing import Any
 
@@ -13,6 +14,16 @@ from .settings import settings
 
 logger = logging.getLogger(__name__)
 MAX_TOOL_ROUNDS = 8
+
+ACTION_FIRST_GUARD = """
+Additional product rules for this turn:
+- Missing logged food is UNKNOWN intake, not zero intake. Never assume the user has eaten nothing just because no meal is recorded.
+- If today's meal log is empty or clearly incomplete, the first recommendation must be to log what the user has already eaten today. Do not recommend extra calories, protein, or exercise from an incomplete food log.
+- Give exactly one primary action. A short reason may follow, but do not add competing alternatives.
+- Use concrete quantities only when the available data supports them.
+- Return plain text only. Do not use Markdown formatting markers such as **, __, #, or backticks.
+- Keep the final answer compact enough to scan on a phone: normally one action sentence plus at most two short evidence lines.
+""".strip()
 
 
 def _response_tools() -> list[dict[str, Any]]:
@@ -46,7 +57,7 @@ def _request_options(model: str) -> dict[str, Any]:
         "model": model,
         "tools": _response_tools(),
         "tool_choice": "auto",
-        "max_output_tokens": 1000,
+        "max_output_tokens": 500,
         "text": {"verbosity": "low"},
         # Food Reader handles conversation state itself. Do not persist private health
         # conversations as Responses API application state.
@@ -66,7 +77,7 @@ def _runtime_instructions(user: models.User, *, timezone_name: str, locale: str,
         f"Browser timezone: {timezone_name}. Locale: {locale}. "
         f"Available data inventory: {json.dumps(inventory, ensure_ascii=False, default=str)}"
     )
-    return f"{SYSTEM_PROMPT}\n\nRuntime context:\n{runtime}"
+    return f"{SYSTEM_PROMPT}\n\n{ACTION_FIRST_GUARD}\n\nRuntime context:\n{runtime}"
 
 
 def _conversation_input(history: list[dict[str, str]], message: str) -> list[dict[str, str]]:
@@ -78,6 +89,16 @@ def _conversation_input(history: list[dict[str, str]], message: str) -> list[dic
             items.append({"role": role, "content": content})
     items.append({"role": "user", "content": message[:3000]})
     return items
+
+
+def _plain_output_text(value: str) -> str:
+    """Keep assistant output readable in the plain-text chat bubble."""
+    text = str(value or "").strip()
+    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text, flags=re.DOTALL)
+    text = re.sub(r"__(.*?)__", r"\1", text, flags=re.DOTALL)
+    text = text.replace("`", "")
+    text = re.sub(r"(?m)^#{1,6}\s*", "", text)
+    return text.strip()
 
 
 def _localized_failure(locale: str) -> str:
@@ -129,7 +150,7 @@ def chat_with_food_reader(
             if not function_calls:
                 return {
                     "available": True,
-                    "message": response.output_text or "",
+                    "message": _plain_output_text(response.output_text or ""),
                     "sources": used_sources,
                     "model": model,
                 }

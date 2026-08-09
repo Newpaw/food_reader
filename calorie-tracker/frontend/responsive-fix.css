@@ -1,5 +1,5 @@
 /* Narrow-screen contract: treat every layout below the desktop-nav breakpoint as app/mobile UI.
- * This layer intentionally comes last and fixes the 760-979px gap between phone and desktop styles.
+ * This layer intentionally comes last and keeps the app layout comfortable below the desktop-nav breakpoint.
  */
 
 @media (max-width: 979px) {
@@ -540,5 +540,121 @@
     flex: 0 0 7.25rem !important;
     min-width: 7.25rem !important;
     scroll-snap-align: start;
+  }
+}
+
+/* 2026 interaction pass: comfortable touch targets and calmer mobile rhythm. */
+@media (max-width: 979px) {
+  .topbar-inner {
+    min-height: 4rem;
+    padding-top: max(0.45rem, env(safe-area-inset-top, 0px));
+    padding-bottom: 0.45rem;
+  }
+
+  body[data-page] .page {
+    width: min(100% - 1rem, 54rem) !important;
+    max-width: min(100% - 1rem, 54rem) !important;
+    padding-top: 0.65rem;
+    padding-bottom: calc(6.35rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .panel {
+    padding: clamp(0.9rem, 3.6vw, 1.2rem);
+    border-radius: clamp(18px, 5vw, var(--radius));
+    box-shadow: 0 10px 28px rgba(53, 38, 22, 0.08);
+  }
+
+  .panel-heading {
+    margin-bottom: 0.8rem;
+  }
+
+  .panel-note,
+  .capture-mode-helper {
+    line-height: 1.4;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+
+  .btn,
+  .btn-small,
+  .segmented-control button,
+  .language-picker select,
+  .topbar-actions [data-logout] {
+    min-height: 2.75rem;
+  }
+
+  .primary-capture-panel .upload-card {
+    padding: 0.75rem;
+  }
+
+  .primary-capture-panel .upload-preview {
+    min-height: clamp(9.25rem, 42vw, 15rem);
+  }
+
+  .upload-preview-empty {
+    padding: 1.35rem 1rem;
+  }
+
+  .inline-actions {
+    align-items: center;
+  }
+
+  .inline-actions .panel-note {
+    flex: 1 1 15rem;
+    margin: 0;
+  }
+
+  body[data-page="history"] .quick-row .btn,
+  body[data-page="metrics"] .quick-row .btn,
+  body[data-page="history"] .filter-header > .btn,
+  body[data-page="metrics"] .filter-header > .btn {
+    min-height: 2.75rem;
+  }
+
+  body[data-page="history"] .filter-panel,
+  body[data-page="metrics"] .metrics-filter-panel {
+    padding: 0.8rem !important;
+    gap: 0.6rem !important;
+  }
+
+  .modal {
+    padding: 0.65rem 0.65rem max(0.65rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .modal-card {
+    width: min(42rem, 100%);
+    max-height: calc(100dvh - 1.3rem - env(safe-area-inset-bottom, 0px));
+    overscroll-behavior: contain;
+  }
+
+  .modal-close {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .analysis-primary-actions .btn,
+  .analysis-edit-actions .btn,
+  .profile-save-bar .btn {
+    min-height: 3rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .brand-copy {
+    display: none;
+  }
+
+  .profile-basics-grid,
+  .profile-lifestyle-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .field-span-2 {
+    grid-column: auto;
   }
 }

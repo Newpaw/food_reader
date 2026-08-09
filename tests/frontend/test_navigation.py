@@ -25,6 +25,7 @@ EXPECTED_NAV_ITEMS = [
 
 def main() -> None:
     navigation_source = (FRONTEND / "navigation.js").read_text(encoding="utf-8")
+    shared_styles_source = (FRONTEND / "styles.css").read_text(encoding="utf-8")
 
     for nav_id, href in EXPECTED_NAV_ITEMS:
         assert f"id: '{nav_id}'" in navigation_source, f"missing nav id: {nav_id}"
@@ -34,12 +35,14 @@ def main() -> None:
     assert "window.navigator?.language" in navigation_source
     assert "cs: 'Zdraví'" in navigation_source
     assert "cs: 'AI asistent'" in navigation_source
-    assert "repeat(6, minmax(0, 1fr))" in navigation_source
+    assert "repeat(6, minmax(0, 1fr))" in shared_styles_source
+    assert ".bottom-nav-icon" in shared_styles_source
     assert "food-reader:localechange" in navigation_source
     assert "mobile-ux.js?v=20260809-4" in navigation_source
     assert "mobile-polish.css" in navigation_source
     assert "responsive-fix.css" in navigation_source
-    assert "document.body.appendChild(nav)" in navigation_source
+    assert "document.body.appendChild(nav)" not in navigation_source
+    assert "food-reader-global-navigation-style" not in navigation_source
     assert "document.body?.dataset.page === 'health'" in navigation_source
 
     mobile_polish = FRONTEND / "mobile-polish.css"
@@ -62,7 +65,7 @@ def main() -> None:
     assert "touch-action: pan-y pinch-zoom" in health_css_source
     assert ".health-trends-details" in health_css_source
 
-    script_tag = '<script type="module" src="navigation.js?v=20260809-1"></script>'
+    script_tag = '<script type="module" src="navigation.js?v=20260809-2"></script>'
     for filename, page_id in PAGES.items():
         source = (FRONTEND / filename).read_text(encoding="utf-8")
         assert source.count(script_tag) == 1, f"{filename} must load shared navigation exactly once"

@@ -6,7 +6,7 @@
     <title>Food Reader | AI Assistant</title>
     <meta name="description" content="Chat with a private AI assistant that can read your Food Reader, Oura, and Withings data.">
     <meta name="theme-color" content="#d96b3b">
-    <link rel="stylesheet" href="styles.css?v=20260403-11">
+    <link rel="stylesheet" href="styles.css?v=20260809-nav-1">
     <link rel="stylesheet" href="assistant.css?v=20260809-mobile-3">
     <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
@@ -20,7 +20,7 @@
           <a class="brand" href="index.html">
             <span class="brand-mark">FR</span>
             <span class="brand-copy">
-              <strong>Food Reader</strong>
+              <strong data-i18n="brand.name">Food Reader</strong>
               <small>personal health data</small>
             </span>
           </a>
@@ -34,14 +34,14 @@
           </nav>
           <div class="topbar-actions">
             <label class="language-picker">
-              <span class="sr-only">Language</span>
+              <span class="sr-only" data-i18n="label.language">Language</span>
               <select data-language-select aria-label="Language">
                 <option value="en">EN</option>
                 <option value="cs">CZ</option>
               </select>
             </label>
             <span class="user-chip"><span data-user-greeting>You</span></span>
-            <button class="btn btn-ghost btn-small" data-logout>Log out</button>
+            <button class="btn btn-ghost btn-small" data-logout data-i18n="button.logout">Log out</button>
           </div>
         </div>
       </header>
@@ -97,7 +97,7 @@
       </nav>
     </div>
 
-    <script type="module" src="navigation.js?v=20260809-1"></script>
+    <script type="module" src="navigation.js?v=20260809-2"></script>
     <script type="module" src="assistant.js?v=20260809-1"></script>
   </body>
 </html>

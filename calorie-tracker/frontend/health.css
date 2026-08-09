@@ -1,5 +1,5 @@
 body[data-page="health"] {
-  overflow-x: clip;
+  overflow-x: hidden;
   touch-action: pan-y pinch-zoom;
   background:
     radial-gradient(circle at 8% 0%, rgba(217, 107, 59, 0.1), transparent 25%),
@@ -22,7 +22,7 @@ body[data-page="health"] article {
   grid-template-columns: minmax(0, 1fr);
   gap: 0.65rem;
   width: min(760px, calc(100% - 0.75rem));
-  overflow: clip;
+  overflow-x: hidden;
 }
 
 .health-copy-en { display: inline; }
@@ -598,4 +598,40 @@ html[lang^="cs"] .health-copy-cs { display: inline; }
   .health-chart-empty { min-height:13rem; }
   .health-chart-svg { height:13rem; }
   .health-daily-row { grid-template-columns:1fr 1.6fr 1.1fr; align-items:center; gap:.65rem; padding:.8rem 0; }
+}
+
+@media (max-width: 979px) {
+  .health-page {
+    width: min(100% - 1rem, 54rem);
+    gap: 0.75rem;
+  }
+
+  .health-hero-panel,
+  .health-coach-priority {
+    padding: 0.85rem;
+  }
+
+  .health-hero-actions #syncOuraButton,
+  .health-hero-actions #connectOuraButton,
+  .health-coach-heading .btn,
+  .health-quick-range .btn,
+  .health-range-details summary,
+  .health-filter-form .btn {
+    min-height: 2.75rem;
+  }
+
+  .health-coach-heading .btn,
+  .health-quick-range .btn {
+    font-size: 0.76rem;
+  }
+
+  .health-trends-summary,
+  .health-daily-summary {
+    min-height: 4.25rem;
+  }
+
+  .health-stat-card {
+    min-height: 6rem;
+    padding: 0.7rem;
+  }
 }

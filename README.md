@@ -41,7 +41,7 @@ The narrow-screen navigation always contains:
 - AI
 - Profile
 
-`navigation.js` renders the six destinations, moves the mobile nav directly under `body`, and pins it with `left/right` viewport offsets rather than a fixed pixel width. This keeps the bar independent of page containers and page-level overflow.
+`navigation.js` renders the six destinations without moving the navigation node after page load. The critical fixed positioning and six-column layout live in `styles.css`, so the bar is stable before and after JavaScript initialization. Viewport-relative left/right offsets keep it independent of content width.
 
 ### Health is intentionally isolated
 
@@ -53,7 +53,7 @@ The current contract is simpler:
 - `health-action.css` was removed,
 - generic `mobile-polish.css` / `responsive-fix.css` are **not layered on top of Health**,
 - `health.css` is mobile-first and has only one desktop transition at `980px`,
-- the Health document blocks accidental horizontal scrolling and uses vertical touch panning,
+- the Health document blocks accidental horizontal scrolling with broadly supported overflow rules and uses vertical touch panning,
 - `mobile-ux.js` resets stale horizontal scroll position on Health when needed.
 
 Health hierarchy on narrow screens:
@@ -469,7 +469,7 @@ Health should never have document-level horizontal scrolling. Verify that the cu
 
 ### Bottom navigation is incomplete or horizontally shifted
 
-Verify `navigation.js` loaded. It should render six items, append the nav directly under `body`, and use fixed `left/right` offsets on narrow screens.
+Verify `navigation.js` loaded. It should render six items in the existing navigation node; `styles.css` keeps that node fixed with viewport-relative `left/right` offsets on narrow screens.
 
 ### Mobile chat jumps when the keyboard opens
 

@@ -1,7 +1,7 @@
 import './mobile-ux.js?v=20260809-4';
 
 const MOBILE_POLISH_VERSION = '20260809-2';
-const RESPONSIVE_FIX_VERSION = '20260809-3';
+const RESPONSIVE_FIX_VERSION = '20260809-4';
 
 function ensureSharedStylesheets() {
   // Health owns its responsive layout in health.css. Do not stack the older
@@ -34,36 +34,42 @@ const NAV_ITEMS = [
   {
     id: 'add',
     href: 'index.html',
+    icon: '<path d="M12 5v14M5 12h14"/>',
     desktop: { en: 'Add Meal', cs: 'Přidat jídlo' },
     mobile: { en: 'Add', cs: 'Přidat' },
   },
   {
     id: 'history',
     href: 'history.html',
+    icon: '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="8"/>',
     desktop: { en: 'History', cs: 'Historie' },
     mobile: { en: 'History', cs: 'Historie' },
   },
   {
     id: 'metrics',
     href: 'metrics.html',
+    icon: '<path d="M5 19V9M12 19V5M19 19v-7"/>',
     desktop: { en: 'Metrics', cs: 'Přehled' },
     mobile: { en: 'Metrics', cs: 'Přehled' },
   },
   {
     id: 'health',
     href: 'health.html',
+    icon: '<path d="M20.8 8.4c0 5-8.8 10.1-8.8 10.1S3.2 13.4 3.2 8.4A4.2 4.2 0 0 1 12 5a4.2 4.2 0 0 1 8.8 3.4Z"/>',
     desktop: { en: 'Health', cs: 'Zdraví' },
     mobile: { en: 'Health', cs: 'Zdraví' },
   },
   {
     id: 'assistant',
     href: 'assistant.html',
+    icon: '<path d="m12 3 1.2 4.1L17 9l-3.8 1.9L12 15l-1.2-4.1L7 9l3.8-1.9L12 3ZM18.5 15l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7.7-2.3Z"/>',
     desktop: { en: 'AI Assistant', cs: 'AI asistent' },
     mobile: { en: 'AI', cs: 'AI' },
   },
   {
     id: 'profile',
     href: 'profile.html',
+    icon: '<circle cx="12" cy="8" r="3"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>',
     desktop: { en: 'Profile', cs: 'Profil' },
     mobile: { en: 'Profile', cs: 'Profil' },
   },
@@ -114,70 +120,15 @@ function renderLinks(mode, locale, currentPage) {
     const isCurrent = item.id === currentPage;
     const currentAttribute = isCurrent ? ' aria-current="page"' : '';
     const activeClass = isCurrent ? ' class="active"' : '';
-    return `<a href="${item.href}" data-nav="${item.id}"${activeClass}${currentAttribute}>${label}</a>`;
+    const accessibleLabel = item.desktop[locale];
+    const mobileContents = `
+      <svg class="bottom-nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${item.icon}</svg>
+      <span>${label}</span>
+    `;
+    const contents = mode === 'mobile' ? mobileContents : label;
+    const ariaLabel = mode === 'mobile' ? ` aria-label="${accessibleLabel}"` : '';
+    return `<a href="${item.href}" data-nav="${item.id}"${activeClass}${currentAttribute}${ariaLabel}>${contents}</a>`;
   }).join('');
-}
-
-function ensureMobileNavigationStyle() {
-  if (document.getElementById('food-reader-global-navigation-style')) {
-    return;
-  }
-
-  const style = document.createElement('style');
-  style.id = 'food-reader-global-navigation-style';
-  style.textContent = `
-    .bottom-nav {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-
-    .bottom-nav a {
-      min-width: 0;
-      padding-left: 0.2rem;
-      padding-right: 0.2rem;
-      font-size: clamp(0.64rem, 2.6vw, 0.78rem);
-      white-space: nowrap;
-    }
-
-    @media (max-width: 979px) {
-      .bottom-nav {
-        position: fixed !important;
-        left: 0.45rem !important;
-        right: 0.45rem !important;
-        bottom: max(0.45rem, env(safe-area-inset-bottom, 0px)) !important;
-        width: auto !important;
-        max-width: none !important;
-        transform: none !important;
-        z-index: 1000 !important;
-        display: grid !important;
-        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-        gap: 0.18rem !important;
-        padding: 0.28rem !important;
-        border-radius: 1.35rem !important;
-        overflow: hidden !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-      }
-
-      .bottom-nav a {
-        min-width: 0 !important;
-        min-height: 2.7rem;
-        display: grid;
-        place-items: center;
-        padding: 0.4rem 0.08rem !important;
-        font-size: clamp(0.62rem, 2.5vw, 0.78rem) !important;
-        line-height: 1.05;
-      }
-
-      body[data-page] .page {
-        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-      }
-    }
-
-    @media (min-width: 980px) {
-      .bottom-nav { display: none !important; }
-    }
-  `;
-  document.head.appendChild(style);
 }
 
 function renderNavigation() {
@@ -192,13 +143,7 @@ function renderNavigation() {
   document.querySelectorAll('.bottom-nav').forEach((nav) => {
     nav.setAttribute('aria-label', locale === 'cs' ? 'Mobilní navigace' : 'Mobile navigation');
     nav.innerHTML = renderLinks('mobile', locale, currentPage);
-
-    if (nav.parentElement !== document.body) {
-      document.body.appendChild(nav);
-    }
   });
-
-  ensureMobileNavigationStyle();
 }
 
 if (document.readyState === 'loading') {

@@ -29,19 +29,19 @@
   opacity: 1;
 }
 
-.health-hero-status.status.success {
+.health-hero-status.status[data-tone="success"] {
   color: #153d28;
   background: #effcf3;
   border-color: #b8dfc5;
 }
 
-.health-hero-status.status.info {
+.health-hero-status.status[data-tone="info"] {
   color: #16374a;
   background: #edf8ff;
   border-color: #b9dceb;
 }
 
-.health-hero-status.status.danger {
+.health-hero-status.status[data-tone="danger"] {
   color: #6d2522;
   background: #fff1ef;
   border-color: #efc1bd;
@@ -161,6 +161,10 @@
   font-size: clamp(1.45rem, 5vw, 1.9rem);
 }
 
+#healthCoverageNote {
+  font-size: 0.76rem;
+}
+
 .health-stat-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.55rem;
@@ -184,7 +188,14 @@
   font-size: clamp(1.65rem, 8vw, 2.45rem);
 }
 
-.health-stat-card small {
+.health-stat-card strong .health-stat-unit {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.health-stat-card > small {
   font-size: 0.72rem;
   line-height: 1.2;
 }
@@ -316,10 +327,6 @@
     color: var(--accent-deep);
     background: rgba(217, 107, 59, 0.1);
     border: 1px solid rgba(217, 107, 59, 0.16);
-  }
-
-  .health-coverage-note {
-    font-size: 0.72rem;
   }
 
   .health-filter-panel {

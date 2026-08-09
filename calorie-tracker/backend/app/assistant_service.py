@@ -416,12 +416,13 @@ def chat_with_food_reader(
         }
 
     inventory = _inventory(db, user.id)
+    local_now = datetime.now(_safe_zoneinfo(timezone_name)).isoformat(timespec="minutes")
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {
             "role": "system",
             "content": (
-                f"Current user: {user.name}. Browser timezone: {timezone_name}. Locale: {locale}. "
+                f"Current user: {user.name}. Current local time: {local_now}. Browser timezone: {timezone_name}. Locale: {locale}. "
                 f"Available data inventory: {json.dumps(inventory, ensure_ascii=False, default=str)}"
             ),
         },
@@ -434,14 +435,18 @@ def chat_with_food_reader(
     messages.append({"role": "user", "content": message[:3000]})
 
     used_sources: list[str] = []
+    model = settings.assistant_model
+    completion_options: dict[str, Any] = {"max_completion_tokens": 1000}
+    if model.startswith("gpt-5.6"):
+        completion_options["reasoning_effort"] = "low"
+
     for _ in range(8):
         response = client.chat.completions.create(
-            model=settings.assistant_model,
+            model=model,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
-            temperature=0.15,
-            max_tokens=500,
+            **completion_options,
         )
         assistant_message = response.choices[0].message
         tool_calls = assistant_message.tool_calls or []
@@ -450,7 +455,7 @@ def chat_with_food_reader(
                 "available": True,
                 "message": assistant_message.content or "",
                 "sources": used_sources,
-                "model": settings.assistant_model,
+                "model": model,
             }
 
         messages.append(_tool_call_message(assistant_message))
@@ -482,5 +487,5 @@ def chat_with_food_reader(
         "available": True,
         "message": "I reached the data-query limit for this turn. Please narrow the question or date range.",
         "sources": used_sources,
-        "model": settings.assistant_model,
+        "model": model,
     }

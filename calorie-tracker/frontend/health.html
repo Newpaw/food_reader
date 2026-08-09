@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#d96b3b">
     <link rel="stylesheet" href="styles.css?v=20260808-health-3">
     <link rel="stylesheet" href="health.css?v=20260809-mobile-1">
+    <link rel="stylesheet" href="health-action.css?v=20260809-1">
     <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
@@ -50,8 +51,8 @@
         <section class="panel health-hero-panel">
           <div class="health-hero-copy">
             <p class="eyebrow" id="healthEyebrow">Personal health OS</p>
-            <h1 id="healthHeading">Food + Oura + body data</h1>
-            <p class="panel-note" id="healthSupport">Use your own longitudinal data instead of generic nutrition advice.</p>
+            <h1 id="healthHeading">Health</h1>
+            <p class="panel-note" id="healthSupport">Today first. Trends when you need the why.</p>
           </div>
           <div class="health-hero-actions">
             <div class="button-row">
@@ -61,12 +62,38 @@
             </div>
             <div id="ouraConnectionSummary" class="health-connection-strip"></div>
           </div>
-          <p id="ouraHealthStatus" class="status health-hero-status" hidden></p>
+          <p id="ouraHealthStatus" class="status health-hero-status" role="status" aria-live="polite" hidden></p>
+        </section>
+
+        <section class="panel health-coach-panel health-coach-priority">
+          <div class="panel-heading health-coach-heading">
+            <div>
+              <p class="eyebrow" id="coachEyebrow">Today</p>
+              <h2 id="coachHeading">What should I do now?</h2>
+              <p class="panel-note" id="coachSupport">One concrete action from today's food, targets and Oura data.</p>
+            </div>
+            <button id="generateCoachButton" type="button" class="btn btn-primary btn-small">Refresh advice</button>
+          </div>
+          <div id="healthCoach" class="stack">
+            <div class="empty-state compact" id="coachEmpty">Preparing today's recommendation…</div>
+          </div>
+          <p id="coachStatus" class="status health-coach-status" role="status" aria-live="polite" hidden></p>
+        </section>
+
+        <section class="health-summary-section">
+          <div class="health-section-heading">
+            <div>
+              <p class="eyebrow" id="summaryEyebrow">Today</p>
+              <h2 id="summaryHeading">At a glance</h2>
+            </div>
+            <p id="healthCoverageNote" class="panel-note"></p>
+          </div>
+          <div id="healthSummaryCards" class="health-stat-grid"></div>
         </section>
 
         <section class="panel health-filter-panel">
           <div class="health-filter-copy">
-            <p class="eyebrow" id="rangeEyebrow">Range</p>
+            <p class="eyebrow" id="rangeEyebrow">Trends</p>
             <h2 id="rangeHeading">Analysis window</h2>
           </div>
           <div class="button-row quick-row health-quick-range">
@@ -91,17 +118,6 @@
               <button id="healthApplyButton" type="submit" class="btn btn-primary">Refresh</button>
             </form>
           </details>
-        </section>
-
-        <section class="health-summary-section">
-          <div class="health-section-heading">
-            <div>
-              <p class="eyebrow" id="summaryEyebrow">Signals</p>
-              <h2 id="summaryHeading">Period summary</h2>
-            </div>
-            <p id="healthCoverageNote" class="panel-note"></p>
-          </div>
-          <div id="healthSummaryCards" class="health-stat-grid"></div>
         </section>
 
         <section class="health-charts-grid" aria-label="Health trends">
@@ -139,43 +155,28 @@
           </article>
         </section>
 
-        <section class="health-lower-grid">
-          <article class="panel health-coach-panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow" id="coachEyebrow">AI interpretation</p>
-                <h2 id="coachHeading">Health Coach</h2>
-                <p class="panel-note" id="coachSupport">One practical recommendation grounded in the selected period.</p>
-              </div>
-              <button id="generateCoachButton" type="button" class="btn btn-primary">Generate recommendation</button>
+        <section class="panel health-insights-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" id="insightsEyebrow">Personal patterns</p>
+              <h2 id="insightsHeading">What your data says</h2>
             </div>
-            <div id="healthCoach" class="stack">
-              <div class="empty-state compact" id="coachEmpty">Generate a recommendation after Oura data is connected.</div>
-            </div>
-            <p id="coachStatus" class="status" hidden></p>
-          </article>
-
-          <article class="panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow" id="insightsEyebrow">Personal patterns</p>
-                <h2 id="insightsHeading">What your data says</h2>
-              </div>
-            </div>
-            <div id="healthInsights" class="stack"></div>
-            <p class="panel-note" id="correlationWarning">These are correlations in your own data, not medical conclusions or proof of causality.</p>
-          </article>
+          </div>
+          <div id="healthInsights" class="stack"></div>
+          <p class="panel-note" id="correlationWarning">These are correlations in your own data, not medical conclusions or proof of causality.</p>
         </section>
 
-        <section class="panel health-daily-panel">
-          <div class="panel-heading">
+        <details class="panel health-daily-panel health-daily-details">
+          <summary class="health-daily-summary">
             <div>
               <p class="eyebrow" id="dailyEyebrow">Daily view</p>
               <h2 id="dailyHeading">Food vs expenditure and recovery</h2>
             </div>
-          </div>
+            <span class="health-daily-summary-hint health-copy-cs">Zobrazit data</span>
+            <span class="health-daily-summary-hint health-copy-en">Show data</span>
+          </summary>
           <div id="healthDailyList" class="stack"></div>
-        </section>
+        </details>
       </main>
 
       <nav class="bottom-nav" aria-label="Mobile">
@@ -187,6 +188,6 @@
     </div>
 
     <script type="module" src="navigation.js?v=20260809-1"></script>
-    <script type="module" src="health.js?v=20260808-health-3"></script>
+    <script type="module" src="health.js?v=20260809-action-1"></script>
   </body>
 </html>

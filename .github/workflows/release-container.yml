@@ -41,10 +41,25 @@ jobs:
       - name: Run backend tests
         run: uv run pytest tests/backend
 
+  frontend:
+    name: Frontend syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check frontend JavaScript
+        run: |
+          node --check calorie-tracker/frontend/health.js
+          node --check calorie-tracker/frontend/assistant.js
+          node --check calorie-tracker/frontend/service-worker.js
+
   publish:
     name: Build and publish Docker image
     runs-on: ubuntu-latest
-    needs: test
+    needs:
+      - test
+      - frontend
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

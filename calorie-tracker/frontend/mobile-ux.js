@@ -17,8 +17,6 @@ function applyCompactRangeCopy() {
   const cs = isCzech();
 
   document.querySelectorAll('[data-days]').forEach((button) => {
-    // Shared mobile copy owns these labels so common.js cannot expand them again
-    // after setupPage() applies the generic desktop translations.
     button.removeAttribute('data-i18n');
     const days = button.dataset.days;
     const shortLabels = cs
@@ -42,6 +40,23 @@ function applyCompactRangeCopy() {
   } else {
     setButtonText(historyCustom, cs ? 'Vlastní datumy' : 'Custom dates');
     setButtonText(metricsCustom, cs ? 'Vlastní datumy' : 'Custom dates');
+  }
+}
+
+function applyHealthDetailsCopy() {
+  if (document.body?.dataset.page !== 'health') return;
+  const cs = isCzech();
+
+  const trends = document.querySelector('.health-trends-details');
+  const trendsHint = trends?.querySelector('.health-trends-summary-hint:not([style])');
+  if (trendsHint) {
+    trendsHint.textContent = trends.open ? (cs ? 'Skrýt' : 'Hide') : (cs ? 'Zobrazit' : 'Show');
+  }
+
+  const daily = document.querySelector('.health-daily-details');
+  const dailyHint = daily?.querySelector('.health-daily-summary-hint:not([style])');
+  if (dailyHint) {
+    dailyHint.textContent = daily.open ? (cs ? 'Skrýt' : 'Hide') : (cs ? 'Zobrazit' : 'Show');
   }
 }
 
@@ -69,6 +84,8 @@ function applyHealthMobileCopy() {
     const raw = Number(button.dataset.healthDays || 0) + 1;
     setButtonText(button, cs ? `${raw} dní` : `${raw} days`);
   });
+
+  applyHealthDetailsCopy();
 }
 
 function applyResponsiveCopy() {
@@ -89,6 +106,31 @@ function setupCopyGuard() {
   if (!document.body || !['history', 'metrics', 'health'].includes(document.body.dataset.page)) return;
   const observer = new MutationObserver(scheduleResponsiveCopy);
   observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function resetHealthHorizontalPosition() {
+  if (document.body?.dataset.page !== 'health' || !mobileMedia.matches) return;
+  document.documentElement.scrollLeft = 0;
+  document.body.scrollLeft = 0;
+  if (window.scrollX !== 0) {
+    window.scrollTo(0, window.scrollY);
+  }
+}
+
+function setupHealthViewport() {
+  if (document.body?.dataset.page !== 'health') return;
+
+  document.querySelectorAll('.health-trends-details, .health-daily-details').forEach((details) => {
+    details.addEventListener('toggle', () => {
+      applyHealthDetailsCopy();
+      resetHealthHorizontalPosition();
+    });
+  });
+
+  window.addEventListener('pageshow', resetHealthHorizontalPosition);
+  window.addEventListener('resize', resetHealthHorizontalPosition);
+  window.visualViewport?.addEventListener('resize', resetHealthHorizontalPosition);
+  requestAnimationFrame(resetHealthHorizontalPosition);
 }
 
 function syncAssistantViewport() {
@@ -128,9 +170,8 @@ function setupAssistantViewport() {
 function init() {
   applyResponsiveCopy();
   setupCopyGuard();
+  setupHealthViewport();
   setupAssistantViewport();
-  // Page modules call setupPage() asynchronously and may localize after DOMContentLoaded.
-  // Re-apply once the initial render settles; the observer handles later dynamic updates.
   requestAnimationFrame(() => requestAnimationFrame(applyResponsiveCopy));
 }
 
@@ -144,5 +185,6 @@ window.addEventListener('food-reader:localechange', scheduleResponsiveCopy);
 
 mobileMedia.addEventListener?.('change', () => {
   applyResponsiveCopy();
+  resetHealthHorizontalPosition();
   syncAssistantViewport();
 });

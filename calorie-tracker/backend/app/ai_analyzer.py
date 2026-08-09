@@ -39,6 +39,13 @@ def get_openai_client() -> OpenAI | None:
     return OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
+def _completion_controls(model: str, *, max_tokens: int, reasoning_effort: str) -> dict[str, Any]:
+    controls: dict[str, Any] = {"max_completion_tokens": max_tokens}
+    if model.startswith("gpt-5.6"):
+        controls["reasoning_effort"] = reasoning_effort
+    return controls
+
+
 def encode_image_to_base64(image_path: str) -> str:
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
@@ -131,8 +138,9 @@ def analyze_food_image(
     }
 
     try:
+        model = settings.meal_analysis_model
         response = client.chat.completions.create(
-            model=settings.meal_analysis_model,
+            model=model,
             messages=[
                 {
                     "role": "user",
@@ -142,8 +150,7 @@ def analyze_food_image(
                     ],
                 }
             ],
-            temperature=0,
-            max_tokens=220,
+            **_completion_controls(model, max_tokens=420, reasoning_effort="none"),
         )
         response_text = response.choices[0].message.content or ""
         return _parse_ai_response(response_text, fallback)
@@ -184,11 +191,11 @@ def analyze_food_text(food_description: str) -> dict[str, Any]:
     }
 
     try:
+        model = settings.meal_analysis_model
         response = client.chat.completions.create(
-            model=settings.meal_analysis_model,
+            model=model,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0,
-            max_tokens=180,
+            **_completion_controls(model, max_tokens=360, reasoning_effort="none"),
         )
         response_text = response.choices[0].message.content or ""
         return _parse_ai_response(response_text, fallback)

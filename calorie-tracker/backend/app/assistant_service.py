@@ -29,11 +29,18 @@ Health rules:
 - Do not diagnose disease, prescribe medication, or present wearable/calorie estimates as exact physiology.
 - Clearly distinguish correlation from causation when discussing relationships in the data.
 - If data is missing or sparse, say so directly.
+- Never treat an incomplete current day as a completed daily calorie deficit or surplus.
 
-Style:
+Product style:
 - Reply in the same language as the user unless explicitly asked otherwise.
-- Be concise, specific, and data-driven.
-- Prefer concrete dates, values, comparisons, and trends over generic advice.
+- Default to a SHORT answer: normally 1 direct recommendation plus at most 2 supporting bullets, usually under 120 words.
+- Put the action first. If the user asks what to do today, start with a concrete imperative such as a food portion, minutes of walking/training, or a recovery action.
+- Use exact quantities only when they are supported by the user's targets and logged data.
+- Prefer current-day gaps and readiness over dumping historical rows.
+- Do not repeat day-by-day raw data unless the user explicitly asks for it.
+- Do not add generic wellness advice, motivational filler, summaries of what the user already knows, or a closing offer such as 'let me know if you want more'.
+- For broad questions, choose the 2-3 most decision-relevant facts instead of listing everything available.
+- If there is no meaningful action supported by the data, say so in one sentence.
 """.strip()
 
 
@@ -110,7 +117,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_health_summary",
-            "description": "Build a combined Food Reader + Oura health summary for a date range, including daily intake, expenditure, recovery, correlations, and latest weight. Maximum 366 days.",
+            "description": "Build a combined Food Reader + Oura health summary for a date range, including daily intake, expenditure, recovery, correlations, nutrition targets, and latest weight. Maximum 366 days.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -419,22 +426,22 @@ def chat_with_food_reader(
             ),
         },
     ]
-    for item in history[-12:]:
+    for item in history[-10:]:
         role = item.get("role")
-        content = str(item.get("content") or "")[:4000]
+        content = str(item.get("content") or "")[:3000]
         if role in {"user", "assistant"} and content:
             messages.append({"role": role, "content": content})
-    messages.append({"role": "user", "content": message[:4000]})
+    messages.append({"role": "user", "content": message[:3000]})
 
     used_sources: list[str] = []
     for _ in range(8):
         response = client.chat.completions.create(
-            model=settings.LLM_MODEL,
+            model=settings.assistant_model,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
-            temperature=0.2,
-            max_tokens=900,
+            temperature=0.15,
+            max_tokens=500,
         )
         assistant_message = response.choices[0].message
         tool_calls = assistant_message.tool_calls or []
@@ -443,7 +450,7 @@ def chat_with_food_reader(
                 "available": True,
                 "message": assistant_message.content or "",
                 "sources": used_sources,
-                "model": settings.LLM_MODEL,
+                "model": settings.assistant_model,
             }
 
         messages.append(_tool_call_message(assistant_message))
@@ -475,5 +482,5 @@ def chat_with_food_reader(
         "available": True,
         "message": "I reached the data-query limit for this turn. Please narrow the question or date range.",
         "sources": used_sources,
-        "model": settings.LLM_MODEL,
+        "model": settings.assistant_model,
     }

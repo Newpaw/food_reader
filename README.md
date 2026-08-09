@@ -2,16 +2,85 @@
 
 Food Reader is a mobile-first personal nutrition and health application. It combines meal logging, profile-based nutrition targets, Oura recovery/activity data, optional Withings body measurements, an action-first Health screen, and a private AI assistant.
 
-The product direction is deliberately **action first**: the app should answer **“What should I do now?”** before showing charts and historical detail.
+The product direction is deliberately **action first**: the app should answer **“What should I do now?”** before it shows charts, filters, or long historical detail.
 
 ## Product principles
 
 1. **Mobile / PWA first** – primary flows are designed for a phone and installed-app usage first, then expanded for desktop.
 2. **Action before analysis** – today’s useful action and today’s state appear before long-term charts.
-3. **User data before generic advice** – recommendations are grounded in the authenticated user’s logged food, targets and wearable data.
-4. **Deterministic metrics first, LLM second** – calories, targets, health summaries and correlations are calculated in application code; the LLM interprets the result.
-5. **Read-only AI access** – the AI assistant can inspect the current user’s data through scoped tools, but does not modify meals, OAuth connections or profile data.
-6. **Privacy by design** – OAuth tokens are encrypted locally, AI tools are user-scoped, and the AI assistant uses the OpenAI Responses API with `store=false`.
+3. **Progressive disclosure** – secondary filters, custom date ranges and detailed daily data stay compact until the user asks for them.
+4. **Stable navigation** – the six-item bottom navigation is fixed above the safe area on mobile and content reserves space for it.
+5. **Readable state changes** – success, info and error states must use explicit contrast and must not disappear into background colors.
+6. **One scroll owner** – complex screens should have one obvious scroll region. The AI chat frame stays inside the viewport and only the message list scrolls.
+7. **User data before generic advice** – recommendations are grounded in the authenticated user’s logged food, targets and wearable data.
+8. **Deterministic metrics first, LLM second** – calories, targets, health summaries and correlations are calculated in application code; the LLM interprets them.
+9. **Read-only AI access** – the AI assistant can inspect the current user’s data through scoped tools, but does not modify meals, OAuth connections or profile data.
+10. **Privacy by design** – OAuth tokens are encrypted locally, AI tools are user-scoped, and the AI assistant uses the OpenAI Responses API with `store=false`.
+
+## Mobile UX contract
+
+The shared mobile behavior lives in:
+
+```text
+calorie-tracker/frontend/navigation.js
+calorie-tracker/frontend/mobile-polish.css
+calorie-tracker/frontend/mobile-ux.js
+```
+
+`navigation.js` loads the shared polish layer on every main application page.
+
+### Bottom navigation
+
+The mobile navigation always contains:
+
+- Add
+- History
+- Overview
+- Health
+- AI
+- Profile
+
+On phone-sized layouts it is fixed above `env(safe-area-inset-bottom)`, has a high stacking order, and every target keeps a roughly touch-sized hit area. Pages reserve bottom padding so content is not hidden behind the bar.
+
+### History
+
+History intentionally keeps the date selector compact on mobile:
+
+- current active range and **Custom** action share the first row,
+- Today / 7 / 30 / 90-day presets use one compact row,
+- custom date fields open only when requested,
+- the three summary metrics fit in one row instead of leaving an empty fourth quadrant.
+
+### Overview / Metrics
+
+The Today card is a control panel, not a billboard. Large duplicate calorie numbers and oversized progress areas are visually reduced so current targets and macro progress are visible sooner. The selected-range filter uses the same compact pattern as History.
+
+### Health
+
+The mobile hierarchy is:
+
+1. compact Health/Oura connection header,
+2. **What now?** Health Coach,
+3. today-at-a-glance cards,
+4. trend window,
+5. charts and personal patterns,
+6. detailed daily data.
+
+The Health Coach card is intentionally concise. The first screen should prioritize the recommended action and today’s state instead of configuration metadata.
+
+### AI Assistant
+
+The AI Assistant behaves like an app-sized chat window, not a long web page:
+
+- the application shell is pinned to the current visual viewport,
+- `window.visualViewport` is used to react to the mobile keyboard,
+- the chat card remains fully inside the visible viewport,
+- only the messages area scrolls,
+- the composer stays visible,
+- the bottom navigation hides while the text input is focused so the keyboard does not squeeze the composer unnecessarily,
+- routine success/info banners are visually suppressed because the response and source chips already communicate success; errors remain visible.
+
+This is implemented in `mobile-ux.js` and `mobile-polish.css` so keyboard behavior is not duplicated in individual pages.
 
 ## Main features
 
@@ -24,23 +93,9 @@ The product direction is deliberately **action first**: the app should answer **
 - Meal history, templates and daily nutrition summaries.
 - Profile-based calorie, protein, carbohydrate, fat and fiber targets.
 
-### Health
-
-`health.html` is the action-first health dashboard.
-
-The mobile hierarchy is intentionally:
-
-1. **What should I do now?** – Health Coach recommendation.
-2. **Today at a glance** – calories, protein, readiness and sleep.
-3. **Trend window** – 14 / 30 / 90 days or a custom range.
-4. **Charts and personal patterns** – energy, recovery and HRV trends.
-5. **Detailed daily data** – lower-priority drill-down.
-
-The Health screen avoids keeping connection metadata or filter controls permanently dominant on a small viewport. Oura sync/connect status remains available, but the primary screen real estate is reserved for decisions and current state.
-
 ### Health Coach
 
-Health Coach generates **one concrete next action for today**, for example a food portion, short walk, easy workout, recovery action or “stop for today” when appropriate.
+Health Coach generates **one concrete next action for today**, for example a food portion, short walk, easy workout, recovery action, or a data-quality action such as logging today’s meals before making a nutrition decision.
 
 It uses:
 
@@ -50,9 +105,7 @@ It uses:
 - recent trends and deterministic health insights,
 - local time.
 
-The frontend automatically prepares/caches the current recommendation and exposes **Refresh advice** for an explicit recalculation.
-
-The prompt is intentionally restrictive: short recommendation, at most two supporting evidence points, no diagnosis, medication/supplement advice, extreme restriction or invented measurements.
+Important rule: **missing logged food means unknown intake, not zero intake**. If today’s meal log is clearly incomplete, the coach/assistant must not infer that the user has eaten nothing and should not manufacture a calorie or protein prescription from that assumption.
 
 ### Private AI assistant
 
@@ -67,22 +120,56 @@ The assistant can query scoped tools for:
 - Oura daily metrics,
 - combined health summaries.
 
-The assistant is instructed to answer briefly and action-first. It should prefer one direct recommendation plus only the most decision-relevant evidence instead of dumping raw daily data.
+The default product style is deliberately short: one primary action plus only the most decision-relevant evidence.
 
-#### OpenAI API architecture
+## OpenAI architecture
 
-The AI assistant uses the **OpenAI Responses API** for reasoning + function calling. Food Reader manually manages the visible chat history and tool loop.
+### Model routing
 
-Important implementation details:
+AI models are configurable from environment variables without changing code:
 
-- `store=false` – response application state is not intentionally persisted by the Responses API.
-- GPT-5-family assistant calls use low reasoning effort with `context=current_turn`.
-- `text.verbosity=low` keeps the product output concise.
-- Function calls are executed only against server-side, authenticated, user-scoped Food Reader tools.
-- Every response output item is replayed across tool rounds so reasoning/tool state is preserved correctly when `store=false`.
-- Provider/API failures return a safe user-facing unavailable state instead of an unhandled HTTP 500.
+```dotenv
+OPENAI_API_KEY=...
 
-Meal analysis and Health Coach remain separate workloads and can use their own model configuration.
+# Default for every AI workload
+LLM_MODEL=gpt-5.6-terra
+
+# Optional per-workload overrides; blank means inherit LLM_MODEL
+MEAL_ANALYSIS_MODEL=
+HEALTH_COACH_MODEL=
+ASSISTANT_MODEL=
+```
+
+Effective routing:
+
+```text
+meal analysis  -> MEAL_ANALYSIS_MODEL or LLM_MODEL
+Health Coach   -> HEALTH_COACH_MODEL or LLM_MODEL
+AI assistant   -> ASSISTANT_MODEL or LLM_MODEL
+```
+
+### AI Assistant: Responses API
+
+The tool-enabled AI Assistant uses the **OpenAI Responses API** rather than Chat Completions.
+
+Relevant implementation:
+
+```text
+calorie-tracker/backend/app/assistant_service.py
+calorie-tracker/backend/app/assistant_responses_service.py
+```
+
+Behavior:
+
+- `store=false`,
+- GPT-5-family calls use low reasoning effort with `context=current_turn`,
+- `text.verbosity=low`,
+- server-side authenticated function tools,
+- tool outputs are replayed with the response items across tool rounds,
+- provider failures return a safe application response instead of an unhandled HTTP 500,
+- plain-text output is preferred for the compact mobile chat UI.
+
+Meal analysis and Health Coach are separate workloads and can use independent model overrides.
 
 ## Oura integration
 
@@ -115,83 +202,41 @@ See [`OURA_INTEGRATION.md`](OURA_INTEGRATION.md) for implementation detail and O
 
 Withings support is optional and provides OAuth-based body measurement synchronization. Synced values can include weight and supported body-composition measurements and can feed profile/health context.
 
-## AI model routing
-
-AI models are configurable from environment variables without changing code.
-
-```dotenv
-OPENAI_API_KEY=...
-
-# Default model for every AI workload
-LLM_MODEL=gpt-5.6-terra
-
-# Optional per-workload overrides; blank means inherit LLM_MODEL
-MEAL_ANALYSIS_MODEL=
-HEALTH_COACH_MODEL=
-ASSISTANT_MODEL=
-```
-
-Effective routing is:
-
-```text
-meal analysis  -> MEAL_ANALYSIS_MODEL or LLM_MODEL
-Health Coach   -> HEALTH_COACH_MODEL or LLM_MODEL
-AI assistant   -> ASSISTANT_MODEL or LLM_MODEL
-```
-
-The current production-oriented default is `gpt-5.6-terra`; the three workloads can be benchmarked and upgraded/downgraded independently.
-
-## PWA and navigation
-
-The frontend is static HTML/CSS/JavaScript and can be installed as a Progressive Web App.
-
-Primary navigation is shared across the main pages:
-
-- Add meal
-- History
-- Overview
-- Health
-- AI Assistant
-- Profile
-
-The bottom navigation is optimized for mobile/PWA use, while desktop navigation remains available on larger screens.
-
-The service worker caches the application shell so the installed app can reopen when connectivity is temporarily unavailable. Meal offline behavior is handled separately from server-backed AI/OAuth features.
-
 ## Project structure
 
 ```text
 food_reader/
 ├─ .github/workflows/
-│  └─ release-container.yml          # tests + GHCR image release
+│  └─ release-container.yml
 ├─ deploy/
-│  ├─ docker-compose.prod.yml        # image-based production compose
-│  └─ .env.example                   # production environment template
+│  ├─ docker-compose.prod.yml
+│  └─ .env.example
 ├─ tests/
-│  ├─ backend/                       # FastAPI/service tests
-│  └─ frontend/                      # navigation/integration checks
+│  ├─ backend/
+│  └─ frontend/
 ├─ calorie-tracker/
 │  ├─ backend/
-│  │  ├─ app/
-│  │  │  ├─ main.py
-│  │  │  ├─ settings.py              # env config + model routing
-│  │  │  ├─ ai_analyzer.py           # meal photo/text AI analysis
-│  │  │  ├─ health_service.py        # deterministic health aggregation
-│  │  │  ├─ health_coach.py          # action-first LLM interpretation
-│  │  │  ├─ assistant_service.py     # assistant data tools + shared prompt
-│  │  │  ├─ assistant_responses_service.py # Responses API tool loop
-│  │  │  ├─ oura_service.py
-│  │  │  ├─ oura_models.py
-│  │  │  └─ routers/
-│  │  └─ uploads/
+│  │  └─ app/
+│  │     ├─ main.py
+│  │     ├─ settings.py
+│  │     ├─ ai_analyzer.py
+│  │     ├─ health_service.py
+│  │     ├─ health_coach.py
+│  │     ├─ assistant_service.py
+│  │     ├─ assistant_responses_service.py
+│  │     ├─ oura_service.py
+│  │     ├─ oura_models.py
+│  │     └─ routers/
 │  ├─ frontend/
 │  │  ├─ index.html / home.js
 │  │  ├─ history.html / history.js
 │  │  ├─ metrics.html / metrics.js
 │  │  ├─ health.html / health.js / health.css / health-action.css
-│  │  ├─ assistant.html / assistant.js
+│  │  ├─ assistant.html / assistant.js / assistant.css
 │  │  ├─ profile.html / profile.js
 │  │  ├─ navigation.js
+│  │  ├─ mobile-polish.css
+│  │  ├─ mobile-ux.js
 │  │  ├─ common.js
 │  │  ├─ service-worker.js
 │  │  ├─ manifest.webmanifest
@@ -207,7 +252,7 @@ food_reader/
 
 ## Configuration
 
-For an image-based production deployment, start from:
+For image-based production deployment start from:
 
 ```bash
 cp deploy/.env.example deploy/.env
@@ -216,36 +261,31 @@ cp deploy/.env.example deploy/.env
 Important variables:
 
 ```dotenv
-# Runtime
 BACKEND_PORT=18000
 FRONTEND_PORT=18080
 DATABASE_URL=sqlite:////app/data/app.db
 
-# Authentication
 JWT_SECRET=replace-with-a-long-random-secret
 ACCESS_TOKEN_EXPIRE_MINUTES=10080
 
-# OpenAI
 OPENAI_API_KEY=...
 LLM_MODEL=gpt-5.6-terra
 MEAL_ANALYSIS_MODEL=
 HEALTH_COACH_MODEL=
 ASSISTANT_MODEL=
 
-# Oura
 OURA_CLIENT_ID=...
 OURA_CLIENT_SECRET=...
 OURA_REDIRECT_URI=https://food.example.com/oura/callback
 OURA_FRONTEND_URL=https://food.example.com/health.html
 
-# Withings
 WITHINGS_CLIENT_ID=...
 WITHINGS_CLIENT_SECRET=...
 WITHINGS_REDIRECT_URI=https://food.example.com/withings/callback
 APP_FRONTEND_URL=https://food.example.com/profile.html
 ```
 
-### Important JWT/OAuth rule
+### JWT/OAuth rule
 
 Keep `JWT_SECRET` stable after users connect Oura/Withings. Food Reader derives the local OAuth token-encryption key from this secret; changing it invalidates previously encrypted OAuth credentials.
 
@@ -253,14 +293,14 @@ Never commit `.env` or real OAuth/OpenAI secrets.
 
 ## Running locally
 
-### Prerequisites
+Prerequisites:
 
 - Python 3.12
 - `uv`
 - Node.js 20+ for frontend tests
 - Docker + Docker Compose for container workflows
 
-### Backend
+Backend:
 
 ```bash
 uv sync
@@ -268,28 +308,16 @@ cd calorie-tracker
 uv run uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Static frontend
+Static frontend:
 
 ```bash
 cd calorie-tracker/frontend
 python3 -m http.server 8080
 ```
 
-Open:
+Open `http://localhost:8080`.
 
-```text
-http://localhost:8080
-```
-
-The frontend detects the common split local setup and sends API requests to port `8000`.
-
-To override the backend location in a development browser:
-
-```js
-localStorage.setItem('food-reader-api-base', 'http://YOUR-HOST:8000')
-```
-
-## Docker
+## Docker / production image
 
 Build directly:
 
@@ -297,19 +325,17 @@ Build directly:
 docker build -f calorie-tracker/Dockerfile -t food-reader .
 ```
 
-The application container exposes:
+The container exposes:
 
 - backend: `8000`
 - Nginx/static frontend: `8080`
 
-Persistent production data should be mounted for:
+Persistent production paths:
 
 ```text
 /app/data
 /app/calorie-tracker/backend/uploads
 ```
-
-## Production image deployment
 
 `deploy/docker-compose.prod.yml` runs:
 
@@ -317,17 +343,7 @@ Persistent production data should be mounted for:
 ghcr.io/newpaw/food_reader:latest
 ```
 
-Example:
-
-```bash
-cd deploy
-docker compose -f docker-compose.prod.yml pull app
-docker compose -f docker-compose.prod.yml up -d app
-```
-
-The production compose expects an existing external Docker network named `cloudflare`. Adjust the network section if your environment uses another reverse-proxy topology.
-
-The container includes a `/health` backend health check.
+The production compose expects an existing external Docker network named `cloudflare` unless the deployment file is adapted.
 
 ## CI/CD
 
@@ -337,14 +353,14 @@ The workflow:
 
 1. installs locked Python dependencies with `uv`,
 2. runs backend `pytest` tests,
-3. checks frontend JavaScript syntax,
+3. syntax-checks `navigation.js`, `mobile-ux.js`, `health.js`, `assistant.js` and the service worker,
 4. verifies shared navigation integration,
 5. builds the `linux/amd64` Docker image,
 6. publishes `ghcr.io/newpaw/food_reader:latest`,
-7. also publishes a commit-SHA image tag,
+7. publishes a commit-SHA image tag,
 8. attaches provenance and SBOM metadata.
 
-A production host can periodically pull `latest` and recreate only the application container while preserving mounted SQLite/upload data.
+The service worker uses a versioned app-shell cache and includes the shared mobile polish assets.
 
 ## Testing
 
@@ -362,6 +378,12 @@ npm install
 npm test
 ```
 
+Frontend navigation regression:
+
+```bash
+python tests/frontend/test_navigation.py
+```
+
 Frontend E2E:
 
 ```bash
@@ -370,8 +392,6 @@ E2E_EMAIL="your-email@example.com" \
 E2E_PASSWORD="your-password" \
 npm run test:e2e
 ```
-
-The release workflow additionally executes JavaScript syntax checks and the shared-navigation regression test.
 
 ## API overview
 
@@ -428,19 +448,17 @@ The release workflow additionally executes JavaScript syntax checks and the shar
 ## Data and privacy model
 
 - Every meal, Oura metric, Withings measurement and OAuth connection is associated with a Food Reader user ID.
-- Oura/Withings tool access is scoped to the currently authenticated user.
+- Oura/Withings tool access is scoped to the authenticated user.
 - OAuth access/refresh tokens are encrypted before being stored in SQLite.
 - OAuth secrets and OpenAI keys stay server-side.
-- AI assistant tools do not expose OAuth credentials, API keys, passwords or database paths.
-- The AI assistant is read-only.
-- Responses API calls use `store=false` and the app manages the visible conversation context itself.
-- Health Coach receives a compact health/nutrition context rather than raw OAuth credentials or uploaded meal photos.
-
-See `privacy.html` and `terms.html` for user-facing legal pages.
+- AI Assistant tools do not expose OAuth credentials, API keys, passwords or database paths.
+- AI Assistant is read-only.
+- Responses API calls use `store=false`; the app manages visible conversation history itself.
+- Health Coach receives compact health/nutrition context rather than raw OAuth credentials or uploaded meal photos.
 
 ## Health-data caveat
 
-Food Reader is a personal wellness/nutrition tool, not a medical device. Oura/Withings values and calorie estimates are useful signals but are not exact physiological measurements. Personal correlations are presented as patterns, not proof of causality or diagnosis.
+Food Reader is a personal wellness/nutrition tool, not a medical device. Oura/Withings values and calorie estimates are useful signals but are not exact physiological measurements. Personal correlations are patterns, not proof of causality or diagnosis.
 
 Energy trend calculations use:
 
@@ -452,19 +470,23 @@ Interpret this primarily over multi-day trends rather than as a precise single-d
 
 ## Troubleshooting
 
-### AI assistant returns an error
+### AI Assistant returns an error
 
-Check backend logs first:
+Check backend logs:
 
 ```bash
 docker logs --since 15m food-reader
 ```
 
-The assistant now uses the Responses API because GPT-5.6 tool calling with reasoning is designed for that API. Do not switch it back to Chat Completions merely to suppress a tool/reasoning compatibility error.
+The Assistant uses Responses API for GPT-5.x reasoning + tool calling. Do not switch it back to Chat Completions merely to suppress a tool/reasoning compatibility error.
 
-### Health Coach works but Assistant fails
+### Mobile chat jumps when the keyboard opens
 
-These are separate OpenAI workloads and API paths. Verify the effective model routing and backend logs independently.
+Verify that the latest `mobile-ux.js` and `mobile-polish.css` are served and that the active service worker cache has updated. The Assistant relies on `window.visualViewport` and the `assistant-input-focused` class.
+
+### Bottom navigation is missing or content is underneath it
+
+Verify that `navigation.js` loaded successfully. It loads the global mobile polish stylesheet, which fixes the nav position and reserves page bottom space.
 
 ### Oura is connected but data is stale
 
@@ -476,28 +498,16 @@ Verify that `JWT_SECRET` was not changed after the OAuth connection was created.
 
 ### Production image does not update
 
-Verify the GHCR pull, container image digest, and the host-side update scheduler. The repository publishes images but does not install a host scheduler automatically.
+Verify the GHCR pull, container image digest and host-side update scheduler.
 
-## Security checklist for production
+## Security checklist
 
 - Use a long random `JWT_SECRET` and keep it stable.
 - Protect `.env` (for example mode `600` on a single-host deployment).
 - Never commit API/OAuth secrets.
-- Use HTTPS for all public OAuth callbacks.
-- Keep OAuth redirect URIs exact.
-- Persist SQLite/uploads outside the container filesystem.
-- Keep user-scoped authorization tests enabled.
-- Add rate limiting/abuse controls before broad public exposure.
-- Back up persistent data before schema/deployment changes.
-
-## Technologies
-
-- **Backend:** Python 3.12, FastAPI, SQLAlchemy, Pydantic, SQLite
-- **AI:** OpenAI API, GPT-5.6-family configurable routing, Responses API function calling for the assistant
-- **Wearables:** Oura OAuth/API, optional Withings OAuth/API
-- **Frontend:** HTML, CSS, vanilla JavaScript modules, PWA service worker/manifest
-- **Testing:** pytest, Vitest, Playwright, frontend syntax/regression checks
-- **Infrastructure:** Docker, Nginx, Docker Compose, GitHub Actions, GHCR
+- Use HTTPS for public OAuth callbacks.
+- Keep user-scoped queries on every health/assistant data path.
+- Keep AI tools read-only unless a future write workflow adds explicit authorization and confirmation semantics.
 
 ## License
 

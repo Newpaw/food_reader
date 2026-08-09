@@ -1,3 +1,20 @@
+import './mobile-ux.js?v=20260809-2';
+
+const MOBILE_POLISH_VERSION = '20260809-2';
+
+function ensureMobilePolishStylesheet() {
+  if (document.getElementById('food-reader-mobile-polish')) {
+    return;
+  }
+  const link = document.createElement('link');
+  link.id = 'food-reader-mobile-polish';
+  link.rel = 'stylesheet';
+  link.href = `mobile-polish.css?v=${MOBILE_POLISH_VERSION}`;
+  document.head.appendChild(link);
+}
+
+ensureMobilePolishStylesheet();
+
 const NAV_ITEMS = [
   {
     id: 'add',

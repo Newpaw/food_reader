@@ -1,5 +1,5 @@
-const CACHE_NAME = 'food-reader-v15';
-const ASSET_VERSION = '20260403-11';
+const CACHE_NAME = 'food-reader-v16';
+const ASSET_VERSION = '20260809-1';
 const withVersion = (path) => `${path}?v=${ASSET_VERSION}`;
 const APP_SHELL = [
   '/',
@@ -7,14 +7,19 @@ const APP_SHELL = [
   '/login.html',
   '/history.html',
   '/metrics.html',
+  '/health.html',
+  '/assistant.html',
   '/profile.html',
   '/offline.html',
   withVersion('/styles.css'),
+  withVersion('/assistant.css'),
   withVersion('/common.js'),
   withVersion('/home.js'),
   withVersion('/login.js'),
   withVersion('/history.js'),
   withVersion('/metrics.js'),
+  withVersion('/health.js'),
+  withVersion('/assistant.js'),
   withVersion('/profile.js'),
   withVersion('/charts.js'),
   withVersion('/manifest.webmanifest'),
@@ -27,7 +32,7 @@ const APP_SHELL = [
   '/assets/images/text-meal-placeholder.svg',
 ];
 
-const API_PREFIXES = ['/auth', '/users', '/me', '/profile', '/uploads'];
+const API_PREFIXES = ['/auth', '/users', '/me', '/profile', '/uploads', '/withings', '/oura', '/assistant'];
 const NETWORK_FIRST_EXTENSIONS = /\.(?:html|css|js|webmanifest)$/;
 
 function shouldUseNetworkFirst(request, url) {

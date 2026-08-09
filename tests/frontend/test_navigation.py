@@ -36,13 +36,25 @@ def main() -> None:
     assert "cs: 'AI asistent'" in navigation_source
     assert "repeat(6, minmax(0, 1fr))" in navigation_source
     assert "food-reader:localechange" in navigation_source
-    assert "mobile-ux.js?v=20260809-2" in navigation_source
+    assert "mobile-ux.js?v=20260809-3" in navigation_source
     assert "mobile-polish.css" in navigation_source
+    assert "responsive-fix.css" in navigation_source
+    assert "document.body.appendChild(nav)" in navigation_source
 
     mobile_polish = FRONTEND / "mobile-polish.css"
     mobile_ux = FRONTEND / "mobile-ux.js"
+    responsive_fix = FRONTEND / "responsive-fix.css"
     assert mobile_polish.exists(), "shared mobile polish stylesheet is missing"
     assert mobile_ux.exists(), "shared mobile UX script is missing"
+    assert responsive_fix.exists(), "narrow-screen responsive fix stylesheet is missing"
+
+    mobile_ux_source = mobile_ux.read_text(encoding="utf-8")
+    responsive_fix_source = responsive_fix.read_text(encoding="utf-8")
+    assert "(max-width: 979px)" in mobile_ux_source
+    assert "@media (max-width: 979px)" in responsive_fix_source
+    assert "grid-template-columns: repeat(6, minmax(0, 1fr))" in responsive_fix_source
+    assert 'body[data-page="health"] .health-charts-grid' in responsive_fix_source
+    assert 'body[data-page="assistant"] .assistant-shell' in responsive_fix_source
 
     script_tag = '<script type="module" src="navigation.js?v=20260809-1"></script>'
     for filename, page_id in PAGES.items():

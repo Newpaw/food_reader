@@ -8,6 +8,9 @@ import {
 
 let ouraStatus = null;
 let healthSummary = null;
+let coachRequestInFlight = false;
+
+const COACH_CACHE_KEY = 'food-reader:health-coach:v2';
 
 const CHART_COLORS = {
   intake: '#d96b3b',
@@ -51,48 +54,45 @@ function setRange(daysBack) {
 
 function applyStaticCopy() {
   document.getElementById('healthEyebrow').textContent = copy('Osobní health OS', 'Personal health OS');
-  document.getElementById('healthHeading').textContent = copy('Jídlo + Oura + tělesná data', 'Food + Oura + body data');
+  document.getElementById('healthHeading').textContent = copy('Zdraví', 'Health');
   document.getElementById('healthSupport').textContent = copy(
-    'Rozhoduj se podle vlastních dlouhodobých dat, ne podle obecných pouček.',
-    'Use your own longitudinal data instead of generic nutrition advice.',
+    'Nejdřív co máš udělat dnes. Trendy až jako vysvětlení proč.',
+    'What to do today first. Trends only when you need the why.',
   );
-  document.getElementById('syncOuraButton').textContent = copy('Synchronizovat Ouru', 'Sync Oura');
+  document.getElementById('syncOuraButton').textContent = copy('Sync Oura', 'Sync Oura');
   document.getElementById('connectOuraButton').textContent = copy('Připojit Ouru', 'Connect Oura');
-  document.getElementById('rangeEyebrow').textContent = copy('Období', 'Range');
-  document.getElementById('rangeHeading').textContent = copy('Okno pro analýzu', 'Analysis window');
+  document.getElementById('rangeEyebrow').textContent = copy('Trendy', 'Trends');
+  document.getElementById('rangeHeading').textContent = copy('Období pro trendy', 'Trend window');
   document.getElementById('healthFromLabel').textContent = copy('Od', 'From');
   document.getElementById('healthToLabel').textContent = copy('Do', 'To');
   document.getElementById('healthApplyButton').textContent = copy('Přepočítat', 'Refresh');
-  document.getElementById('summaryEyebrow').textContent = copy('Signály', 'Signals');
-  document.getElementById('summaryHeading').textContent = copy('Souhrn období', 'Period summary');
+  document.getElementById('summaryEyebrow').textContent = copy('Dnes', 'Today');
+  document.getElementById('summaryHeading').textContent = copy('Na první pohled', 'At a glance');
   document.getElementById('energyChartEyebrow').textContent = copy('Energie', 'Energy');
   document.getElementById('energyChartHeading').textContent = copy('Příjem vs. výdej', 'Intake vs expenditure');
   document.getElementById('recoveryChartEyebrow').textContent = copy('Regenerace', 'Recovery');
   document.getElementById('recoveryChartHeading').textContent = copy('Readiness & spánek', 'Readiness & sleep');
   document.getElementById('hrvChartEyebrow').textContent = copy('Hloubka regenerace', 'Recovery depth');
   document.getElementById('hrvChartHeading').textContent = copy('Trend HRV', 'HRV trend');
-  document.getElementById('coachEyebrow').textContent = copy('AI interpretace', 'AI interpretation');
-  document.getElementById('coachHeading').textContent = copy('Health Coach', 'Health Coach');
+  document.getElementById('coachEyebrow').textContent = copy('Dnes', 'Today');
+  document.getElementById('coachHeading').textContent = copy('Co mám udělat teď?', 'What should I do now?');
   document.getElementById('coachSupport').textContent = copy(
-    'Jedno praktické doporučení opřené o zvolené období a tvoje vlastní data.',
-    'One practical recommendation grounded in the selected period and your own data.',
+    'Jedna konkrétní akce z dnešního jídla, cílů a Oura dat.',
+    'One concrete action from today’s food, targets, and Oura data.',
   );
-  document.getElementById('generateCoachButton').textContent = copy('Vygenerovat doporučení', 'Generate recommendation');
+  document.getElementById('generateCoachButton').textContent = copy('Obnovit radu', 'Refresh advice');
   const coachEmpty = document.getElementById('coachEmpty');
   if (coachEmpty) {
-    coachEmpty.textContent = copy(
-      'Po připojení Oury si nech vygenerovat doporučení pro dnešek.',
-      'After connecting Oura, generate a recommendation for today.',
-    );
+    coachEmpty.textContent = copy('Připravuji dnešní doporučení…', 'Preparing today’s recommendation…');
   }
   document.getElementById('insightsEyebrow').textContent = copy('Osobní vzorce', 'Personal patterns');
-  document.getElementById('insightsHeading').textContent = copy('Co říkají tvoje data', 'What your data says');
+  document.getElementById('insightsHeading').textContent = copy('Proč se to děje', 'Why this may be happening');
   document.getElementById('correlationWarning').textContent = copy(
     'Jde o korelace ve tvých datech, ne o lékařské závěry ani důkaz příčiny.',
     'These are correlations in your own data, not medical conclusions or proof of causality.',
   );
   document.getElementById('dailyEyebrow').textContent = copy('Po dnech', 'Daily view');
-  document.getElementById('dailyHeading').textContent = copy('Jídlo vs. výdej a regenerace', 'Food vs expenditure and recovery');
+  document.getElementById('dailyHeading').textContent = copy('Detailní data', 'Detailed data');
 }
 
 function renderConnection() {
@@ -103,8 +103,8 @@ function renderConnection() {
 
   if (!ouraStatus?.configured) {
     target.innerHTML = `<div class="health-connection-message">${copy(
-      'Oura není nakonfigurovaná. Doplň serverové OAuth proměnné.',
-      'Oura is not configured. Add the server OAuth variables.',
+      'Oura není nakonfigurovaná.',
+      'Oura is not configured.',
     )}</div>`;
     syncButton.hidden = true;
     connectButton.hidden = true;
@@ -114,8 +114,8 @@ function renderConnection() {
 
   if (!ouraStatus.connected) {
     target.innerHTML = `<div class="health-connection-message">${copy(
-      'Oura účet zatím není připojený.',
-      'Oura account is not connected yet.',
+      'Oura není připojená.',
+      'Oura is not connected.',
     )}</div>`;
     syncButton.hidden = true;
     connectButton.hidden = false;
@@ -128,7 +128,7 @@ function renderConnection() {
   coachButton.disabled = false;
   const lastSync = ouraStatus.last_sync_at ? formatDateTime(ouraStatus.last_sync_at) : '-';
   target.innerHTML = `
-    <div class="health-connection-item"><span>${copy('Oura', 'Oura')}</span><strong class="health-connected-dot">${copy('Připojeno', 'Connected')}</strong></div>
+    <div class="health-connection-item"><span>Oura</span><strong class="health-connected-dot">${copy('Připojeno', 'Connected')}</strong></div>
     <div class="health-connection-item"><span>${copy('Sync', 'Sync')}</span><strong>${escapeHtml(lastSync)}</strong></div>
     <div class="health-connection-item"><span>${copy('Historie', 'History')}</span><strong>${ouraStatus.synced_days ?? 0} ${copy('dní', 'days')}</strong></div>
   `;
@@ -138,42 +138,77 @@ function fmt(value, suffix = '') {
   return value === null || value === undefined ? '-' : `${value}${suffix}`;
 }
 
+function currentDayRow() {
+  const rows = healthSummary?.days || [];
+  const today = localDateKey(new Date());
+  return rows.find((row) => row.day === today) || [...rows].reverse().find((row) => row.oura || row.nutrition?.meal_count) || null;
+}
+
+function finiteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function remainingText(target, current, unit) {
+  const targetNumber = finiteNumber(target);
+  const currentNumber = finiteNumber(current) ?? 0;
+  if (targetNumber === null || targetNumber <= 0) {
+    return copy('bez nastaveného cíle', 'no target set');
+  }
+  const remaining = Math.round(targetNumber - currentNumber);
+  if (remaining > 0) {
+    return copy(`zbývá ${remaining} ${unit}`, `${remaining} ${unit} remaining`);
+  }
+  if (remaining < 0) {
+    return copy(`nad cílem o ${Math.abs(remaining)} ${unit}`, `${Math.abs(remaining)} ${unit} over target`);
+  }
+  return copy('cíl splněn', 'target met');
+}
+
 function renderSummary() {
   const cards = document.getElementById('healthSummaryCards');
   const note = document.getElementById('healthCoverageNote');
   const summary = healthSummary?.summary;
-  if (!summary) {
+  const row = currentDayRow();
+  if (!summary || !row) {
     cards.innerHTML = '';
     note.textContent = '';
     return;
   }
-  const balance = summary.average_energy_balance_kcal;
-  const balanceClass = balance === null ? '' : balance < 0 ? 'health-stat-negative' : 'health-stat-positive';
+
+  const nutrition = row.nutrition || {};
+  const oura = row.oura || {};
+  const targets = healthSummary?.targets || {};
+  const calories = Math.round(finiteNumber(nutrition.calories) ?? 0);
+  const protein = Math.round(finiteNumber(nutrition.protein_g) ?? 0);
+  const readiness = finiteNumber(oura.readiness_score) ?? finiteNumber(ouraStatus?.latest_readiness);
+  const sleep = finiteNumber(oura.sleep_score) ?? finiteNumber(ouraStatus?.latest_sleep_score);
+
   cards.innerHTML = `
-    <article class="health-stat-card ${balanceClass}">
-      <span>${copy('Prům. bilance', 'Avg balance')}</span>
-      <strong>${balance === null ? '-' : `${balance > 0 ? '+' : ''}${balance}`}</strong>
-      <small>kcal / ${copy('den', 'day')}</small>
+    <article class="health-stat-card">
+      <span>${copy('Kalorie dnes', 'Calories today')}</span>
+      <strong>${calories}</strong>
+      <small>${escapeHtml(remainingText(targets.calories, calories, 'kcal'))}</small>
     </article>
     <article class="health-stat-card">
-      <span>${copy('Readiness', 'Readiness')}</span>
-      <strong>${fmt(summary.average_readiness)}</strong>
-      <small>${copy('průměr', 'average')}</small>
+      <span>${copy('Bílkoviny dnes', 'Protein today')}</span>
+      <strong>${protein}<small class="health-stat-unit"> g</small></strong>
+      <small>${escapeHtml(remainingText(targets.protein_g, protein, 'g'))}</small>
     </article>
     <article class="health-stat-card">
-      <span>${copy('Sleep score', 'Sleep score')}</span>
-      <strong>${fmt(summary.average_sleep_score)}</strong>
-      <small>${copy('průměr', 'average')}</small>
+      <span>Readiness</span>
+      <strong>${fmt(readiness)}</strong>
+      <small>${copy('dnešní stav', 'today')}</small>
     </article>
     <article class="health-stat-card">
-      <span>${copy('Poslední váha', 'Latest weight')}</span>
-      <strong>${fmt(summary.latest_weight_kg)}</strong>
-      <small>kg</small>
+      <span>${copy('Spánek', 'Sleep')}</span>
+      <strong>${fmt(sleep)}</strong>
+      <small>${copy('sleep score', 'sleep score')}</small>
     </article>
   `;
   note.textContent = copy(
-    `Pokrytí dat: jídlo ${summary.days_with_food} dní · Oura ${summary.days_with_oura} dní`,
-    `Data coverage: food ${summary.days_with_food} days · Oura ${summary.days_with_oura} days`,
+    `Data: jídlo ${summary.days_with_food} dní · Oura ${summary.days_with_oura} dní`,
+    `Data: food ${summary.days_with_food} days · Oura ${summary.days_with_oura} days`,
   );
 }
 
@@ -328,8 +363,8 @@ function renderCoach(payload) {
     ? `<ul class="health-coach-evidence">${evidence.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`
     : '';
   target.innerHTML = `
-    <article class="health-coach-card">
-      <p class="eyebrow">${copy('Doporučení pro dnešek', 'Recommendation for today')} · ${copy('jistota', 'confidence')}: ${escapeHtml(payload?.confidence || 'low')}</p>
+    <article class="health-coach-card" data-confidence="${escapeHtml(payload?.confidence || 'low')}">
+      <p class="eyebrow">${copy('Doporučení pro dnešek', 'Recommendation for today')}</p>
       <h3>${escapeHtml(payload?.headline || 'Health Coach')}</h3>
       <p>${escapeHtml(payload?.recommendation || '')}</p>
       ${evidenceHtml}
@@ -337,12 +372,49 @@ function renderCoach(payload) {
   `;
 }
 
-function resetCoach() {
+function resetCoach(message = null) {
   const target = document.getElementById('healthCoach');
-  target.innerHTML = `<div class="empty-state compact" id="coachEmpty">${copy(
-    'Po připojení Oury si nech vygenerovat doporučení pro dnešek.',
-    'After connecting Oura, generate a recommendation for today.',
-  )}</div>`;
+  target.innerHTML = `<div class="empty-state compact" id="coachEmpty">${escapeHtml(message || copy(
+    'Připravuji dnešní doporučení…',
+    'Preparing today’s recommendation…',
+  ))}</div>`;
+}
+
+function coachFingerprint() {
+  const row = currentDayRow();
+  return JSON.stringify({
+    locale: isCzech() ? 'cs' : 'en',
+    from: healthSummary?.from,
+    to: healthSummary?.to,
+    targets: healthSummary?.targets || null,
+    today: row
+      ? {
+          day: row.day,
+          nutrition: row.nutrition,
+          oura: row.oura,
+        }
+      : null,
+    ouraLastSync: ouraStatus?.last_sync_at || null,
+  });
+}
+
+function readCoachCache(fingerprint) {
+  try {
+    const raw = window.localStorage.getItem(COACH_CACHE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    return cached?.fingerprint === fingerprint && cached?.payload ? cached.payload : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCoachCache(fingerprint, payload) {
+  try {
+    window.localStorage.setItem(COACH_CACHE_KEY, JSON.stringify({ fingerprint, payload }));
+  } catch {
+    // Cache is only a convenience. Health Coach still works without localStorage.
+  }
 }
 
 function renderDaily() {
@@ -387,13 +459,13 @@ async function loadStatus() {
 }
 
 async function loadHealthSummary() {
-  resetCoach();
   if (!ouraStatus?.connected) {
     healthSummary = null;
     renderSummary();
     renderCharts();
     renderInsights();
     renderDaily();
+    resetCoach(copy('Nejdřív připoj Ouru.', 'Connect Oura first.'));
     return;
   }
   const from = document.getElementById('healthFrom').value;
@@ -408,6 +480,7 @@ async function loadHealthSummary() {
   renderCharts();
   renderInsights();
   renderDaily();
+  void ensureCoach();
 }
 
 function analysisParams() {
@@ -418,31 +491,69 @@ function analysisParams() {
   return `start_date=${encodeURIComponent(from)}&end_date=${encodeURIComponent(to)}&timezone=${encodeURIComponent(timezone)}&locale=${locale}`;
 }
 
-async function generateCoach() {
+async function generateCoach({ silent = false, force = true } = {}) {
   const status = document.getElementById('coachStatus');
   const button = document.getElementById('generateCoachButton');
-  if (!ouraStatus?.connected) {
-    showStatus(status, copy('Nejdřív připoj Ouru.', 'Connect Oura first.'), 'info');
+  if (!ouraStatus?.connected || !healthSummary || coachRequestInFlight) {
+    if (!ouraStatus?.connected && !silent) {
+      showStatus(status, copy('Nejdřív připoj Ouru.', 'Connect Oura first.'), 'info');
+    }
     return;
   }
+
+  const fingerprint = coachFingerprint();
+  if (!force) {
+    const cached = readCoachCache(fingerprint);
+    if (cached) {
+      renderCoach(cached);
+      status.hidden = true;
+      return;
+    }
+  }
+
+  coachRequestInFlight = true;
   button.disabled = true;
-  showStatus(status, copy('Analyzuji tvoje vlastní trendy…', 'Analyzing your personal trends…'), 'info');
+  if (silent) {
+    resetCoach(copy('Připravuji dnešní doporučení…', 'Preparing today’s recommendation…'));
+    status.hidden = true;
+  } else {
+    showStatus(status, copy('Přepočítávám dnešní doporučení…', 'Refreshing today’s recommendation…'), 'info');
+  }
+
   try {
     const response = await apiFetch(`/oura/coach?${analysisParams()}`, { method: 'POST' });
     const payload = await getJsonOrThrow(response, copy('Health Coach selhal', 'Health Coach failed'));
     renderCoach(payload);
-    showStatus(
-      status,
-      payload.available
-        ? copy('Doporučení vychází z aktuálně zvolených dat.', 'Recommendation is grounded in the selected data.')
-        : payload.recommendation,
-      payload.available ? 'success' : 'info',
-    );
+    if (payload.available) {
+      writeCoachCache(fingerprint, payload);
+    }
+    if (!silent) {
+      showStatus(
+        status,
+        payload.available ? copy('Doporučení je aktuální.', 'Advice is up to date.') : payload.recommendation,
+        payload.available ? 'success' : 'info',
+      );
+    } else if (!payload.available) {
+      showStatus(status, payload.recommendation, 'info');
+    }
   } catch (error) {
     showStatus(status, error.message, 'danger');
   } finally {
+    coachRequestInFlight = false;
     button.disabled = !ouraStatus?.connected;
   }
+}
+
+async function ensureCoach() {
+  if (!ouraStatus?.connected || !healthSummary) return;
+  const fingerprint = coachFingerprint();
+  const cached = readCoachCache(fingerprint);
+  if (cached) {
+    renderCoach(cached);
+    document.getElementById('coachStatus').hidden = true;
+    return;
+  }
+  await generateCoach({ silent: true, force: true });
 }
 
 async function connectOura() {
@@ -459,16 +570,24 @@ async function connectOura() {
 
 async function syncOura() {
   const status = document.getElementById('ouraHealthStatus');
+  const button = document.getElementById('syncOuraButton');
+  button.disabled = true;
   showStatus(status, copy('Synchronizuji Oura data…', 'Syncing Oura data…'), 'info');
   try {
     const response = await apiFetch('/oura/sync', { method: 'POST' });
     const payload = await getJsonOrThrow(response, copy('Synchronizace Oury selhala', 'Oura sync failed'));
     await loadStatus();
     await loadHealthSummary();
-    const warning = payload.warnings?.length ? ` ${copy('Částečné upozornění:', 'Partial warning:')} ${payload.warnings.join('; ')}` : '';
-    showStatus(status, `${copy('Synchronizováno dní:', 'Synced days:')} ${payload.synced_days}.${warning}`, payload.warnings?.length ? 'info' : 'success');
+    const warning = payload.warnings?.length ? ` ${copy('Upozornění:', 'Warning:')} ${payload.warnings.join('; ')}` : '';
+    showStatus(
+      status,
+      `${copy('Oura je aktuální.', 'Oura is up to date.')} ${copy('Načteno dní:', 'Days synced:')} ${payload.synced_days}.${warning}`,
+      payload.warnings?.length ? 'info' : 'success',
+    );
   } catch (error) {
     showStatus(status, error.message, 'danger');
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -484,13 +603,13 @@ function showCallbackResult() {
     showStatus(
       status,
       copy(
-        'Oura je připojená, ale první synchronizace nedoběhla. Použij tlačítko Synchronizovat Ouru.',
+        'Oura je připojená, ale první synchronizace nedoběhla. Použij Sync Oura.',
         'Oura is connected, but the initial sync did not complete. Use Sync Oura.',
       ),
       'info',
     );
   } else if (result === 'connected') {
-    showStatus(status, copy('Oura je připojená a první historie byla synchronizovaná.', 'Oura is connected and initial history was synced.'), 'success');
+    showStatus(status, copy('Oura je připojená a data jsou načtená.', 'Oura is connected and data is loaded.'), 'success');
   } else {
     showStatus(status, copy('Připojení Oury se nepodařilo.', 'Oura connection failed.'), 'danger');
   }
@@ -509,7 +628,7 @@ async function init() {
 
   document.getElementById('connectOuraButton').addEventListener('click', connectOura);
   document.getElementById('syncOuraButton').addEventListener('click', syncOura);
-  document.getElementById('generateCoachButton').addEventListener('click', generateCoach);
+  document.getElementById('generateCoachButton').addEventListener('click', () => generateCoach({ silent: false, force: true }));
   document.getElementById('healthFilters').addEventListener('submit', async (event) => {
     event.preventDefault();
     await loadHealthSummary();

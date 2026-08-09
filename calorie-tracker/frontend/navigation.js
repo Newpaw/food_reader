@@ -1,9 +1,16 @@
-import './mobile-ux.js?v=20260809-3';
+import './mobile-ux.js?v=20260809-4';
 
 const MOBILE_POLISH_VERSION = '20260809-2';
 const RESPONSIVE_FIX_VERSION = '20260809-3';
 
 function ensureSharedStylesheets() {
+  // Health owns its responsive layout in health.css. Do not stack the older
+  // generic responsive layers on top of it; that was the source of conflicting
+  // breakpoints and horizontal overflow on Android.
+  if (document.body?.dataset.page === 'health') {
+    return;
+  }
+
   if (!document.getElementById('food-reader-mobile-polish')) {
     const polish = document.createElement('link');
     polish.id = 'food-reader-mobile-polish';
@@ -130,6 +137,45 @@ function ensureMobileNavigationStyle() {
       font-size: clamp(0.64rem, 2.6vw, 0.78rem);
       white-space: nowrap;
     }
+
+    @media (max-width: 979px) {
+      .bottom-nav {
+        position: fixed !important;
+        left: 0.45rem !important;
+        right: 0.45rem !important;
+        bottom: max(0.45rem, env(safe-area-inset-bottom, 0px)) !important;
+        width: auto !important;
+        max-width: none !important;
+        transform: none !important;
+        z-index: 1000 !important;
+        display: grid !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 0.18rem !important;
+        padding: 0.28rem !important;
+        border-radius: 1.35rem !important;
+        overflow: hidden !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+
+      .bottom-nav a {
+        min-width: 0 !important;
+        min-height: 2.7rem;
+        display: grid;
+        place-items: center;
+        padding: 0.4rem 0.08rem !important;
+        font-size: clamp(0.62rem, 2.5vw, 0.78rem) !important;
+        line-height: 1.05;
+      }
+
+      body[data-page] .page {
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+      }
+    }
+
+    @media (min-width: 980px) {
+      .bottom-nav { display: none !important; }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -147,8 +193,6 @@ function renderNavigation() {
     nav.setAttribute('aria-label', locale === 'cs' ? 'Mobilní navigace' : 'Mobile navigation');
     nav.innerHTML = renderLinks('mobile', locale, currentPage);
 
-    // Keep fixed navigation outside any page container that might establish a
-    // containing block or horizontal overflow. This makes it truly viewport-fixed.
     if (nav.parentElement !== document.body) {
       document.body.appendChild(nav);
     }

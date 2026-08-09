@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from . import models
 from .ai_analyzer import get_openai_client
+from .assistant_meal_tools import MEAL_MUTATION_TOOL_NAMES, MEAL_MUTATION_TOOLS, execute_meal_mutation_tool
 from .assistant_service import SYSTEM_PROMPT, TOOLS, _inventory, _safe_zoneinfo, execute_tool
 from .settings import settings
 
@@ -25,11 +26,24 @@ Additional product rules for this turn:
 - Keep the final answer compact enough to scan on a phone: normally one action sentence plus at most two short evidence lines.
 """.strip()
 
+MEAL_WRITE_RULES = """
+Meal logging exception to the base read-only rule:
+- You may create, update, and delete meal records only through add_meal, update_meal, and delete_meal. All other Food Reader data remains read-only.
+- Call add_meal when the user clearly reports food or drink they actually consumed in first person, or explicitly asks to log it. Do not log hypothetical, planned, recommended, or merely discussed food.
+- If it is genuinely ambiguous whether food was consumed or only being discussed, ask one short clarification instead of writing.
+- For update_meal and delete_meal, act only on a clear correction/removal request. Use get_meals first whenever needed to identify the exact meal_id. Never guess an id.
+- A clear explicit delete/remove request does not need a second confirmation once the meal is uniquely identified.
+- Never create duplicate meal records for the same user statement within one turn.
+- After a successful write, briefly confirm what was created, changed, or deleted. If a tool returns an error, say that the change was not saved.
+""".strip()
+
+ALL_TOOLS = [*TOOLS, *MEAL_MUTATION_TOOLS]
+
 
 def _response_tools() -> list[dict[str, Any]]:
-    """Convert the shared function schema to Responses API tools."""
+    """Convert shared read tools and meal write tools to Responses API tools."""
     response_tools: list[dict[str, Any]] = []
-    for tool in TOOLS:
+    for tool in ALL_TOOLS:
         function = tool["function"]
         response_tools.append(
             {
@@ -77,7 +91,7 @@ def _runtime_instructions(user: models.User, *, timezone_name: str, locale: str,
         f"Browser timezone: {timezone_name}. Locale: {locale}. "
         f"Available data inventory: {json.dumps(inventory, ensure_ascii=False, default=str)}"
     )
-    return f"{SYSTEM_PROMPT}\n\n{ACTION_FIRST_GUARD}\n\nRuntime context:\n{runtime}"
+    return f"{SYSTEM_PROMPT}\n\n{MEAL_WRITE_RULES}\n\n{ACTION_FIRST_GUARD}\n\nRuntime context:\n{runtime}"
 
 
 def _conversation_input(history: list[dict[str, str]], message: str) -> list[dict[str, str]]:
@@ -166,14 +180,23 @@ def chat_with_food_reader(
                 except json.JSONDecodeError:
                     args = {}
 
-                result = execute_tool(
-                    db,
-                    user,
-                    tool_name,
-                    args,
-                    timezone_name=timezone_name,
-                    locale=locale,
-                )
+                if tool_name in MEAL_MUTATION_TOOL_NAMES:
+                    result = execute_meal_mutation_tool(
+                        db,
+                        user,
+                        tool_name,
+                        args,
+                        timezone_name=timezone_name,
+                    )
+                else:
+                    result = execute_tool(
+                        db,
+                        user,
+                        tool_name,
+                        args,
+                        timezone_name=timezone_name,
+                        locale=locale,
+                    )
                 if tool_name not in used_sources:
                     used_sources.append(tool_name)
 

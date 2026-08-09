@@ -1,29 +1,28 @@
 # Oura integration
 
-Food Reader can connect an Oura account through OAuth 2.0, store selected daily health metrics in the existing SQLite database, and combine them with nutrition and Withings weight data in the **Health Insights** dashboard.
+Food Reader connects an Oura account through OAuth 2.0, stores normalized daily metrics in the existing SQLite database, and combines them with nutrition targets, logged meals and optional Withings weight data in the **Health** screen.
+
+The current product hierarchy is action-first: the user sees **what to do now**, then today’s state, and only then trends and detailed history.
 
 ## What is included
 
 - Oura OAuth 2.0 authorization with encrypted access and refresh tokens
-- Initial historical import (up to 365 days)
-- Incremental manual sync with a short lookback window so recently changed Oura days are refreshed
+- One Oura connection per Food Reader user
+- Initial historical import (up to 365 days, limited by data available in Oura)
+- Incremental manual sync with a short lookback so recently changed Oura days are refreshed
 - Daily activity: activity score, active calories, total calories, steps
 - Daily readiness score
 - Daily sleep score
 - Sleep detail where available: total sleep duration, average HRV, lowest heart rate
 - Daily stress/recovery where available
 - Workout count, calories and duration where available
-- Health Insights API combining Food Reader nutrition + Oura + latest Withings weight
-- Personal trend analysis:
-  - logged calorie intake vs Oura total expenditure
-  - energy balance vs next-day readiness
-  - protein vs next-day readiness
-  - calorie intake vs next-day readiness
-  - late last meal (21:00+) vs next-day sleep score
-- Optional **Health Coach** using the application's existing OpenAI configuration to turn the deterministic metrics into one short recommendation for today
+- Combined Food Reader nutrition + Oura + latest Withings health summary
+- Personal trend analysis such as energy balance, protein, meal timing and next-day recovery patterns
+- **Action-first Health Coach** using today’s food, targets, Oura signals and recent trends
+- Automatic Health Coach preparation/cache on the Health screen, plus explicit **Refresh advice**
 - Czech and English dashboard copy
 
-The analytics intentionally require a minimum number of observations before calculating correlations. Correlations are displayed as patterns in the user's own data, not as medical conclusions or proof of causality.
+The analytics intentionally require a minimum number of observations before calculating correlations. Correlations are displayed as patterns in the user’s own data, not as medical conclusions or proof of causality.
 
 ## Oura developer setup
 
@@ -34,7 +33,7 @@ The analytics intentionally require a minimum number of observations before calc
    https://food.example.com/oura/callback
    ```
 
-3. Add these variables to `calorie-tracker/.env`:
+3. Configure the server environment:
 
    ```dotenv
    OURA_CLIENT_ID=...
@@ -63,7 +62,7 @@ daily workout personal
 | POST | `/oura/sync` | Import/refresh Oura data |
 | GET | `/oura/daily` | Read locally stored daily Oura metrics |
 | GET | `/oura/health-summary` | Combined nutrition/recovery analytics |
-| POST | `/oura/coach` | Generate one data-grounded Health Coach recommendation |
+| POST | `/oura/coach` | Generate one data-grounded recommendation for today |
 | DELETE | `/oura/disconnect` | Remove local Oura tokens and imported Oura data |
 
 Example health summary:
@@ -84,21 +83,56 @@ POST /oura/coach?start_date=2026-07-01&end_date=2026-08-01&timezone=Europe/Pragu
 
 `oura_daily_metrics` stores one normalized row per user and local Oura day. This keeps dashboard requests fast and prevents the frontend from depending directly on Oura availability.
 
-Meals stay in the existing `meals` table. The Health Insights service aggregates meals in the browser's IANA timezone and joins them to Oura's daily metrics by date.
+Meals remain in the existing `meals` table. The Health service aggregates meals in the browser’s IANA timezone and joins them to Oura daily metrics by local date.
+
+## Health screen behavior
+
+On mobile, the Health screen is intentionally ordered as:
+
+1. **What should I do now?** – Health Coach
+2. **Today at a glance** – calories, protein, readiness, sleep
+3. **Trend range** – 14 / 30 / 90 days or custom range
+4. **Charts / personal patterns**
+5. **Detailed daily data**
+
+Oura connection metadata and sync controls remain available but are visually secondary. Sync feedback uses explicit success/info/error states so the result remains readable on a small screen.
+
+The Health Coach recommendation is cached in browser `localStorage` against a fingerprint containing the selected range, today’s relevant nutrition/Oura data, targets, locale and latest Oura sync. When those inputs change, a new recommendation is generated. The user can also force a refresh explicitly.
 
 ## Health Coach and data sent to OpenAI
 
-The Health Coach is an interpretation layer. It does **not** calculate the source metrics itself: Food Reader first calculates the energy balance, coverage and personal correlations deterministically and only then asks the configured LLM to summarize the most useful action.
+Health Coach is an interpretation layer. It does **not** calculate the source metrics itself: Food Reader first calculates nutrition totals, remaining targets, coverage and personal correlations deterministically and only then asks the configured LLM for one practical next action.
 
-When the user explicitly selects **Generate recommendation**, the backend sends a compact aggregated context to the OpenAI API configured through the existing `OPENAI_API_KEY` / `LLM_MODEL` settings. The context contains:
+Model routing is configured through:
 
+```dotenv
+LLM_MODEL=gpt-5.6-terra
+HEALTH_COACH_MODEL=
+```
+
+When `HEALTH_COACH_MODEL` is blank, it inherits `LLM_MODEL`.
+
+The backend sends a compact aggregated context containing:
+
+- local time
 - selected date range and aggregate summary
+- nutrition targets
 - deterministic insight text
-- at most the latest 14 days of numeric signals: calories, protein, last-meal time, energy balance, readiness, sleep score, HRV, steps and workout count
+- at most the latest 14 days of numeric signals such as calories, protein, last-meal time, energy balance, readiness, sleep score, HRV, steps and workouts
 
-It intentionally does **not** send meal photos, meal descriptions, notes, upload paths, Oura OAuth credentials or raw access/refresh tokens. If no OpenAI API key is configured, Health Coach returns a safe unavailable state and the deterministic dashboard continues to work normally.
+It intentionally does **not** send Oura OAuth credentials or raw access/refresh tokens. Meal photos are not part of Health Coach context.
 
-The Health Coach prompt explicitly forbids diagnosis, claiming causality, medication/supplement recommendations and extreme restriction. Its output should still be treated as a wellness interpretation of the user's own data, not medical advice.
+The Health Coach prompt is action-first and intentionally restrictive:
+
+- one short recommendation
+- at most two short evidence points
+- concrete portion/duration/step target when supported by data
+- no diagnosis
+- no medication/supplement advice
+- no extreme calorie restriction
+- do not treat an incomplete current day as a finished daily deficit/surplus
+
+If no OpenAI API key is configured, Health Coach returns a safe unavailable state and the deterministic Health dashboard continues to work normally.
 
 ## Energy balance caveat
 
@@ -108,15 +142,24 @@ The dashboard calculates:
 logged Food Reader calories - Oura total calories
 ```
 
-This is useful as a trend signal, but neither food logging nor wearable expenditure is exact enough to treat a single day's number as a precise physiological energy balance. Use multi-day trends and body-weight development for decisions.
+This is useful as a trend signal, but neither food logging nor wearable expenditure is exact enough to treat a single day’s number as a precise physiological energy balance. Use multi-day trends and body-weight development for decisions.
 
-## Webhooks
+## Webhooks / automatic Oura sync
 
-This first integration performs a historical import when OAuth completes and exposes incremental sync through `/oura/sync`. Oura recommends webhooks for ongoing updates. A production follow-up should add webhook subscriptions so the local cache refreshes automatically after Oura Cloud receives new data, instead of depending on the user pressing Sync.
+The current integration performs a historical import when OAuth completes and exposes incremental sync through `/oura/sync`.
+
+Automatic Oura webhook/background synchronization is **not implemented yet**. Until it is added, the user refreshes wearable data through **Sync Oura**. This is separate from Health Coach auto-generation: the Coach can refresh automatically from the latest locally available Oura data, but it does not itself pull new Oura Cloud data.
 
 ## Tests
 
-Oura/Health Coach backend coverage is in `tests/backend/test_oura.py` and `tests/backend/test_health_coach.py` and covers:
+Oura/Health Coach backend coverage lives mainly in:
+
+```text
+tests/backend/test_oura.py
+tests/backend/test_health_coach.py
+```
+
+Coverage includes:
 
 - missing configuration
 - OAuth callback and initial sync
@@ -124,5 +167,5 @@ Oura/Health Coach backend coverage is in `tests/backend/test_oura.py` and `tests
 - Food Reader + Oura health summary
 - user data isolation
 - disconnect cleanup
-- Health Coach context minimization (raw meal text/photos/paths are not included)
+- Health Coach context minimization
 - Health Coach fallback when OpenAI is unavailable

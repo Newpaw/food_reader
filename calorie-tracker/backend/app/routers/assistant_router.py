@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from .. import models
-from ..assistant_service import chat_with_food_reader
+from ..assistant_responses_service import chat_with_food_reader
 from ..deps import get_current_user, get_db
 
 

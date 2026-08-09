@@ -132,7 +132,7 @@ def analyze_food_image(
 
     try:
         response = client.chat.completions.create(
-            model=settings.LLM_MODEL,
+            model=settings.meal_analysis_model,
             messages=[
                 {
                     "role": "user",
@@ -185,7 +185,7 @@ def analyze_food_text(food_description: str) -> dict[str, Any]:
 
     try:
         response = client.chat.completions.create(
-            model=settings.LLM_MODEL,
+            model=settings.meal_analysis_model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=180,

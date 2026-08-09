@@ -1,0 +1,567 @@
+/* Shared mobile polish layer for Food Reader.
+ * Loaded globally by navigation.js so page-specific styles can stay focused.
+ */
+
+:root {
+  --fr-mobile-nav-height: 4.15rem;
+  --assistant-vv-height: 100dvh;
+  --assistant-vv-top: 0px;
+}
+
+@media (max-width: 759px) {
+  .bottom-nav {
+    position: fixed !important;
+    left: 0.45rem !important;
+    right: 0.45rem !important;
+    bottom: max(0.45rem, env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1000 !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 0.2rem !important;
+    min-height: var(--fr-mobile-nav-height);
+    padding: 0.28rem !important;
+    border-radius: 1.35rem !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .bottom-nav a {
+    min-width: 0 !important;
+    min-height: 2.8rem;
+    display: grid;
+    place-items: center;
+    padding: 0.42rem 0.12rem !important;
+    font-size: clamp(0.64rem, 2.6vw, 0.78rem) !important;
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+
+  body[data-page] .page {
+    width: calc(100% - 0.7rem);
+    padding-top: 0.45rem;
+    padding-bottom: calc(var(--fr-mobile-nav-height) + 1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ---------- History / shared date filters ---------- */
+  body[data-page="history"] .page,
+  body[data-page="metrics"] .page {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  body[data-page="history"] .filter-panel,
+  body[data-page="metrics"] .metrics-filter-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.45rem;
+    padding: 0.68rem;
+    border-radius: 18px;
+    box-shadow: 0 8px 22px rgba(60, 36, 12, 0.07);
+  }
+
+  body[data-page="history"] .filter-header,
+  body[data-page="metrics"] .filter-header {
+    display: contents;
+  }
+
+  body[data-page="history"] .filter-header > div,
+  body[data-page="metrics"] .filter-header > div {
+    display: none;
+  }
+
+  body[data-page="history"] .filter-header > .btn,
+  body[data-page="metrics"] .filter-header > .btn {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    min-height: 2.35rem;
+    padding: 0.42rem 0.65rem;
+    font-size: 0.76rem;
+  }
+
+  body[data-page="history"] .active-range-chip,
+  body[data-page="metrics"] .active-range-chip {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 2.35rem;
+    padding: 0.45rem 0.62rem;
+    gap: 0.35rem;
+    border-radius: 12px;
+  }
+
+  body[data-page="history"] .active-range-chip span,
+  body[data-page="metrics"] .active-range-chip span {
+    display: none;
+  }
+
+  body[data-page="history"] .active-range-chip strong,
+  body[data-page="metrics"] .active-range-chip strong {
+    font-size: 0.88rem;
+  }
+
+  body[data-page="history"] .quick-row,
+  body[data-page="metrics"] .quick-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  body[data-page="history"] .quick-row .btn,
+  body[data-page="metrics"] .quick-row .btn {
+    min-height: 2.35rem;
+    padding: 0.38rem 0.2rem;
+    font-size: 0.72rem;
+  }
+
+  body[data-page="history"] .compact-filter-form,
+  body[data-page="metrics"] .compact-filter-form {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    padding-top: 0.2rem;
+  }
+
+  body[data-page="history"] .compact-filter-form .field,
+  body[data-page="metrics"] .compact-filter-form .field {
+    gap: 0.25rem;
+  }
+
+  body[data-page="history"] .compact-filter-form .field span,
+  body[data-page="metrics"] .compact-filter-form .field span {
+    font-size: 0.75rem;
+  }
+
+  body[data-page="history"] .compact-filter-form input,
+  body[data-page="metrics"] .compact-filter-form input {
+    min-height: 2.55rem;
+    padding: 0.5rem 0.58rem;
+  }
+
+  body[data-page="history"] .compact-filter-form .btn,
+  body[data-page="metrics"] .compact-filter-form .btn {
+    grid-column: 1 / -1;
+    min-height: 2.5rem;
+  }
+
+  body[data-page="metrics"] .metrics-filter-note {
+    display: none;
+  }
+
+  body[data-page="history"] #historySummary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  body[data-page="history"] #historySummary .stat-card {
+    min-height: 4.8rem;
+    padding: 0.62rem;
+  }
+
+  body[data-page="history"] #historySummary .stat-card span {
+    font-size: 0.72rem;
+    line-height: 1.15;
+  }
+
+  body[data-page="history"] #historySummary .stat-card strong {
+    font-size: 1.45rem;
+  }
+
+  body[data-page="history"] #historyList .empty-state {
+    padding: 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  /* ---------- Metrics: today is a compact control panel, not a billboard ---------- */
+  body[data-page="metrics"] .metrics-today-panel {
+    padding: 0.72rem;
+    border-radius: 19px;
+    box-shadow: 0 9px 24px rgba(60, 36, 12, 0.08);
+  }
+
+  body[data-page="metrics"] .metrics-today-panel .panel-heading {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 0.45rem;
+  }
+
+  body[data-page="metrics"] .metrics-today-panel .eyebrow {
+    font-size: 0.68rem;
+  }
+
+  body[data-page="metrics"] .metrics-today-title {
+    margin-top: 0.1rem;
+    font-size: 1.55rem;
+  }
+
+  body[data-page="metrics"] #metricsTodayShortcut {
+    display: none;
+  }
+
+  body[data-page="metrics"] .metrics-today-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(6.8rem, 0.75fr);
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+  }
+
+  body[data-page="metrics"] .metrics-today-copy {
+    gap: 0.24rem;
+  }
+
+  body[data-page="metrics"] .goal-state {
+    font-size: 0.84rem;
+    line-height: 1.25;
+  }
+
+  body[data-page="metrics"] .goal-kcal-block {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.45rem;
+  }
+
+  body[data-page="metrics"] .goal-kcal-block strong {
+    font-size: 2rem;
+  }
+
+  body[data-page="metrics"] .goal-kcal-block span,
+  body[data-page="metrics"] .metrics-today-copy .panel-note {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.25;
+  }
+
+  body[data-page="metrics"] .goal-progress-card {
+    gap: 0.42rem;
+    padding: 0.55rem 0.62rem;
+    border-radius: 13px;
+  }
+
+  body[data-page="metrics"] .goal-progress-track {
+    min-height: 0.55rem;
+  }
+
+  body[data-page="metrics"] .goal-progress-meta {
+    gap: 0.35rem;
+  }
+
+  body[data-page="metrics"] .goal-progress-meta strong {
+    font-size: 1.05rem;
+  }
+
+  body[data-page="metrics"] .goal-progress-meta span {
+    font-size: 0.7rem;
+  }
+
+  body[data-page="metrics"] .metrics-today-meta {
+    margin-bottom: 0.45rem;
+  }
+
+  body[data-page="metrics"] .metrics-mini-stat {
+    max-width: none;
+    min-height: 2.55rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 0.45rem 0.62rem;
+  }
+
+  body[data-page="metrics"] .metrics-mini-stat span {
+    font-size: 0.76rem;
+  }
+
+  body[data-page="metrics"] .metrics-mini-stat strong {
+    font-size: 1.15rem;
+  }
+
+  body[data-page="metrics"] .today-metrics-list {
+    gap: 0.48rem;
+  }
+
+  body[data-page="metrics"] .today-metric-row {
+    gap: 0.24rem;
+  }
+
+  body[data-page="metrics"] .today-metric-header strong {
+    font-size: 0.82rem;
+  }
+
+  body[data-page="metrics"] .today-metric-header span {
+    font-size: 0.72rem;
+  }
+
+  body[data-page="metrics"] .today-metric-track {
+    min-height: 0.5rem;
+  }
+
+  /* ---------- Health: action first, but compact ---------- */
+  body[data-page="health"] .health-page {
+    gap: 0.55rem;
+  }
+
+  body[data-page="health"] .health-hero-panel {
+    gap: 0.35rem;
+    padding: 0.58rem 0.66rem;
+    border-radius: 17px;
+  }
+
+  body[data-page="health"] .health-hero-copy h1 {
+    font-size: 1.62rem;
+  }
+
+  body[data-page="health"] .health-hero-actions {
+    gap: 0.25rem;
+  }
+
+  body[data-page="health"] .health-hero-actions #syncOuraButton,
+  body[data-page="health"] .health-hero-actions #connectOuraButton {
+    min-width: 6.55rem;
+    min-height: 2.28rem;
+    padding: 0.42rem 0.58rem;
+    font-size: 0.76rem;
+  }
+
+  body[data-page="health"] .health-connection-item,
+  body[data-page="health"] .health-connection-message {
+    padding: 0.25rem 0.45rem;
+    font-size: 0.68rem;
+  }
+
+  body[data-page="health"] .health-coach-priority {
+    padding: 0.7rem;
+    border-radius: 18px;
+  }
+
+  body[data-page="health"] .health-coach-heading {
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.45rem;
+  }
+
+  body[data-page="health"] .health-coach-heading .eyebrow {
+    font-size: 0.66rem;
+  }
+
+  body[data-page="health"] .health-coach-heading h2 {
+    margin-top: 0.08rem;
+    font-size: 1.55rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  body[data-page="health"] .health-coach-heading .btn {
+    min-height: 2.2rem;
+    padding: 0.38rem 0.55rem;
+    font-size: 0.7rem;
+  }
+
+  body[data-page="health"] .health-coach-card {
+    gap: 0.3rem;
+    padding: 0.7rem 0.72rem;
+    border-radius: 14px;
+  }
+
+  body[data-page="health"] .health-coach-card .eyebrow {
+    font-size: 0.62rem;
+  }
+
+  body[data-page="health"] .health-coach-card h3 {
+    font-size: 1.35rem;
+    line-height: 1.02;
+  }
+
+  body[data-page="health"] .health-coach-card > p:not(.eyebrow) {
+    font-size: 0.88rem;
+    line-height: 1.34;
+  }
+
+  body[data-page="health"] .health-coach-evidence {
+    gap: 0.28rem;
+    margin-top: 0.1rem;
+  }
+
+  body[data-page="health"] .health-coach-evidence li {
+    padding: 0.28rem 0.4rem;
+    font-size: 0.64rem;
+  }
+
+  body[data-page="health"] .health-section-heading {
+    margin-bottom: 0.4rem;
+  }
+
+  body[data-page="health"] .health-section-heading h2 {
+    font-size: 1.38rem;
+  }
+
+  body[data-page="health"] #healthCoverageNote {
+    font-size: 0.66rem;
+  }
+
+  body[data-page="health"] .health-stat-grid {
+    display: flex !important;
+    grid-template-columns: none !important;
+    gap: 0.45rem;
+    overflow-x: auto !important;
+    padding-bottom: 0.2rem;
+    scroll-snap-type: x proximity;
+  }
+
+  body[data-page="health"] .health-stat-card {
+    flex: 0 0 7.35rem;
+    min-width: 7.35rem;
+    min-height: 5.55rem;
+    padding: 0.58rem;
+    border-radius: 14px;
+    scroll-snap-align: start;
+  }
+
+  body[data-page="health"] .health-stat-card span {
+    font-size: 0.68rem;
+  }
+
+  body[data-page="health"] .health-stat-card strong {
+    margin-top: auto;
+    font-size: 1.62rem;
+  }
+
+  body[data-page="health"] .health-stat-card > small {
+    font-size: 0.64rem;
+  }
+
+  body[data-page="health"] .health-filter-panel {
+    gap: 0.45rem;
+    padding: 0.62rem;
+    border-radius: 16px;
+  }
+
+  body[data-page="health"] .health-quick-range {
+    gap: 0.35rem;
+  }
+
+  body[data-page="health"] .health-quick-range .btn {
+    min-height: 2.25rem;
+    padding: 0.38rem 0.2rem;
+    font-size: 0.72rem;
+  }
+
+  body[data-page="health"] .health-range-details {
+    padding-top: 0.4rem;
+  }
+
+  /* ---------- Assistant: viewport is the app, messages are the scroll region ---------- */
+  body[data-page="assistant"] {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body[data-page="assistant"] .assistant-shell {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: var(--assistant-vv-top);
+    height: var(--assistant-vv-height);
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  body[data-page="assistant"] .topbar {
+    position: relative;
+    top: auto;
+  }
+
+  body[data-page="assistant"] .assistant-page {
+    width: calc(100% - 0.7rem);
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 0.35rem 0 calc(var(--fr-mobile-nav-height) + 0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+    overflow: hidden !important;
+  }
+
+  body[data-page="assistant"] .assistant-chat-card {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    gap: 0.38rem;
+    padding: 0.52rem;
+    border-radius: 17px;
+  }
+
+  body[data-page="assistant"] .assistant-chat-toolbar {
+    padding-bottom: 0.36rem;
+  }
+
+  body[data-page="assistant"] .assistant-suggestions {
+    padding-bottom: 0.12rem;
+  }
+
+  body[data-page="assistant"] .assistant-messages {
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    padding: 0.08rem 0.02rem;
+  }
+
+  body[data-page="assistant"] .assistant-bubble {
+    padding: 0.62rem 0.68rem;
+    font-size: 0.88rem;
+    line-height: 1.36;
+  }
+
+  body[data-page="assistant"] .assistant-source-chip {
+    padding: 0.28rem 0.45rem;
+    font-size: 0.66rem;
+  }
+
+  body[data-page="assistant"] .assistant-composer {
+    gap: 0.38rem;
+    padding-top: 0.4rem;
+  }
+
+  body[data-page="assistant"] .assistant-composer textarea {
+    min-height: 2.75rem;
+    max-height: 5.5rem;
+    padding: 0.6rem 0.66rem;
+    font-size: 0.88rem;
+  }
+
+  body[data-page="assistant"] .assistant-composer .btn {
+    min-width: 4.2rem;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.66rem;
+    font-size: 0.8rem;
+  }
+
+  body[data-page="assistant"] #assistantStatus[data-tone="info"],
+  body[data-page="assistant"] #assistantStatus[data-tone="success"] {
+    display: none !important;
+  }
+
+  body[data-page="assistant"] #assistantStatus[data-tone="danger"] {
+    display: block;
+    padding: 0.5rem 0.62rem;
+    font-size: 0.74rem;
+  }
+
+  body[data-page="assistant"].assistant-input-focused .bottom-nav {
+    display: none !important;
+  }
+
+  body[data-page="assistant"].assistant-input-focused .assistant-page {
+    padding-bottom: 0.25rem !important;
+  }
+}
+
+@media (min-width: 760px) and (max-width: 1099px) {
+  body[data-page="assistant"] .assistant-page {
+    padding-top: 0.55rem;
+  }
+
+  body[data-page="assistant"] .assistant-chat-card {
+    min-height: calc(100dvh - 9rem);
+  }
+}

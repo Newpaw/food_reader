@@ -53,6 +53,7 @@ jobs:
           node --check calorie-tracker/frontend/navigation.js
           node --check calorie-tracker/frontend/mobile-ux.js
           node --check calorie-tracker/frontend/health.js
+          node --check calorie-tracker/frontend/health-recipe.js
           node --check calorie-tracker/frontend/assistant.js
           node --check calorie-tracker/frontend/service-worker.js
 

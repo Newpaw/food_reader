@@ -25,6 +25,15 @@ import {
 let historyMeals = [];
 let activeMeal = null;
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 function buildTextMealPayload(template) {
   return {
     food_description: template.description || template.title,
@@ -58,8 +67,8 @@ function renderTemplateSection() {
       (template) => `
         <article class="template-card">
           <div class="template-card-main">
-            <strong>${template.title}</strong>
-            <span>${template.calories} kcal</span>
+            <strong>${escapeHtml(template.title)}</strong>
+            <span>${escapeHtml(template.calories)} kcal</span>
           </div>
           <div class="template-card-actions">
             <button type="button" class="btn btn-secondary btn-small" data-template-log="${template.id}">${t('button.logAgain')}</button>
@@ -156,6 +165,18 @@ function renderSummary(meals) {
   `;
 }
 
+function getMealCompactMeta(meal) {
+  const mealType = meal?.meal_type ? t(`option.${meal.meal_type}`) : t('common.unknown');
+  const parts = [mealType];
+  if (meal?.protein !== null && meal?.protein !== undefined) {
+    const protein = Number(meal.protein);
+    if (Number.isFinite(protein)) {
+      parts.push(`${t('label.protein')} ${Math.round(protein)} g`);
+    }
+  }
+  return parts.join(' · ');
+}
+
 function renderHistory(meals) {
   const target = document.getElementById('historyList');
   if (!meals.length) {
@@ -176,26 +197,31 @@ function renderHistory(meals) {
           </header>
           <div class="meal-grid">
             ${day.meals
-              .map(
-                (meal) => `
-                  <article class="meal-card">
-                    <img src="${resolveAssetUrl(meal.image_url)}" alt="${getMealDisplayName(meal)}" class="meal-card-image">
+              .map((meal) => {
+                const mealName = getMealDisplayName(meal);
+                const mobileLabel = `${t('button.view')}: ${mealName}, ${meal.calories} kcal`;
+                return `
+                  <article class="meal-card history-meal-card">
+                    <img src="${resolveAssetUrl(meal.image_url)}" alt="${escapeHtml(mealName)}" class="meal-card-image">
                     <div class="meal-card-body">
                       <div class="meal-card-heading">
-                        <h3>${getMealDisplayName(meal)}</h3>
+                        <h3>${escapeHtml(mealName)}</h3>
                         <span>${formatTime(meal.consumed_at)}</span>
                       </div>
                       <p class="meal-card-metric">${meal.calories} kcal</p>
-                      <p class="meal-card-note">${meal.notes || t('history.noNotes')}</p>
+                      <p class="history-meal-meta">${escapeHtml(getMealCompactMeta(meal))}</p>
+                      <p class="meal-card-note">${escapeHtml(meal.notes || t('history.noNotes'))}</p>
                       <div class="meal-card-actions">
                         <button class="btn btn-secondary btn-small" data-open-meal="${meal.id}">${t('button.view')}</button>
                         <button class="btn btn-ghost btn-small" data-edit-meal="${meal.id}">${t('button.editMeal')}</button>
                         <button class="btn btn-danger btn-small" data-delete-meal="${meal.id}">${t('button.delete')}</button>
                       </div>
                     </div>
+                    <span class="history-meal-chevron" aria-hidden="true">›</span>
+                    <button type="button" class="history-meal-mobile-open" data-open-meal="${meal.id}" aria-label="${escapeHtml(mobileLabel)}"></button>
                   </article>
-                `,
-              )
+                `;
+              })
               .join('')}
           </div>
         </section>
@@ -249,6 +275,7 @@ function openMealModal(mealId, editMode = false) {
 
   const mealName = getMealDisplayName(activeMeal);
   document.getElementById('modalMealImage').src = resolveAssetUrl(activeMeal.image_url);
+  document.getElementById('modalMealImage').alt = mealName;
   document.getElementById('modalMealTitle').textContent = `${mealName} · ${activeMeal.calories} kcal`;
   document.getElementById('modalMealMeta').textContent = formatDateTime(activeMeal.consumed_at);
   document.getElementById('modalMealNotes').textContent = activeMeal.notes || t('history.noNotes');
@@ -362,6 +389,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('openMealEdit').addEventListener('click', () => {
     if (activeMeal) {
       openMealModal(activeMeal.id, true);
+    }
+  });
+  document.getElementById('deleteMealFromModal').addEventListener('click', () => {
+    if (activeMeal) {
+      deleteMeal(activeMeal.id);
     }
   });
   document.getElementById('mealEditForm').addEventListener('submit', saveMealEdits);

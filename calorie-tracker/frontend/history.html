@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="styles.css?v=20260809-responsive-1">
     <link id="food-reader-mobile-polish" rel="stylesheet" href="mobile-polish.css?v=20260809-3">
     <link id="food-reader-responsive-fix" rel="stylesheet" href="responsive-fix.css?v=20260809-5">
+    <link rel="stylesheet" href="history.css?v=20260815-compact-1">
     <link rel="manifest" href="manifest.webmanifest?v=20260403-11">
     <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
@@ -110,7 +111,10 @@
             <p id="modalMealMeta" class="panel-note"></p>
           </div>
           <p id="modalMealNotes"></p>
-          <button id="openMealEdit" type="button" class="btn btn-secondary" data-i18n="button.editMeal">Edit meal</button>
+          <div class="meal-modal-actions">
+            <button id="openMealEdit" type="button" class="btn btn-secondary" data-i18n="button.editMeal">Edit meal</button>
+            <button id="deleteMealFromModal" type="button" class="btn btn-danger" data-i18n="button.delete">Delete</button>
+          </div>
         </div>
 
         <form id="mealEditForm" class="stack" hidden>
@@ -169,6 +173,6 @@
     </div>
 
     <script type="module" src="navigation.js?v=20260809-2"></script>
-    <script type="module" src="history.js?v=20260403-11"></script>
+    <script type="module" src="history.js?v=20260815-compact-1"></script>
   </body>
 </html>

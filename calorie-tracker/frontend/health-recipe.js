@@ -1,4 +1,5 @@
 import {
+  API,
   apiFetch,
   getJsonOrThrow,
   showStatus,
@@ -6,6 +7,10 @@ import {
 
 let recipeRequestInFlight = false;
 let recipeGenerated = false;
+let currentRecipePayload = null;
+let currentUserId = null;
+
+const RECIPE_CACHE_VERSION = 'v1';
 
 function isCzech() {
   return (document.documentElement.lang || '').toLowerCase().startsWith('cs');
@@ -29,6 +34,50 @@ function finiteNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+function recipeCacheKey(userId) {
+  return `food-reader:user:${userId}:recipe:${RECIPE_CACHE_VERSION}`;
+}
+
+function readRecipeCache(userId) {
+  if (!userId) return null;
+  try {
+    const raw = window.localStorage.getItem(recipeCacheKey(userId));
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    return cached?.payload?.recipe ? cached.payload : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeRecipeCache(userId, payload) {
+  if (!userId || !payload?.recipe) return;
+  try {
+    window.localStorage.setItem(
+      recipeCacheKey(userId),
+      JSON.stringify({
+        saved_at: new Date().toISOString(),
+        payload,
+      }),
+    );
+  } catch {
+    // Persistence is a convenience. The current recipe stays visible even if storage is unavailable.
+  }
+}
+
+async function resolveCurrentUserId() {
+  if (currentUserId) return currentUserId;
+  try {
+    const response = await apiFetch(API.currentUser);
+    if (!response.ok) return null;
+    const user = await response.json();
+    currentUserId = user?.id || null;
+    return currentUserId;
+  } catch {
+    return null;
+  }
+}
+
 function applyRecipeCopy() {
   const eyebrow = document.getElementById('recipeEyebrow');
   const heading = document.getElementById('recipeHeading');
@@ -39,8 +88,8 @@ function applyRecipeCopy() {
   eyebrow.textContent = copy('Další jídlo', 'Next meal');
   heading.textContent = copy('Co si mám dnes uvařit?', 'What should I cook today?');
   support.textContent = copy(
-    'AI vezme dnešní jídlo, tvoje cíle a pokud je dostupná i Ouru. Každé nové generování používá aktuální stav.',
-    'AI uses today’s food, your targets and Oura when available. Every regeneration uses the current state.',
+    'Vygenerovaný recept zůstane uložený, dokud si výslovně nevygeneruješ nový. Nové generování vždy používá aktuální stav dne.',
+    'The generated recipe stays saved until you explicitly generate a new one. Regeneration always uses the current state of the day.',
   );
   button.textContent = recipeGenerated
     ? copy('Vygenerovat znovu', 'Generate again')
@@ -148,11 +197,24 @@ function renderRecipe(payload) {
         </div>
       </div>
       <p class="health-recipe-estimate">${copy(
-        'Makra jsou orientační odhad. Nové generování vždy znovu načte dnešní záznamy.',
-        'Macros are an estimate. Regenerating always reloads today’s log.',
+        'Makra jsou orientační odhad. Tento recept zůstane uložený až do dalšího úspěšného přegenerování.',
+        'Macros are an estimate. This recipe stays saved until the next successful regeneration.',
       )}</p>
     </article>
   `;
+}
+
+async function restoreRecipe() {
+  const userId = await resolveCurrentUserId();
+  const cached = readRecipeCache(userId);
+  if (!cached) return;
+
+  currentRecipePayload = cached;
+  recipeGenerated = true;
+  renderRecipe(cached);
+  applyRecipeCopy();
+  const status = document.getElementById('recipeStatus');
+  if (status) status.hidden = true;
 }
 
 async function generateRecipe() {
@@ -175,33 +237,48 @@ async function generateRecipe() {
     const payload = await getJsonOrThrow(response, copy('Nepodařilo se vygenerovat recept', 'Unable to generate recipe'));
 
     if (!payload.available || !payload.recipe) {
-      resetRecipe(payload.message || copy('Recept teď nedává smysl.', 'A recipe is not useful right now.'));
-      showStatus(status, payload.message || copy('Recept teď nedává smysl.', 'A recipe is not useful right now.'), 'info');
+      if (!currentRecipePayload) {
+        resetRecipe(payload.message || copy('Recept teď nedává smysl.', 'A recipe is not useful right now.'));
+      }
+      showStatus(status, payload.message || copy('Recept teď nedává smysl. Původní recept zůstává uložený.', 'A new recipe is not useful right now. The previous recipe stays saved.'), 'info');
       return;
     }
 
+    const userId = await resolveCurrentUserId();
+    currentRecipePayload = payload;
     recipeGenerated = true;
+    writeRecipeCache(userId, payload);
     renderRecipe(payload);
     applyRecipeCopy();
-    showStatus(status, copy('Recept odpovídá aktuálnímu stavu dne.', 'Recipe matches the current state of today.'), 'success');
+    showStatus(status, copy('Nový recept je uložený a nahradil předchozí.', 'The new recipe is saved and replaced the previous one.'), 'success');
   } catch (error) {
-    showStatus(status, error.message, 'danger');
+    showStatus(
+      status,
+      currentRecipePayload
+        ? copy(`Nový recept se nepodařilo vytvořit. Původní zůstává uložený. ${error.message}`, `Could not create a new recipe. The previous one stays saved. ${error.message}`)
+        : error.message,
+      'danger',
+    );
   } finally {
     recipeRequestInFlight = false;
     button.disabled = false;
   }
 }
 
-function initRecipe() {
+async function initRecipe() {
   applyRecipeCopy();
   resetRecipe();
   const button = document.getElementById('generateRecipeButton');
   if (button) button.addEventListener('click', generateRecipe);
+  await restoreRecipe();
 
   window.addEventListener('food-reader:localechange', () => {
-    recipeGenerated = false;
     applyRecipeCopy();
-    resetRecipe();
+    if (currentRecipePayload) {
+      renderRecipe(currentRecipePayload);
+    } else {
+      resetRecipe();
+    }
     const status = document.getElementById('recipeStatus');
     if (status) status.hidden = true;
   });

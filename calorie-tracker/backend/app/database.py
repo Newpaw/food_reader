@@ -84,6 +84,63 @@ def _ensure_profile_schema() -> None:
             connection.execute(text(f"ALTER TABLE user_profiles ADD COLUMN {column_name} {column_type}"))
 
 
+def _ensure_oura_schema() -> None:
+    """Bring long-lived production databases up to the current Oura schema.
+
+    Production starts the application directly rather than invoking Alembic, so
+    additive Oura columns must also be created here for existing installations.
+    Fresh databases already receive the complete schema through create_all().
+    """
+
+    inspector = inspect(engine)
+    if "oura_daily_metrics" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("oura_daily_metrics")}
+    desired_columns = [
+        ("activity_target_calories", "INTEGER"),
+        ("average_met_minutes", "FLOAT"),
+        ("equivalent_walking_distance_m", "FLOAT"),
+        ("sedentary_seconds", "INTEGER"),
+        ("resting_seconds", "INTEGER"),
+        ("low_activity_seconds", "INTEGER"),
+        ("medium_activity_seconds", "INTEGER"),
+        ("high_activity_seconds", "INTEGER"),
+        ("non_wear_seconds", "INTEGER"),
+        ("inactivity_alerts", "INTEGER"),
+        ("temperature_deviation_c", "FLOAT"),
+        ("temperature_trend_deviation_c", "FLOAT"),
+        ("time_in_bed_seconds", "INTEGER"),
+        ("awake_seconds", "INTEGER"),
+        ("light_sleep_seconds", "INTEGER"),
+        ("deep_sleep_seconds", "INTEGER"),
+        ("rem_sleep_seconds", "INTEGER"),
+        ("sleep_latency_seconds", "INTEGER"),
+        ("sleep_efficiency", "FLOAT"),
+        ("average_heart_rate_bpm", "FLOAT"),
+        ("average_breaths_per_minute", "FLOAT"),
+        ("bedtime_start", "VARCHAR"),
+        ("bedtime_end", "VARCHAR"),
+        ("spo2_average_percent", "FLOAT"),
+        ("resilience_level", "VARCHAR"),
+        ("vascular_age_years", "FLOAT"),
+        ("vo2_max", "FLOAT"),
+        ("heart_rate_average_bpm", "FLOAT"),
+        ("heart_rate_min_bpm", "FLOAT"),
+        ("heart_rate_max_bpm", "FLOAT"),
+        ("heart_rate_samples", "INTEGER"),
+        ("details_json", "TEXT"),
+    ]
+    missing_columns = [(name, type_) for name, type_ in desired_columns if name not in existing_columns]
+    if not missing_columns:
+        return
+
+    with engine.begin() as connection:
+        for column_name, column_type in missing_columns:
+            connection.execute(text(f"ALTER TABLE oura_daily_metrics ADD COLUMN {column_name} {column_type}"))
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_profile_schema()
+    _ensure_oura_schema()

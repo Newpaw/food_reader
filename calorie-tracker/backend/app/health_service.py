@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from . import models
 from .adaptive_targets import resolve_nutrition_targets
 from .oura_models import OuraDailyMetric
+from .oura_service import parse_oura_details
 
 
 def _safe_zoneinfo(name: str) -> ZoneInfo:
@@ -107,6 +108,59 @@ def _aggregate_meals(
     return totals
 
 
+def _oura_payload(oura: OuraDailyMetric) -> dict:
+    """Compact but rich daily Oura context used by Health Coach and other AI."""
+
+    return {
+        "activity_score": oura.activity_score,
+        "active_calories": oura.active_calories,
+        "total_calories": oura.total_calories,
+        "steps": oura.steps,
+        "activity_target_calories": oura.activity_target_calories,
+        "average_met_minutes": oura.average_met_minutes,
+        "equivalent_walking_distance_m": oura.equivalent_walking_distance_m,
+        "sedentary_seconds": oura.sedentary_seconds,
+        "resting_seconds": oura.resting_seconds,
+        "low_activity_seconds": oura.low_activity_seconds,
+        "medium_activity_seconds": oura.medium_activity_seconds,
+        "high_activity_seconds": oura.high_activity_seconds,
+        "non_wear_seconds": oura.non_wear_seconds,
+        "inactivity_alerts": oura.inactivity_alerts,
+        "readiness_score": oura.readiness_score,
+        "temperature_deviation_c": oura.temperature_deviation_c,
+        "temperature_trend_deviation_c": oura.temperature_trend_deviation_c,
+        "sleep_score": oura.sleep_score,
+        "total_sleep_seconds": oura.total_sleep_seconds,
+        "time_in_bed_seconds": oura.time_in_bed_seconds,
+        "awake_seconds": oura.awake_seconds,
+        "light_sleep_seconds": oura.light_sleep_seconds,
+        "deep_sleep_seconds": oura.deep_sleep_seconds,
+        "rem_sleep_seconds": oura.rem_sleep_seconds,
+        "sleep_latency_seconds": oura.sleep_latency_seconds,
+        "sleep_efficiency": oura.sleep_efficiency,
+        "average_hrv_ms": oura.average_hrv_ms,
+        "lowest_heart_rate_bpm": oura.lowest_heart_rate_bpm,
+        "average_heart_rate_bpm": oura.average_heart_rate_bpm,
+        "average_breaths_per_minute": oura.average_breaths_per_minute,
+        "bedtime_start": oura.bedtime_start,
+        "bedtime_end": oura.bedtime_end,
+        "stress_high_seconds": oura.stress_high_seconds,
+        "recovery_high_seconds": oura.recovery_high_seconds,
+        "workout_count": oura.workout_count,
+        "workout_calories": oura.workout_calories,
+        "workout_seconds": oura.workout_seconds,
+        "spo2_average_percent": oura.spo2_average_percent,
+        "resilience_level": oura.resilience_level,
+        "vascular_age_years": oura.vascular_age_years,
+        "vo2_max": oura.vo2_max,
+        "heart_rate_average_bpm": oura.heart_rate_average_bpm,
+        "heart_rate_min_bpm": oura.heart_rate_min_bpm,
+        "heart_rate_max_bpm": oura.heart_rate_max_bpm,
+        "heart_rate_samples": oura.heart_rate_samples,
+        "details": parse_oura_details(oura.details_json),
+    }
+
+
 def build_health_summary(
     db: Session,
     user_id: int,
@@ -154,24 +208,7 @@ def build_health_summary(
                     "meal_count": nutrition.get("meal_count", 0),
                     "last_meal_hour": nutrition.get("last_meal_hour"),
                 },
-                "oura": None
-                if oura is None
-                else {
-                    "activity_score": oura.activity_score,
-                    "active_calories": oura.active_calories,
-                    "total_calories": oura.total_calories,
-                    "steps": oura.steps,
-                    "readiness_score": oura.readiness_score,
-                    "sleep_score": oura.sleep_score,
-                    "total_sleep_seconds": oura.total_sleep_seconds,
-                    "average_hrv_ms": oura.average_hrv_ms,
-                    "lowest_heart_rate_bpm": oura.lowest_heart_rate_bpm,
-                    "stress_high_seconds": oura.stress_high_seconds,
-                    "recovery_high_seconds": oura.recovery_high_seconds,
-                    "workout_count": oura.workout_count,
-                    "workout_calories": oura.workout_calories,
-                    "workout_seconds": oura.workout_seconds,
-                },
+                "oura": None if oura is None else _oura_payload(oura),
                 "energy_balance_kcal": balance,
             }
         )

@@ -10,6 +10,8 @@ from . import models
 from .ai_analyzer import get_openai_client
 from .assistant_meal_tools import MEAL_MUTATION_TOOL_NAMES, MEAL_MUTATION_TOOLS, execute_meal_mutation_tool
 from .assistant_service import SYSTEM_PROMPT, TOOLS, _inventory, _safe_zoneinfo, execute_tool
+from .oura_models import OuraDailyMetric
+from .oura_service import parse_oura_details
 from .settings import settings
 
 
@@ -37,7 +39,28 @@ Meal logging exception to the base read-only rule:
 - After a successful write, briefly confirm what was created, changed, or deleted. If a tool returns an error, say that the change was not saved.
 """.strip()
 
-ALL_TOOLS = [*TOOLS, *MEAL_MUTATION_TOOLS]
+
+def _enriched_read_tools() -> list[dict[str, Any]]:
+    tools: list[dict[str, Any]] = []
+    for tool in TOOLS:
+        function = tool.get("function") or {}
+        if function.get("name") == "get_oura_daily":
+            function = {
+                **function,
+                "description": (
+                    "Read rich Oura daily health context including activity and sedentary time, calorie expenditure, steps, "
+                    "readiness contributors and temperature deviation, sleep stages/efficiency/HRV/heart rate/breathing, "
+                    "stress/recovery, workouts, SpO2, resilience, cardiovascular age, VO2 max, heart-rate summaries, "
+                    "sessions and tags when available."
+                ),
+            }
+            tools.append({**tool, "function": function})
+        else:
+            tools.append(tool)
+    return tools
+
+
+ALL_TOOLS = [*_enriched_read_tools(), *MEAL_MUTATION_TOOLS]
 ACTIVE_SYSTEM_PROMPT = SYSTEM_PROMPT.replace(
     "private read-only assistant",
     "private nutrition and health assistant",
@@ -58,8 +81,6 @@ def _response_tools() -> list[dict[str, Any]]:
                 "name": function["name"],
                 "description": function.get("description", ""),
                 "parameters": function.get("parameters", {"type": "object", "properties": {}}),
-                # Existing Food Reader schemas contain optional fields. Keep best-effort
-                # function calling until those schemas are converted to strict mode.
                 "strict": False,
             }
         )
@@ -80,13 +101,9 @@ def _request_options(model: str) -> dict[str, Any]:
         "tool_choice": "auto",
         "max_output_tokens": 500,
         "text": {"verbosity": "low"},
-        # Food Reader handles conversation state itself. Do not persist private health
-        # conversations as Responses API application state.
         "store": False,
     }
     if model.startswith("gpt-5"):
-        # Tool decisions benefit from light reasoning, while current_turn avoids
-        # carrying hidden reasoning across separate user turns managed by the app.
         options["reasoning"] = {"effort": "low", "context": "current_turn"}
     return options
 
@@ -126,6 +143,64 @@ def _localized_failure(locale: str) -> str:
     if locale == "cs":
         return "AI asistent je teď dočasně nedostupný. Zkus to prosím znovu za chvíli."
     return "The AI assistant is temporarily unavailable. Please try again shortly."
+
+
+def _augment_oura_result(db: Session, user_id: int, result: dict[str, Any]) -> dict[str, Any]:
+    rows = result.get("rows")
+    if not isinstance(rows, list) or not rows:
+        return result
+    days = [str(row.get("day")) for row in rows if isinstance(row, dict) and row.get("day")]
+    if not days:
+        return result
+    metrics = (
+        db.query(OuraDailyMetric)
+        .filter(OuraDailyMetric.user_id == user_id, OuraDailyMetric.day.in_(days))
+        .all()
+    )
+    by_day = {metric.day: metric for metric in metrics}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        metric = by_day.get(str(row.get("day")))
+        if metric is None:
+            continue
+        row.update(
+            {
+                "activity_target_calories": metric.activity_target_calories,
+                "average_met_minutes": metric.average_met_minutes,
+                "equivalent_walking_distance_m": metric.equivalent_walking_distance_m,
+                "sedentary_seconds": metric.sedentary_seconds,
+                "resting_seconds": metric.resting_seconds,
+                "low_activity_seconds": metric.low_activity_seconds,
+                "medium_activity_seconds": metric.medium_activity_seconds,
+                "high_activity_seconds": metric.high_activity_seconds,
+                "non_wear_seconds": metric.non_wear_seconds,
+                "inactivity_alerts": metric.inactivity_alerts,
+                "temperature_deviation_c": metric.temperature_deviation_c,
+                "temperature_trend_deviation_c": metric.temperature_trend_deviation_c,
+                "time_in_bed_seconds": metric.time_in_bed_seconds,
+                "awake_seconds": metric.awake_seconds,
+                "light_sleep_seconds": metric.light_sleep_seconds,
+                "deep_sleep_seconds": metric.deep_sleep_seconds,
+                "rem_sleep_seconds": metric.rem_sleep_seconds,
+                "sleep_latency_seconds": metric.sleep_latency_seconds,
+                "sleep_efficiency": metric.sleep_efficiency,
+                "average_heart_rate_bpm": metric.average_heart_rate_bpm,
+                "average_breaths_per_minute": metric.average_breaths_per_minute,
+                "bedtime_start": metric.bedtime_start,
+                "bedtime_end": metric.bedtime_end,
+                "spo2_average_percent": metric.spo2_average_percent,
+                "resilience_level": metric.resilience_level,
+                "vascular_age_years": metric.vascular_age_years,
+                "vo2_max": metric.vo2_max,
+                "heart_rate_average_bpm": metric.heart_rate_average_bpm,
+                "heart_rate_min_bpm": metric.heart_rate_min_bpm,
+                "heart_rate_max_bpm": metric.heart_rate_max_bpm,
+                "heart_rate_samples": metric.heart_rate_samples,
+                "details": parse_oura_details(metric.details_json),
+            }
+        )
+    return result
 
 
 def chat_with_food_reader(
@@ -176,8 +251,6 @@ def chat_with_food_reader(
                     "model": model,
                 }
 
-            # With store=False, replay every output item before returning function
-            # results. This preserves encrypted reasoning items across tool rounds.
             input_items.extend(_response_item_to_input(item) for item in response.output)
 
             for call in function_calls:
@@ -204,6 +277,8 @@ def chat_with_food_reader(
                         timezone_name=timezone_name,
                         locale=locale,
                     )
+                    if tool_name == "get_oura_daily" and isinstance(result, dict):
+                        result = _augment_oura_result(db, user.id, result)
                 if tool_name not in used_sources:
                     used_sources.append(tool_name)
 

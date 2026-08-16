@@ -16,7 +16,9 @@ from ..oura_service import (
     OuraConfigError,
     build_authorization_url,
     decode_oauth_state,
+    missing_oura_scopes,
     oura_configured,
+    parse_oura_details,
     save_connection_from_code,
     sync_oura_data,
 )
@@ -60,6 +62,58 @@ def _now_for_timezone(timezone_name: str) -> str:
         return datetime.now().astimezone().isoformat(timespec="minutes")
 
 
+def _metric_payload(row: OuraDailyMetric) -> dict:
+    return {
+        "day": row.day,
+        "activity_score": row.activity_score,
+        "active_calories": row.active_calories,
+        "total_calories": row.total_calories,
+        "steps": row.steps,
+        "activity_target_calories": row.activity_target_calories,
+        "average_met_minutes": row.average_met_minutes,
+        "equivalent_walking_distance_m": row.equivalent_walking_distance_m,
+        "sedentary_seconds": row.sedentary_seconds,
+        "resting_seconds": row.resting_seconds,
+        "low_activity_seconds": row.low_activity_seconds,
+        "medium_activity_seconds": row.medium_activity_seconds,
+        "high_activity_seconds": row.high_activity_seconds,
+        "non_wear_seconds": row.non_wear_seconds,
+        "inactivity_alerts": row.inactivity_alerts,
+        "readiness_score": row.readiness_score,
+        "temperature_deviation_c": row.temperature_deviation_c,
+        "temperature_trend_deviation_c": row.temperature_trend_deviation_c,
+        "sleep_score": row.sleep_score,
+        "total_sleep_seconds": row.total_sleep_seconds,
+        "time_in_bed_seconds": row.time_in_bed_seconds,
+        "awake_seconds": row.awake_seconds,
+        "light_sleep_seconds": row.light_sleep_seconds,
+        "deep_sleep_seconds": row.deep_sleep_seconds,
+        "rem_sleep_seconds": row.rem_sleep_seconds,
+        "sleep_latency_seconds": row.sleep_latency_seconds,
+        "sleep_efficiency": row.sleep_efficiency,
+        "average_hrv_ms": row.average_hrv_ms,
+        "lowest_heart_rate_bpm": row.lowest_heart_rate_bpm,
+        "average_heart_rate_bpm": row.average_heart_rate_bpm,
+        "average_breaths_per_minute": row.average_breaths_per_minute,
+        "bedtime_start": row.bedtime_start,
+        "bedtime_end": row.bedtime_end,
+        "stress_high_seconds": row.stress_high_seconds,
+        "recovery_high_seconds": row.recovery_high_seconds,
+        "workout_count": row.workout_count,
+        "workout_calories": row.workout_calories,
+        "workout_seconds": row.workout_seconds,
+        "spo2_average_percent": row.spo2_average_percent,
+        "resilience_level": row.resilience_level,
+        "vascular_age_years": row.vascular_age_years,
+        "vo2_max": row.vo2_max,
+        "heart_rate_average_bpm": row.heart_rate_average_bpm,
+        "heart_rate_min_bpm": row.heart_rate_min_bpm,
+        "heart_rate_max_bpm": row.heart_rate_max_bpm,
+        "heart_rate_samples": row.heart_rate_samples,
+        "details": parse_oura_details(row.details_json),
+    }
+
+
 @router.get("/status")
 def get_status(
     current_user: models.User = Depends(get_current_user),
@@ -73,15 +127,20 @@ def get_status(
         .order_by(OuraDailyMetric.day.desc())
         .first()
     )
+    missing_scopes = missing_oura_scopes(connection) if connection else []
     return {
         "configured": oura_configured(),
         "connected": connection is not None,
         "scope": connection.scope if connection else None,
+        "missing_scopes": missing_scopes,
+        "needs_reauthorization": bool(connection and missing_scopes),
         "last_sync_at": connection.last_sync_at if connection else None,
         "synced_days": metric_count,
         "latest_day": latest.day if latest else None,
         "latest_readiness": latest.readiness_score if latest else None,
         "latest_sleep_score": latest.sleep_score if latest else None,
+        "latest_spo2": latest.spo2_average_percent if latest else None,
+        "latest_resilience": latest.resilience_level if latest else None,
     }
 
 
@@ -155,26 +214,7 @@ def daily_metrics(
         .order_by(OuraDailyMetric.day.asc())
         .all()
     )
-    return [
-        {
-            "day": row.day,
-            "activity_score": row.activity_score,
-            "active_calories": row.active_calories,
-            "total_calories": row.total_calories,
-            "steps": row.steps,
-            "readiness_score": row.readiness_score,
-            "sleep_score": row.sleep_score,
-            "total_sleep_seconds": row.total_sleep_seconds,
-            "average_hrv_ms": row.average_hrv_ms,
-            "lowest_heart_rate_bpm": row.lowest_heart_rate_bpm,
-            "stress_high_seconds": row.stress_high_seconds,
-            "recovery_high_seconds": row.recovery_high_seconds,
-            "workout_count": row.workout_count,
-            "workout_calories": row.workout_calories,
-            "workout_seconds": row.workout_seconds,
-        }
-        for row in rows
-    ]
+    return [_metric_payload(row) for row in rows]
 
 
 @router.get("/health-summary")

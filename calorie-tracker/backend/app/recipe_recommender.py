@@ -19,7 +19,7 @@ Your job is to propose one practical recipe for the next meal that fits the rema
 Rules:
 - Treat the supplied targets and logged totals as the source of truth. Never invent foods the user already ate.
 - Use the remaining calories, protein, carbs, fat, and fiber as planning constraints, not as exact physiology.
-- If Oura data is present, use activity, workouts, readiness, and sleep only to refine meal size and style. Never diagnose from wearable data.
+- If Oura data is present, use activity, workouts, readiness, sleep, stress/recovery and other available wearable context only to refine meal size and style. Never diagnose from wearable data.
 - Respect the user's dietary preference when present.
 - Prefer normal food and realistic portions. Do not recommend supplements, fasting, purging, or extreme restriction.
 - The recipe is for one person and one next meal. If it is early in the day, leave reasonable room for later food instead of consuming the entire remaining budget.
@@ -112,9 +112,21 @@ def _build_context(
             "total_calories": _number(oura.get("total_calories")),
             "readiness_score": _number(oura.get("readiness_score")),
             "sleep_score": _number(oura.get("sleep_score")),
+            "total_sleep_seconds": _number(oura.get("total_sleep_seconds")),
+            "deep_sleep_seconds": _number(oura.get("deep_sleep_seconds")),
+            "rem_sleep_seconds": _number(oura.get("rem_sleep_seconds")),
+            "sleep_efficiency": oura.get("sleep_efficiency"),
+            "average_hrv_ms": oura.get("average_hrv_ms"),
+            "average_heart_rate_bpm": oura.get("average_heart_rate_bpm"),
+            "temperature_deviation_c": oura.get("temperature_deviation_c"),
+            "stress_high_seconds": _number(oura.get("stress_high_seconds")),
+            "recovery_high_seconds": _number(oura.get("recovery_high_seconds")),
             "workout_count": _number(oura.get("workout_count")),
             "workout_calories": _number(oura.get("workout_calories")),
             "workout_seconds": _number(oura.get("workout_seconds")),
+            "spo2_average_percent": oura.get("spo2_average_percent"),
+            "resilience_level": oura.get("resilience_level"),
+            "details": oura.get("details") or {},
         }
 
     return {

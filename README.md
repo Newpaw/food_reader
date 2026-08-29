@@ -187,18 +187,22 @@ Current integration includes:
 - encrypted access/refresh tokens,
 - initial import up to 365 days when available,
 - incremental manual sync with a short lookback,
-- daily activity score, calories and steps,
-- readiness,
-- sleep score/duration, HRV and lowest heart rate when available,
-- stress/recovery when available,
-- workouts,
+- daily activity score, calories, steps, MET/activity zones and distance targets,
+- readiness including temperature deviations and contributors,
+- detailed sleep stages, efficiency, latency, HRV, heart rate, breathing and score deltas,
+- suggested bedtime and sleep timing recommendation,
+- stress/recovery, resilience and rest-mode periods,
+- SpO₂ and breathing disturbance index (BDI),
+- cardiovascular age, pulse-wave velocity and VO₂ max,
+- daytime heart-rate summaries, workouts, sessions and tags,
+- Oura profile, ring model/configuration and latest battery state,
 - combined nutrition + Oura health summaries,
 - Health Coach.
 
 Requested scopes:
 
 ```text
-daily workout personal
+daily workout personal heartrate tag session spo2Daily
 ```
 
 See `OURA_INTEGRATION.md` for OAuth setup and implementation detail.

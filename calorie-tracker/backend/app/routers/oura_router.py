@@ -1,3 +1,4 @@
+import json
 from datetime import date, datetime
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -79,6 +80,8 @@ def _metric_payload(row: OuraDailyMetric) -> dict:
         "high_activity_seconds": row.high_activity_seconds,
         "non_wear_seconds": row.non_wear_seconds,
         "inactivity_alerts": row.inactivity_alerts,
+        "activity_target_meters": row.activity_target_meters,
+        "activity_meters_to_target": row.activity_meters_to_target,
         "readiness_score": row.readiness_score,
         "temperature_deviation_c": row.temperature_deviation_c,
         "temperature_trend_deviation_c": row.temperature_trend_deviation_c,
@@ -97,21 +100,42 @@ def _metric_payload(row: OuraDailyMetric) -> dict:
         "average_breaths_per_minute": row.average_breaths_per_minute,
         "bedtime_start": row.bedtime_start,
         "bedtime_end": row.bedtime_end,
+        "sleep_score_delta": row.sleep_score_delta,
+        "readiness_score_delta": row.readiness_score_delta,
+        "low_battery_alert": row.low_battery_alert,
         "stress_high_seconds": row.stress_high_seconds,
         "recovery_high_seconds": row.recovery_high_seconds,
         "workout_count": row.workout_count,
         "workout_calories": row.workout_calories,
         "workout_seconds": row.workout_seconds,
         "spo2_average_percent": row.spo2_average_percent,
+        "breathing_disturbance_index": row.breathing_disturbance_index,
         "resilience_level": row.resilience_level,
         "vascular_age_years": row.vascular_age_years,
+        "pulse_wave_velocity_m_s": row.pulse_wave_velocity_m_s,
         "vo2_max": row.vo2_max,
         "heart_rate_average_bpm": row.heart_rate_average_bpm,
         "heart_rate_min_bpm": row.heart_rate_min_bpm,
         "heart_rate_max_bpm": row.heart_rate_max_bpm,
         "heart_rate_samples": row.heart_rate_samples,
+        "rest_mode": row.rest_mode,
+        "sleep_time_recommendation": row.sleep_time_recommendation,
+        "sleep_time_status": row.sleep_time_status,
+        "optimal_bedtime_start_offset_seconds": row.optimal_bedtime_start_offset_seconds,
+        "optimal_bedtime_end_offset_seconds": row.optimal_bedtime_end_offset_seconds,
+        "optimal_bedtime_timezone_offset_seconds": row.optimal_bedtime_timezone_offset_seconds,
         "details": parse_oura_details(row.details_json),
     }
+
+
+def _ring_configurations(connection: OuraConnection | None) -> list[dict]:
+    if connection is None or not connection.ring_configuration_json:
+        return []
+    try:
+        value = json.loads(connection.ring_configuration_json)
+        return value if isinstance(value, list) else []
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return []
 
 
 @router.get("/status")
@@ -141,6 +165,27 @@ def get_status(
         "latest_sleep_score": latest.sleep_score if latest else None,
         "latest_spo2": latest.spo2_average_percent if latest else None,
         "latest_resilience": latest.resilience_level if latest else None,
+        "profile": (
+            {
+                "age": connection.profile_age,
+                "weight_kg": connection.profile_weight_kg,
+                "height_m": connection.profile_height_m,
+                "biological_sex": connection.profile_biological_sex,
+            }
+            if connection
+            else None
+        ),
+        "rings": _ring_configurations(connection),
+        "ring_battery": (
+            {
+                "level_percent": connection.ring_battery_level_percent,
+                "charging": connection.ring_battery_charging,
+                "in_charger": connection.ring_battery_in_charger,
+                "updated_at": connection.ring_battery_updated_at,
+            }
+            if connection and connection.ring_battery_level_percent is not None
+            else None
+        ),
     }
 
 

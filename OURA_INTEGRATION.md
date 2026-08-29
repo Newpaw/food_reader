@@ -10,12 +10,17 @@ The current product hierarchy is action-first: the user sees **what to do now**,
 - One Oura connection per Food Reader user
 - Initial historical import (up to 365 days, limited by data available in Oura)
 - Incremental manual sync with a short lookback so recently changed Oura days are refreshed
-- Daily activity: activity score, active calories, total calories, steps
-- Daily readiness score
-- Daily sleep score
-- Sleep detail where available: total sleep duration, average HRV, lowest heart rate
-- Daily stress/recovery where available
-- Workout count, calories and duration where available
+- Daily activity: score, calories, steps, distance targets, MET totals, inactivity and activity zones
+- Daily readiness: score, temperature deviations and all contributors
+- Daily sleep: score, contributors, stages, latency, efficiency, bedtime, HRV, heart rate, breathing and score deltas
+- Suggested optimal bedtime, recommendation and sleep-time status
+- Daily stress/recovery, long-term resilience and rest-mode periods
+- SpO₂ average and breathing disturbance index (BDI)
+- Cardiovascular age, pulse-wave velocity and VO₂ max
+- Daytime heart-rate aggregates with source counts
+- Workouts, sessions and tags with compact per-day detail
+- Oura profile data allowed by the `personal` scope (age, weight, height and biological sex)
+- Ring generation/design/color/firmware/size and the latest battery/charging state
 - Combined Food Reader nutrition + Oura + latest Withings health summary
 - Personal trend analysis such as energy balance, protein, meal timing and next-day recovery patterns
 - **Action-first Health Coach** using today’s food, targets, Oura signals and recent trends
@@ -49,7 +54,7 @@ The analytics intentionally require a minimum number of observations before calc
 Requested Oura scopes are:
 
 ```text
-daily workout personal
+daily workout personal heartrate tag session spo2Daily
 ```
 
 ## API endpoints
@@ -79,9 +84,9 @@ POST /oura/coach?start_date=2026-07-01&end_date=2026-08-01&timezone=Europe/Pragu
 
 ## Data model
 
-`oura_connections` stores one OAuth connection per Food Reader user. Tokens are encrypted before being written to SQLite.
+`oura_connections` stores one OAuth connection per Food Reader user. Tokens are encrypted before being written to SQLite. The same row stores the latest profile, ring configuration and battery snapshot. Oura email is neither requested nor stored.
 
-`oura_daily_metrics` stores one normalized row per user and local Oura day. This keeps dashboard requests fast and prevents the frontend from depending directly on Oura availability.
+`oura_daily_metrics` stores one normalized row per user and local Oura day. It contains the main numeric signals as columns and compact structured context (contributors, workouts, sessions, tags and rest-mode episodes) in `details_json`. Large raw sample arrays are not persisted; heart-rate and battery time series are reduced to useful summaries.
 
 Meals remain in the existing `meals` table. The Health service aggregates meals in the browser’s IANA timezone and joins them to Oura daily metrics by local date.
 

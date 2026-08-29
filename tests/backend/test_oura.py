@@ -27,6 +27,8 @@ def _collections():
                 "total_calories": 2450,
                 "steps": 10234,
                 "target_calories": 550,
+                "target_meters": 9000,
+                "meters_to_target": 880,
                 "average_met_minutes": 1.85,
                 "equivalent_walking_distance": 8120,
                 "sedentary_time": 27000,
@@ -102,6 +104,12 @@ def _collections():
                 "bedtime_end": "2026-08-01T06:44:00+02:00",
                 "type": "long_sleep",
                 "restless_periods": 14,
+                "sleep_score_delta": 2,
+                "readiness_score_delta": 3,
+                "low_battery_alert": False,
+                "sleep_algorithm_version": "v2",
+                "sleep_analysis_reason": "auto_detected",
+                "readiness": {"score": 85, "temperature_deviation": -0.1},
             }
         ],
         "daily_stress": [
@@ -119,15 +127,16 @@ def _collections():
                 "label": "Gym",
                 "intensity": "moderate",
                 "calories": 410,
-                "duration": 3600,
                 "start_datetime": "2026-08-01T17:00:00+02:00",
                 "end_datetime": "2026-08-01T18:00:00+02:00",
+                "source": "confirmed",
             }
         ],
         "daily_spo2": [
             {
                 "day": "2026-08-01",
                 "spo2_percentage": {"average": 97.2},
+                "breathing_disturbance_index": 7,
             }
         ],
         "daily_resilience": [
@@ -137,8 +146,26 @@ def _collections():
                 "contributors": {"sleep_recovery": 0.8, "daytime_recovery": 0.7, "stress": 0.6},
             }
         ],
-        "daily_cardiovascular_age": [{"day": "2026-08-01", "vascular_age": 36}],
+        "daily_cardiovascular_age": [
+            {"day": "2026-08-01", "vascular_age": 36, "pulse_wave_velocity": 7.1}
+        ],
         "vO2_max": [{"day": "2026-08-01", "vo2_max": 43.7}],
+        "sleep_time": [
+            {
+                "day": "2026-08-01",
+                "recommendation": "earlier_bedtime",
+                "status": "optimal_found",
+                "optimal_bedtime": {"day_tz": 7200, "start_offset": 80100, "end_offset": 83700},
+            }
+        ],
+        "rest_mode_period": [
+            {
+                "start_day": "2026-08-01",
+                "end_day": "2026-08-01",
+                "start_time": "2026-08-01T09:00:00+02:00",
+                "episodes": [{"timestamp": "2026-08-01T09:00:00+02:00", "tags": ["illness"]}],
+            }
+        ],
         "session": [
             {
                 "day": "2026-08-01",
@@ -162,6 +189,26 @@ def _collections():
             {"timestamp": "2026-08-01T10:05:00+02:00", "bpm": 68, "source": "awake"},
             {"timestamp": "2026-08-01T10:10:00+02:00", "bpm": 65, "source": "awake"},
         ],
+        "ring_configuration": [
+            {
+                "id": "ring-1",
+                "color": "stealth_black",
+                "design": "horizon",
+                "firmware_version": "3.2.1",
+                "hardware_type": "or5",
+                "set_up_at": "2026-07-01T10:00:00Z",
+                "size": 11,
+            }
+        ],
+        "ring_battery_level": [
+            {
+                "timestamp": "2026-08-01T18:00:00Z",
+                "timestamp_unix": 1785607200000,
+                "level": 73,
+                "charging": False,
+                "in_charger": False,
+            }
+        ],
     }
 
 
@@ -173,7 +220,13 @@ def _patch_oura_client(monkeypatch, *, collections=None, scope=None):
     monkeypatch.setattr(
         oura_service.OuraClient,
         "fetch_personal_info",
-        lambda self, token: {"id": "oura-user-1"},
+        lambda self, token: {
+            "id": "oura-user-1",
+            "age": 41,
+            "weight": 86.4,
+            "height": 1.86,
+            "biological_sex": "male",
+        },
     )
     monkeypatch.setattr(
         oura_service.OuraClient,
@@ -184,6 +237,11 @@ def _patch_oura_client(monkeypatch, *, collections=None, scope=None):
         oura_service.OuraClient,
         "fetch_timeseries",
         lambda self, token, endpoint, **kwargs: data.get(endpoint, []),
+    )
+    monkeypatch.setattr(
+        oura_service.OuraClient,
+        "fetch_unbounded_collection",
+        lambda self, token, endpoint: data.get(endpoint, []),
     )
 
 
@@ -243,6 +301,15 @@ def test_oura_callback_connects_and_initial_sync_persists_daily_metrics(client, 
     assert status_payload["latest_sleep_score"] == 87
     assert status_payload["latest_spo2"] == 97.2
     assert status_payload["latest_resilience"] == "solid"
+    assert status_payload["profile"] == {
+        "age": 41,
+        "weight_kg": 86.4,
+        "height_m": 1.86,
+        "biological_sex": "male",
+    }
+    assert status_payload["rings"][0]["hardware_type"] == "or5"
+    assert status_payload["ring_battery"]["level_percent"] == 73
+    assert status_payload["ring_battery"]["charging"] is False
     assert status_payload["needs_reauthorization"] is False
 
     daily_response = client.get(
@@ -257,6 +324,8 @@ def test_oura_callback_connects_and_initial_sync_persists_daily_metrics(client, 
     assert row["total_calories"] == 2450
     assert row["steps"] == 10234
     assert row["activity_target_calories"] == 550
+    assert row["activity_target_meters"] == 9000
+    assert row["activity_meters_to_target"] == 880
     assert row["sedentary_seconds"] == 27000
     assert row["temperature_deviation_c"] == -0.1
     assert row["deep_sleep_seconds"] == 5400
@@ -264,9 +333,14 @@ def test_oura_callback_connects_and_initial_sync_persists_daily_metrics(client, 
     assert row["sleep_efficiency"] == 94.0
     assert row["average_hrv_ms"] == 48.5
     assert row["average_heart_rate_bpm"] == 57.2
+    assert row["sleep_score_delta"] == 2
+    assert row["readiness_score_delta"] == 3
+    assert row["low_battery_alert"] is False
     assert row["spo2_average_percent"] == 97.2
+    assert row["breathing_disturbance_index"] == 7
     assert row["resilience_level"] == "solid"
     assert row["vascular_age_years"] == 36.0
+    assert row["pulse_wave_velocity_m_s"] == 7.1
     assert row["vo2_max"] == 43.7
     assert row["heart_rate_average_bpm"] == 65.0
     assert row["heart_rate_min_bpm"] == 62.0
@@ -274,12 +348,22 @@ def test_oura_callback_connects_and_initial_sync_persists_daily_metrics(client, 
     assert row["heart_rate_samples"] == 3
     assert row["workout_count"] == 1
     assert row["workout_calories"] == 410.0
+    assert row["workout_seconds"] == 3600
+    assert row["rest_mode"] is True
+    assert row["sleep_time_recommendation"] == "earlier_bedtime"
+    assert row["sleep_time_status"] == "optimal_found"
+    assert row["optimal_bedtime_start_offset_seconds"] == 80100
+    assert row["optimal_bedtime_end_offset_seconds"] == 83700
+    assert row["optimal_bedtime_timezone_offset_seconds"] == 7200
     assert row["details"]["readiness_contributors"]["hrv_balance"] == 79
     assert row["details"]["sleep_contributors"]["deep_sleep"] == 86
     assert row["details"]["stress_day_summary"] == "restored"
     assert row["details"]["workouts"][0]["activity"] == "strength_training"
+    assert row["details"]["workouts"][0]["source"] == "confirmed"
     assert row["details"]["sessions"][0]["type"] == "meditation"
     assert row["details"]["tags"][0]["tag_type_code"] == "alcohol"
+    assert row["details"]["sleep_readiness"]["score"] == 85
+    assert row["details"]["rest_mode_period"]["episodes"][0]["tags"] == ["illness"]
 
 
 def test_existing_oura_connection_reports_missing_richer_scopes(client, register_and_login, monkeypatch):

@@ -11,6 +11,7 @@ from .adaptive_targets import resolve_nutrition_targets
 from .ai_analyzer import get_openai_client
 from .health_service import build_health_summary
 from .oura_models import OuraConnection, OuraDailyMetric
+from .oura_service import parse_oura_details
 from .settings import settings
 
 
@@ -101,7 +102,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_oura_daily",
-            "description": "Read Oura daily activity, calorie expenditure, steps, readiness, sleep, HRV, stress/recovery, and workout metrics.",
+            "description": "Read rich Oura daily activity, readiness, sleep, cardiovascular, respiratory, stress/recovery, rest-mode, workout, session and tag metrics.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -333,16 +334,43 @@ def _oura(db: Session, user_id: int, args: dict[str, Any]) -> dict[str, Any]:
                 "active_calories": row.active_calories,
                 "total_calories": row.total_calories,
                 "steps": row.steps,
+                "activity_target_calories": row.activity_target_calories,
+                "activity_target_meters": row.activity_target_meters,
+                "activity_meters_to_target": row.activity_meters_to_target,
+                "sedentary_seconds": row.sedentary_seconds,
+                "low_activity_seconds": row.low_activity_seconds,
+                "medium_activity_seconds": row.medium_activity_seconds,
+                "high_activity_seconds": row.high_activity_seconds,
                 "readiness_score": row.readiness_score,
+                "temperature_deviation_c": row.temperature_deviation_c,
                 "sleep_score": row.sleep_score,
                 "total_sleep_seconds": row.total_sleep_seconds,
+                "deep_sleep_seconds": row.deep_sleep_seconds,
+                "rem_sleep_seconds": row.rem_sleep_seconds,
+                "sleep_efficiency": row.sleep_efficiency,
+                "sleep_latency_seconds": row.sleep_latency_seconds,
                 "average_hrv_ms": row.average_hrv_ms,
                 "lowest_heart_rate_bpm": row.lowest_heart_rate_bpm,
+                "average_heart_rate_bpm": row.average_heart_rate_bpm,
+                "average_breaths_per_minute": row.average_breaths_per_minute,
                 "stress_high_seconds": row.stress_high_seconds,
                 "recovery_high_seconds": row.recovery_high_seconds,
                 "workout_count": row.workout_count,
                 "workout_calories": row.workout_calories,
                 "workout_seconds": row.workout_seconds,
+                "spo2_average_percent": row.spo2_average_percent,
+                "breathing_disturbance_index": row.breathing_disturbance_index,
+                "resilience_level": row.resilience_level,
+                "vascular_age_years": row.vascular_age_years,
+                "pulse_wave_velocity_m_s": row.pulse_wave_velocity_m_s,
+                "vo2_max": row.vo2_max,
+                "heart_rate_average_bpm": row.heart_rate_average_bpm,
+                "heart_rate_min_bpm": row.heart_rate_min_bpm,
+                "heart_rate_max_bpm": row.heart_rate_max_bpm,
+                "rest_mode": row.rest_mode,
+                "sleep_time_recommendation": row.sleep_time_recommendation,
+                "sleep_time_status": row.sleep_time_status,
+                "details": parse_oura_details(row.details_json),
             }
             for row in rows
         ],

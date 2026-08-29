@@ -127,10 +127,20 @@ function renderConnection() {
   connectButton.hidden = true;
   coachButton.disabled = false;
   const lastSync = ouraStatus.last_sync_at ? formatDateTime(ouraStatus.last_sync_at) : '-';
+  const ring = Array.isArray(ouraStatus.rings) ? ouraStatus.rings[0] : null;
+  const battery = ouraStatus.ring_battery;
+  const ringLabel = ring
+    ? [ring.hardware_type?.toUpperCase(), ring.design, ring.color].filter(Boolean).join(' · ')
+    : '-';
+  const batteryLabel = battery?.level_percent === null || battery?.level_percent === undefined
+    ? '-'
+    : `${battery.level_percent}%${battery.charging ? ` · ${copy('nabíjí se', 'charging')}` : ''}`;
   target.innerHTML = `
     <div class="health-connection-item"><span>Oura</span><strong class="health-connected-dot">${copy('Připojeno', 'Connected')}</strong></div>
     <div class="health-connection-item"><span>${copy('Sync', 'Sync')}</span><strong>${escapeHtml(lastSync)}</strong></div>
     <div class="health-connection-item"><span>${copy('Historie', 'History')}</span><strong>${ouraStatus.synced_days ?? 0} ${copy('dní', 'days')}</strong></div>
+    <div class="health-connection-item"><span>${copy('Prsten', 'Ring')}</span><strong>${escapeHtml(ringLabel)}</strong></div>
+    <div class="health-connection-item"><span>${copy('Baterie', 'Battery')}</span><strong>${escapeHtml(batteryLabel)}</strong></div>
   `;
 }
 
@@ -147,6 +157,12 @@ function currentDayRow() {
 function finiteNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
+}
+
+function durationHours(seconds) {
+  const value = finiteNumber(seconds);
+  if (value === null) return '-';
+  return `${Math.round((value / 3600) * 10) / 10} h`;
 }
 
 function remainingText(target, current, unit) {
@@ -183,6 +199,43 @@ function renderSummary() {
   const protein = Math.round(finiteNumber(nutrition.protein_g) ?? 0);
   const readiness = finiteNumber(oura.readiness_score) ?? finiteNumber(ouraStatus?.latest_readiness);
   const sleep = finiteNumber(oura.sleep_score) ?? finiteNumber(ouraStatus?.latest_sleep_score);
+  const optionalCards = [];
+  if (finiteNumber(oura.total_sleep_seconds) !== null) {
+    optionalCards.push(`
+      <article class="health-stat-card">
+        <span>${copy('Délka spánku', 'Sleep duration')}</span>
+        <strong>${durationHours(oura.total_sleep_seconds)}</strong>
+        <small>${copy('celkový spánek', 'total sleep')}</small>
+      </article>
+    `);
+  }
+  if (finiteNumber(oura.spo2_average_percent) !== null) {
+    optionalCards.push(`
+      <article class="health-stat-card">
+        <span>SpO₂</span>
+        <strong>${fmt(oura.spo2_average_percent, ' %')}</strong>
+        <small>BDI ${fmt(oura.breathing_disturbance_index)}</small>
+      </article>
+    `);
+  }
+  if (oura.resilience_level) {
+    optionalCards.push(`
+      <article class="health-stat-card">
+        <span>${copy('Odolnost', 'Resilience')}</span>
+        <strong>${escapeHtml(oura.resilience_level)}</strong>
+        <small>${copy('dlouhodobá regenerace', 'long-term recovery')}</small>
+      </article>
+    `);
+  }
+  if (finiteNumber(oura.stress_high_seconds) !== null || finiteNumber(oura.recovery_high_seconds) !== null) {
+    optionalCards.push(`
+      <article class="health-stat-card">
+        <span>${copy('Stres / regenerace', 'Stress / recovery')}</span>
+        <strong>${durationHours(oura.stress_high_seconds)} / ${durationHours(oura.recovery_high_seconds)}</strong>
+        <small>${copy('vysoká pásma', 'high zones')}</small>
+      </article>
+    `);
+  }
 
   cards.innerHTML = `
     <article class="health-stat-card">
@@ -205,6 +258,7 @@ function renderSummary() {
       <strong>${fmt(sleep)}</strong>
       <small>${copy('sleep score', 'sleep score')}</small>
     </article>
+    ${optionalCards.join('')}
   `;
   note.textContent = copy(
     `Data: jídlo ${summary.days_with_food} dní · Oura ${summary.days_with_oura} dní`,
@@ -445,6 +499,8 @@ function renderDaily() {
           <div class="health-daily-recovery">
             <strong>R ${fmt(oura.readiness_score)} · S ${fmt(oura.sleep_score)}</strong>
             <span>HRV ${fmt(oura.average_hrv_ms, ' ms')} · ${fmt(oura.steps, copy(' kroků', ' steps'))}</span>
+            <span>SpO₂ ${fmt(oura.spo2_average_percent, ' %')} · ${copy('spánek', 'sleep')} ${durationHours(oura.total_sleep_seconds)}</span>
+            <span>${copy('stres', 'stress')} ${durationHours(oura.stress_high_seconds)} · ${copy('regenerace', 'recovery')} ${durationHours(oura.recovery_high_seconds)}</span>
           </div>
         </div>
       `;

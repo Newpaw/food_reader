@@ -230,6 +230,21 @@ class OuraClient:
             if not next_token:
                 return rows
 
+    def fetch_unbounded_collection(self, access_token: str, endpoint: str) -> list[dict[str, Any]]:
+        """Fetch collections such as ring configuration that do not accept dates."""
+        rows: list[dict[str, Any]] = []
+        next_token: str | None = None
+        while True:
+            params = {"next_token": next_token}
+            payload = _json_request(
+                f"{OURA_API_BASE}/{endpoint}?{urlencode({k: v for k, v in params.items() if v})}",
+                access_token=access_token,
+            )
+            rows.extend(payload.get("data") or [])
+            next_token = payload.get("next_token")
+            if not next_token:
+                return rows
+
     def fetch_personal_info(self, access_token: str) -> dict[str, Any]:
         return _json_request(f"{OURA_API_BASE}/personal_info", access_token=access_token)
 
@@ -241,6 +256,17 @@ def _store_tokens(connection: OuraConnection, token_payload: dict[str, Any]) -> 
     expires_in = int(token_payload.get("expires_in") or 0)
     connection.token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in) if expires_in else None
     connection.updated_at = datetime.now(timezone.utc)
+
+
+def _store_personal_info(connection: OuraConnection, personal: dict[str, Any]) -> None:
+    if personal.get("id"):
+        connection.oura_user_id = str(personal["id"])
+    connection.profile_age = _as_int(personal.get("age"))
+    connection.profile_weight_kg = _as_float(personal.get("weight"))
+    connection.profile_height_m = _as_float(personal.get("height"))
+    connection.profile_biological_sex = (
+        str(personal["biological_sex"]) if personal.get("biological_sex") is not None else None
+    )
 
 
 def save_connection_from_code(
@@ -264,8 +290,7 @@ def save_connection_from_code(
 
     try:
         personal = active_client.fetch_personal_info(token_payload["access_token"])
-        if personal.get("id"):
-            connection.oura_user_id = str(personal["id"])
+        _store_personal_info(connection, personal)
     except OuraAPIError:
         pass
 
@@ -343,7 +368,7 @@ def _metric(db: Session, user_id: int, day: str) -> OuraDailyMetric:
 
 
 def _day_from_row(row: dict[str, Any]) -> str | None:
-    day = row.get("day")
+    day = row.get("day") or row.get("start_day")
     if isinstance(day, str) and len(day) >= 10:
         return day[:10]
     for key in ("start_datetime", "timestamp", "start_time"):
@@ -384,7 +409,17 @@ def parse_oura_details(value: str | None) -> dict[str, Any]:
 def _compact_workout(row: dict[str, Any]) -> dict[str, Any]:
     return {
         key: row.get(key)
-        for key in ("activity", "label", "intensity", "calories", "duration", "start_datetime", "end_datetime", "distance")
+        for key in (
+            "activity",
+            "label",
+            "intensity",
+            "calories",
+            "duration",
+            "start_datetime",
+            "end_datetime",
+            "distance",
+            "source",
+        )
         if row.get(key) is not None
     }
 
@@ -400,7 +435,42 @@ def _compact_session(row: dict[str, Any]) -> dict[str, Any]:
 def _compact_tag(row: dict[str, Any]) -> dict[str, Any]:
     return {
         key: row.get(key)
-        for key in ("tag_type_code", "text", "comment", "start_time", "end_time", "start_datetime", "end_datetime")
+        for key in (
+            "tag_type_code",
+            "custom_name",
+            "text",
+            "comment",
+            "start_day",
+            "end_day",
+            "start_time",
+            "end_time",
+            "start_datetime",
+            "end_datetime",
+        )
+        if row.get(key) is not None
+    }
+
+
+def _row_duration_seconds(row: dict[str, Any]) -> int:
+    explicit = _duration_seconds(row.get("duration"))
+    if explicit:
+        return explicit
+    start = row.get("start_datetime")
+    end = row.get("end_datetime")
+    if not isinstance(start, str) or not isinstance(end, str):
+        return 0
+    try:
+        start_value = datetime.fromisoformat(start.replace("Z", "+00:00"))
+        end_value = datetime.fromisoformat(end.replace("Z", "+00:00"))
+    except ValueError:
+        return 0
+    return max(0, int((end_value - start_value).total_seconds()))
+
+
+def _compact_ring_configuration(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: row.get(key)
+        for key in ("id", "color", "design", "firmware_version", "hardware_type", "set_up_at", "size")
         if row.get(key) is not None
     }
 
@@ -470,7 +540,13 @@ def sync_oura_data(
     # not expose every newer Oura metric. A missing endpoint must never block
     # the core sleep/readiness/activity sync.
     if "daily" in granted_scopes:
-        for endpoint in ("daily_resilience", "daily_cardiovascular_age", "vO2_max"):
+        for endpoint in (
+            "daily_resilience",
+            "daily_cardiovascular_age",
+            "vO2_max",
+            "sleep_time",
+            "rest_mode_period",
+        ):
             optional[endpoint] = _safe_optional_collection(
                 active_client,
                 access_token,
@@ -479,6 +555,48 @@ def sync_oura_data(
                 end_date=sync_end,
                 warnings=warnings,
             )
+
+    if "personal" in granted_scopes:
+        try:
+            _store_personal_info(connection, active_client.fetch_personal_info(access_token))
+        except OuraAPIError as exc:
+            warnings.append(f"personal_info: {exc}")
+
+        try:
+            ring_configurations = active_client.fetch_unbounded_collection(access_token, "ring_configuration")
+            if ring_configurations:
+                connection.ring_configuration_json = json.dumps(
+                    [_compact_ring_configuration(row) for row in ring_configurations[:5]],
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                )
+        except OuraAPIError as exc:
+            warnings.append(f"ring_configuration: {exc}")
+
+        battery_start = max(sync_start, sync_end - timedelta(days=6))
+        try:
+            battery_rows = active_client.fetch_timeseries(
+                access_token,
+                "ring_battery_level",
+                start_date=battery_start,
+                end_date=sync_end,
+            )
+            if battery_rows:
+                latest_battery = max(
+                    battery_rows,
+                    key=lambda row: (row.get("timestamp_unix") or 0, str(row.get("timestamp") or "")),
+                )
+                connection.ring_battery_level_percent = _as_int(latest_battery.get("level"))
+                connection.ring_battery_charging = latest_battery.get("charging")
+                connection.ring_battery_in_charger = latest_battery.get("in_charger")
+                timestamp = latest_battery.get("timestamp")
+                if isinstance(timestamp, str):
+                    try:
+                        connection.ring_battery_updated_at = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                    except ValueError:
+                        pass
+        except OuraAPIError as exc:
+            warnings.append(f"ring_battery_level: {exc}")
 
     if "spo2Daily" in granted_scopes or "spo2" in granted_scopes:
         optional["daily_spo2"] = _safe_optional_collection(
@@ -539,6 +657,8 @@ def sync_oura_data(
         metric.high_activity_seconds = _duration_seconds(row.get("high_activity_time")) or None
         metric.non_wear_seconds = _duration_seconds(row.get("non_wear_time")) or None
         metric.inactivity_alerts = _as_int(row.get("inactivity_alerts"))
+        metric.activity_target_meters = _as_int(row.get("target_meters"))
+        metric.activity_meters_to_target = _as_int(row.get("meters_to_target"))
         _set_detail(metric, "activity_contributors", row.get("contributors"))
         _set_detail(
             metric,
@@ -596,8 +716,14 @@ def sync_oura_data(
         metric.average_breaths_per_minute = _as_float(row.get("average_breath"))
         metric.bedtime_start = row.get("bedtime_start")
         metric.bedtime_end = row.get("bedtime_end")
+        metric.sleep_score_delta = _as_int(row.get("sleep_score_delta"))
+        metric.readiness_score_delta = _as_int(row.get("readiness_score_delta"))
+        metric.low_battery_alert = row.get("low_battery_alert")
         _set_detail(metric, "sleep_type", row.get("type"))
         _set_detail(metric, "restless_periods", _as_int(row.get("restless_periods")))
+        _set_detail(metric, "sleep_algorithm_version", row.get("sleep_algorithm_version"))
+        _set_detail(metric, "sleep_analysis_reason", row.get("sleep_analysis_reason"))
+        _set_detail(metric, "sleep_readiness", row.get("readiness"))
         touched_days.add(day)
 
     for row in optional.get("daily_stress", []):
@@ -618,7 +744,7 @@ def sync_oura_data(
         totals = workout_totals.setdefault(day, {"count": 0, "calories": 0.0, "seconds": 0, "items": []})
         totals["count"] += 1
         totals["calories"] += _as_float(row.get("calories")) or 0.0
-        totals["seconds"] += _duration_seconds(row.get("duration"))
+        totals["seconds"] += _row_duration_seconds(row)
         totals["items"].append(_compact_workout(row))
     for day, totals in workout_totals.items():
         metric = _metric(db, user_id, day)
@@ -639,6 +765,7 @@ def sync_oura_data(
             _set_detail(metric, "spo2", percentage)
         else:
             metric.spo2_average_percent = _as_float(row.get("average"))
+        metric.breathing_disturbance_index = _as_int(row.get("breathing_disturbance_index"))
         touched_days.add(day)
 
     for row in optional.get("daily_resilience", []):
@@ -656,6 +783,7 @@ def sync_oura_data(
             continue
         metric = _metric(db, user_id, day)
         metric.vascular_age_years = _as_float(row.get("vascular_age"))
+        metric.pulse_wave_velocity_m_s = _as_float(row.get("pulse_wave_velocity"))
         touched_days.add(day)
 
     for row in optional.get("vO2_max", []):
@@ -665,6 +793,48 @@ def sync_oura_data(
         metric = _metric(db, user_id, day)
         metric.vo2_max = _as_float(row.get("vo2_max"))
         touched_days.add(day)
+
+    for row in optional.get("sleep_time", []):
+        day = _day_from_row(row)
+        if not day:
+            continue
+        metric = _metric(db, user_id, day)
+        metric.sleep_time_recommendation = (
+            str(row["recommendation"]) if row.get("recommendation") is not None else None
+        )
+        metric.sleep_time_status = str(row["status"]) if row.get("status") is not None else None
+        optimal_bedtime = row.get("optimal_bedtime")
+        if isinstance(optimal_bedtime, dict):
+            metric.optimal_bedtime_start_offset_seconds = _as_int(optimal_bedtime.get("start_offset"))
+            metric.optimal_bedtime_end_offset_seconds = _as_int(optimal_bedtime.get("end_offset"))
+            metric.optimal_bedtime_timezone_offset_seconds = _as_int(optimal_bedtime.get("day_tz"))
+            _set_detail(metric, "optimal_bedtime", optimal_bedtime)
+        touched_days.add(day)
+
+    for row in optional.get("rest_mode_period", []):
+        start_day = row.get("start_day")
+        end_day = row.get("end_day") or sync_end.isoformat()
+        try:
+            period_start = max(date.fromisoformat(str(start_day)), sync_start)
+            period_end = min(date.fromisoformat(str(end_day)), sync_end)
+        except ValueError:
+            continue
+        current_day = period_start
+        while current_day <= period_end:
+            day = current_day.isoformat()
+            metric = _metric(db, user_id, day)
+            metric.rest_mode = True
+            _set_detail(
+                metric,
+                "rest_mode_period",
+                {
+                    key: row.get(key)
+                    for key in ("start_day", "end_day", "start_time", "end_time", "episodes")
+                    if row.get(key) is not None
+                },
+            )
+            touched_days.add(day)
+            current_day += timedelta(days=1)
 
     sessions_by_day: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in optional.get("session", []):

@@ -93,7 +93,30 @@ def _ensure_oura_schema() -> None:
     """
 
     inspector = inspect(engine)
-    if "oura_daily_metrics" not in inspector.get_table_names():
+    table_names = inspector.get_table_names()
+
+    if "oura_connections" in table_names:
+        connection_columns = {column["name"] for column in inspector.get_columns("oura_connections")}
+        desired_connection_columns = [
+            ("profile_age", "INTEGER"),
+            ("profile_weight_kg", "FLOAT"),
+            ("profile_height_m", "FLOAT"),
+            ("profile_biological_sex", "VARCHAR"),
+            ("ring_configuration_json", "TEXT"),
+            ("ring_battery_level_percent", "INTEGER"),
+            ("ring_battery_charging", "BOOLEAN"),
+            ("ring_battery_in_charger", "BOOLEAN"),
+            ("ring_battery_updated_at", "DATETIME"),
+        ]
+        missing_connection_columns = [
+            (name, type_) for name, type_ in desired_connection_columns if name not in connection_columns
+        ]
+        if missing_connection_columns:
+            with engine.begin() as connection:
+                for column_name, column_type in missing_connection_columns:
+                    connection.execute(text(f"ALTER TABLE oura_connections ADD COLUMN {column_name} {column_type}"))
+
+    if "oura_daily_metrics" not in table_names:
         return
 
     existing_columns = {column["name"] for column in inspector.get_columns("oura_daily_metrics")}
@@ -108,6 +131,8 @@ def _ensure_oura_schema() -> None:
         ("high_activity_seconds", "INTEGER"),
         ("non_wear_seconds", "INTEGER"),
         ("inactivity_alerts", "INTEGER"),
+        ("activity_target_meters", "INTEGER"),
+        ("activity_meters_to_target", "INTEGER"),
         ("temperature_deviation_c", "FLOAT"),
         ("temperature_trend_deviation_c", "FLOAT"),
         ("time_in_bed_seconds", "INTEGER"),
@@ -121,14 +146,25 @@ def _ensure_oura_schema() -> None:
         ("average_breaths_per_minute", "FLOAT"),
         ("bedtime_start", "VARCHAR"),
         ("bedtime_end", "VARCHAR"),
+        ("sleep_score_delta", "INTEGER"),
+        ("readiness_score_delta", "INTEGER"),
+        ("low_battery_alert", "BOOLEAN"),
         ("spo2_average_percent", "FLOAT"),
+        ("breathing_disturbance_index", "INTEGER"),
         ("resilience_level", "VARCHAR"),
         ("vascular_age_years", "FLOAT"),
+        ("pulse_wave_velocity_m_s", "FLOAT"),
         ("vo2_max", "FLOAT"),
         ("heart_rate_average_bpm", "FLOAT"),
         ("heart_rate_min_bpm", "FLOAT"),
         ("heart_rate_max_bpm", "FLOAT"),
         ("heart_rate_samples", "INTEGER"),
+        ("rest_mode", "BOOLEAN"),
+        ("sleep_time_recommendation", "VARCHAR"),
+        ("sleep_time_status", "VARCHAR"),
+        ("optimal_bedtime_start_offset_seconds", "INTEGER"),
+        ("optimal_bedtime_end_offset_seconds", "INTEGER"),
+        ("optimal_bedtime_timezone_offset_seconds", "INTEGER"),
         ("details_json", "TEXT"),
     ]
     missing_columns = [(name, type_) for name, type_ in desired_columns if name not in existing_columns]

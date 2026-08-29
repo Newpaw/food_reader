@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 
 from .database import Base
 from .sql_types import UTCDateTime
@@ -17,6 +17,15 @@ class OuraConnection(Base):
     scope = Column(String, nullable=True)
     token_expires_at = Column(UTCDateTime(), nullable=True)
     last_sync_at = Column(UTCDateTime(), nullable=True)
+    profile_age = Column(Integer, nullable=True)
+    profile_weight_kg = Column(Float, nullable=True)
+    profile_height_m = Column(Float, nullable=True)
+    profile_biological_sex = Column(String, nullable=True)
+    ring_configuration_json = Column(Text, nullable=True)
+    ring_battery_level_percent = Column(Integer, nullable=True)
+    ring_battery_charging = Column(Boolean, nullable=True)
+    ring_battery_in_charger = Column(Boolean, nullable=True)
+    ring_battery_updated_at = Column(UTCDateTime(), nullable=True)
     created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(
         UTCDateTime(),
@@ -48,6 +57,8 @@ class OuraDailyMetric(Base):
     high_activity_seconds = Column(Integer, nullable=True)
     non_wear_seconds = Column(Integer, nullable=True)
     inactivity_alerts = Column(Integer, nullable=True)
+    activity_target_meters = Column(Integer, nullable=True)
+    activity_meters_to_target = Column(Integer, nullable=True)
 
     readiness_score = Column(Integer, nullable=True)
     temperature_deviation_c = Column(Float, nullable=True)
@@ -68,6 +79,9 @@ class OuraDailyMetric(Base):
     average_breaths_per_minute = Column(Float, nullable=True)
     bedtime_start = Column(String, nullable=True)
     bedtime_end = Column(String, nullable=True)
+    sleep_score_delta = Column(Integer, nullable=True)
+    readiness_score_delta = Column(Integer, nullable=True)
+    low_battery_alert = Column(Boolean, nullable=True)
 
     stress_high_seconds = Column(Integer, nullable=True)
     recovery_high_seconds = Column(Integer, nullable=True)
@@ -77,13 +91,21 @@ class OuraDailyMetric(Base):
     workout_seconds = Column(Integer, nullable=False, default=0)
 
     spo2_average_percent = Column(Float, nullable=True)
+    breathing_disturbance_index = Column(Integer, nullable=True)
     resilience_level = Column(String, nullable=True)
     vascular_age_years = Column(Float, nullable=True)
+    pulse_wave_velocity_m_s = Column(Float, nullable=True)
     vo2_max = Column(Float, nullable=True)
     heart_rate_average_bpm = Column(Float, nullable=True)
     heart_rate_min_bpm = Column(Float, nullable=True)
     heart_rate_max_bpm = Column(Float, nullable=True)
     heart_rate_samples = Column(Integer, nullable=True)
+    rest_mode = Column(Boolean, nullable=True)
+    sleep_time_recommendation = Column(String, nullable=True)
+    sleep_time_status = Column(String, nullable=True)
+    optimal_bedtime_start_offset_seconds = Column(Integer, nullable=True)
+    optimal_bedtime_end_offset_seconds = Column(Integer, nullable=True)
+    optimal_bedtime_timezone_offset_seconds = Column(Integer, nullable=True)
 
     # Compact structured context from Oura (contributors, workout details, tags,
     # sessions and other optional metrics). Large time-series arrays are never

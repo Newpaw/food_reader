@@ -125,7 +125,10 @@ def _build_context(
             "workout_calories": _number(oura.get("workout_calories")),
             "workout_seconds": _number(oura.get("workout_seconds")),
             "spo2_average_percent": oura.get("spo2_average_percent"),
+            "breathing_disturbance_index": oura.get("breathing_disturbance_index"),
             "resilience_level": oura.get("resilience_level"),
+            "rest_mode": oura.get("rest_mode"),
+            "sleep_time_recommendation": oura.get("sleep_time_recommendation"),
             "details": oura.get("details") or {},
         }
 

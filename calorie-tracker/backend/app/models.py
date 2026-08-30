@@ -1,7 +1,17 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, Date, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Date,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -59,6 +69,57 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
+
+class OAuthClient(Base):
+    """Dynamically registered MCP OAuth client.
+
+    Client metadata is stored as JSON. Confidential client secrets are encrypted
+    separately so they are never persisted in clear text inside that metadata.
+    """
+
+    __tablename__ = "oauth_clients"
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(String, unique=True, index=True, nullable=False)
+    metadata_json = Column(Text, nullable=False)
+    client_secret_encrypted = Column(Text, nullable=True)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class OAuthAuthorizationCode(Base):
+    __tablename__ = "oauth_authorization_codes"
+
+    id = Column(Integer, primary_key=True)
+    code_hash = Column(String, unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    client_id = Column(String, index=True, nullable=False)
+    scopes_json = Column(Text, nullable=False)
+    code_challenge = Column(String, nullable=False)
+    redirect_uri = Column(Text, nullable=False)
+    redirect_uri_provided_explicitly = Column(Boolean, nullable=False, default=True)
+    resource = Column(Text, nullable=False)
+    expires_at = Column(UTCDateTime(), index=True, nullable=False)
+    consumed_at = Column(UTCDateTime(), nullable=True)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class OAuthTokenGrant(Base):
+    """One rotatable MCP access/refresh token pair, stored only as hashes."""
+
+    __tablename__ = "oauth_token_grants"
+
+    id = Column(Integer, primary_key=True)
+    access_token_hash = Column(String, unique=True, index=True, nullable=False)
+    refresh_token_hash = Column(String, unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    client_id = Column(String, index=True, nullable=False)
+    scopes_json = Column(Text, nullable=False)
+    resource = Column(Text, nullable=False)
+    access_expires_at = Column(UTCDateTime(), index=True, nullable=False)
+    refresh_expires_at = Column(UTCDateTime(), index=True, nullable=False)
+    revoked_at = Column(UTCDateTime(), nullable=True)
+    created_at = Column(UTCDateTime(), default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class UserProfile(Base):

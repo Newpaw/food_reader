@@ -7,7 +7,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 APP_ROOT = PROJECT_ROOT / "calorie-tracker"
 
@@ -15,17 +14,14 @@ if str(APP_ROOT) not in sys.path:
     sys.path.insert(0, str(APP_ROOT))
 
 
-@pytest.fixture
-def client(monkeypatch, tmp_path):
-    monkeypatch.setenv("JWT_SECRET", "test-secret")
-    monkeypatch.setenv("DATABASE_URL", "sqlite:///ignored.db")
-
-    from backend.app.database import Base
+@pytest.fixture(scope="session")
+def _app_client(tmp_path_factory):
+    from backend.app import database
     from backend.app.deps import get_db
     from backend.app.main import app
     from backend.app.settings import settings
 
-    settings.UPLOAD_DIR = str(tmp_path / "uploads")
+    settings.UPLOAD_DIR = str(tmp_path_factory.mktemp("uploads"))
     settings.JWT_SECRET = "test-secret"
 
     engine = create_engine(
@@ -34,7 +30,8 @@ def client(monkeypatch, tmp_path):
         poolclass=StaticPool,
     )
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
+    original_session_local = database.SessionLocal
+    database.SessionLocal = TestingSessionLocal
 
     def override_get_db():
         db = TestingSessionLocal()
@@ -46,15 +43,28 @@ def client(monkeypatch, tmp_path):
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app) as test_client:
-        yield test_client
+        yield test_client, engine
 
     app.dependency_overrides.clear()
+    database.SessionLocal = original_session_local
+
+
+@pytest.fixture
+def client(_app_client):
+    from backend.app.database import Base
+
+    test_client, engine = _app_client
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    yield test_client
     Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
 def register_and_login(client):
-    def _register_and_login(email="tester@example.com", name="Tester", password="strong-pass-123"):
+    def _register_and_login(
+        email="tester@example.com", name="Tester", password="strong-pass-123"
+    ):
         register_response = client.post(
             "/auth/register",
             json={"email": email, "name": name, "password": password},
@@ -88,7 +98,9 @@ def ai_stubs(monkeypatch):
             5,
             520,
             "lunch",
-            __import__("datetime").datetime(2026, 4, 2, 12, 0, tzinfo=__import__("datetime").timezone.utc),
+            __import__("datetime").datetime(
+                2026, 4, 2, 12, 0, tzinfo=__import__("datetime").timezone.utc
+            ),
             f"Estimated from: {description}",
         ),
     )
@@ -104,7 +116,11 @@ def ai_stubs(monkeypatch):
             7,
             610,
             "dinner",
-            __import__("datetime").datetime(2026, 4, 2, 18, 30, tzinfo=__import__("datetime").timezone.utc),
-            "Updated analysis" if refinement_context else f"Estimated from image: {Path(image_path).name}",
+            __import__("datetime").datetime(
+                2026, 4, 2, 18, 30, tzinfo=__import__("datetime").timezone.utc
+            ),
+            "Updated analysis"
+            if refinement_context
+            else f"Estimated from image: {Path(image_path).name}",
         ),
     )

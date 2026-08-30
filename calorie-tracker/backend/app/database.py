@@ -7,7 +7,6 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 from .settings import PROJECT_ROOT, settings
 
-
 Base = declarative_base()
 
 
@@ -176,7 +175,31 @@ def _ensure_oura_schema() -> None:
             connection.execute(text(f"ALTER TABLE oura_daily_metrics ADD COLUMN {column_name} {column_type}"))
 
 
+def _prune_expired_oauth_records() -> None:
+    """Bound short-lived OAuth table growth without deleting active grants."""
+
+    inspector = inspect(engine)
+    table_names = inspector.get_table_names()
+    with engine.begin() as connection:
+        if "oauth_authorization_codes" in table_names:
+            connection.execute(
+                text(
+                    "DELETE FROM oauth_authorization_codes "
+                    "WHERE expires_at < CURRENT_TIMESTAMP OR consumed_at IS NOT NULL"
+                )
+            )
+        if "oauth_token_grants" in table_names:
+            connection.execute(
+                text(
+                    "DELETE FROM oauth_token_grants "
+                    "WHERE refresh_expires_at < CURRENT_TIMESTAMP "
+                    "OR (revoked_at IS NOT NULL AND revoked_at < CURRENT_TIMESTAMP)"
+                )
+            )
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_profile_schema()
     _ensure_oura_schema()
+    _prune_expired_oauth_records()

@@ -49,6 +49,13 @@ class Settings(BaseSettings):
     APP_FRONTEND_URL: str = "/profile.html"
     OURA_FRONTEND_URL: str = "/health.html"
 
+    # Public remote MCP server and its built-in OAuth 2.1 authorization server.
+    # Production must override the localhost URL with the externally reachable
+    # HTTPS origin (for example https://food.example.com).
+    MCP_PUBLIC_BASE_URL: str = "http://localhost:8000"
+    MCP_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    MCP_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
     LOG_LEVEL: str = "INFO"
     LOG_DIR: str = "backend/logs"
     LOG_FILE_MAX_SIZE: int = 10 * 1024 * 1024
@@ -74,6 +81,14 @@ class Settings(BaseSettings):
     @property
     def log_dir_path(self) -> Path:
         return _resolve_project_path(self.LOG_DIR)
+
+    @property
+    def mcp_public_base_url(self) -> str:
+        return self.MCP_PUBLIC_BASE_URL.rstrip("/")
+
+    @property
+    def mcp_resource_url(self) -> str:
+        return f"{self.mcp_public_base_url}/mcp"
 
 
 settings = Settings()

@@ -1,5 +1,9 @@
 # Food Reader
 
+Remote agents can access a user's Food Reader, Oura and Withings data through the
+read-only OAuth-protected MCP server. See [MCP_INTEGRATION.md](MCP_INTEGRATION.md)
+for deployment and ChatGPT connection instructions.
+
 Food Reader is a mobile-first personal nutrition and health application. It combines meal logging, nutrition targets, Oura recovery/activity data, optional Withings measurements, an action-first Health screen, and a private AI assistant.
 
 The product direction is deliberately **action first**: the app should answer **“What should I do now?”** before it shows charts, filters, or long historical detail.

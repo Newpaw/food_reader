@@ -294,6 +294,20 @@ Keep `JWT_SECRET` stable after users connect Oura/Withings. The local OAuth toke
 
 Never commit `.env` or real secrets.
 
+### Public MCP access for external agents
+
+Connecting ChatGPT or another external MCP client requires this application to be deployed on a public HTTPS origin. Configure the canonical public origin and OAuth token lifetimes:
+
+```dotenv
+MCP_PUBLIC_BASE_URL=https://food.example.com
+MCP_ACCESS_TOKEN_EXPIRE_MINUTES=60
+MCP_REFRESH_TOKEN_EXPIRE_DAYS=30
+```
+
+`MCP_PUBLIC_BASE_URL` is required in production. Set it to the externally reachable application origin without a path or trailing slash, and keep `JWT_SECRET` stable so issued OAuth credentials remain valid. The deployment or reverse proxy must expose the MCP endpoint, OAuth discovery metadata, and authorization endpoints on this same origin.
+
+Add `https://food.example.com/mcp` (that is, `${MCP_PUBLIC_BASE_URL}/mcp`) as the MCP server URL in ChatGPT or another compatible client. The client can then use OAuth 2.1 with dynamic client registration to sign in as an existing Food Reader user. See [MCP_INTEGRATION.md](MCP_INTEGRATION.md) for the complete endpoint list, authorization flow, security notes, and deployment checklist.
+
 ## Running locally
 
 Prerequisites:

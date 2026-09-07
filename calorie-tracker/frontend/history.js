@@ -20,7 +20,7 @@ import {
   t,
   toggleModal,
   toDateTimeInputValue,
-} from './common.js?v=20260403-11';
+} from './common.js?v=20260908-meal-names-1';
 
 let historyMeals = [];
 let activeMeal = null;

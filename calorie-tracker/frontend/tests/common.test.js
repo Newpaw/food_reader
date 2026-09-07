@@ -58,6 +58,20 @@ describe('common helpers', () => {
         notes: 'AI Analysis: cheeseburger with bacon\nUser context: I only ate half the fries',
       }),
     ).toBe('Cheeseburger with bacon');
+
+    expect(
+      getMealDisplayName({
+        meal_type: 'snack',
+        notes: "Approximate time based on user's description: end of day.\n\nAI Analysis: One Czech větrník cream caramel choux pastry.",
+      }),
+    ).toBe('One Czech větrník cream caramel choux...');
+
+    expect(
+      getMealDisplayName({
+        meal_type: 'dinner',
+        notes: 'Updated estimate based on user clarification: 2 spring rolls plus a very large amount of assorted sushi. Exact sushi types unknown.',
+      }),
+    ).toBe('2 spring rolls plus a very large...');
   });
 
   it('falls back to meal type when notes are generic', () => {

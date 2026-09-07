@@ -57,6 +57,8 @@ def test_text_meal_crud_and_summary_with_timezone_offset(client, register_and_lo
     meal_id = meal["id"]
     assert meal["image_url"] == "/assets/images/text-meal-placeholder.svg"
     assert meal["consumed_at"] == "2026-04-01T23:30:00Z"
+    assert meal["notes"].startswith("Text description: Late pasta dinner")
+    assert meal["notes"].endswith("Home cooked")
 
     list_response = client.get(
         "/me/meals",
@@ -124,6 +126,28 @@ def test_text_meal_rejects_naive_datetime(client, register_and_login):
     )
 
     assert response.status_code == 422
+
+
+def test_ai_text_meal_keeps_food_description_before_metadata(client, register_and_login, ai_stubs):
+    headers = register_and_login()
+
+    response = client.post(
+        "/me/meals/text",
+        headers=headers,
+        json={
+            "food_description": "Two spring rolls and assorted sushi",
+            "notes": "Approximate time based on user's description: evening.",
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["notes"].splitlines() == [
+        "Text description: Two spring rolls and assorted sushi",
+        "",
+        "AI Analysis: Estimated from: Two spring rolls and assorted sushi",
+        "",
+        "Approximate time based on user's description: evening.",
+    ]
 
 
 def test_summary_groups_using_timezone_name_for_dst_boundaries(client, register_and_login):

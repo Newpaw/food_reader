@@ -112,6 +112,24 @@ def _build_image_meal_notes(
     return "\n".join(lines) if lines else None
 
 
+def _build_text_meal_notes(
+    food_description: str,
+    *,
+    user_notes: str | None = None,
+    ai_notes: str | None = None,
+) -> str:
+    parts = [f"Text description: {food_description.strip()}"]
+    cleaned_ai_notes = _clean_optional_text(ai_notes)
+    cleaned_user_notes = _clean_optional_text(user_notes)
+
+    if cleaned_ai_notes:
+        parts.append(f"AI Analysis: {cleaned_ai_notes}")
+    if cleaned_user_notes:
+        parts.append(cleaned_user_notes)
+
+    return "\n\n".join(parts)
+
+
 def _get_reanalysis_context(payload: schemas.MealReanalysis) -> str | None:
     if payload.refinement_context:
         return _clean_optional_text(payload.refinement_context)
@@ -262,10 +280,11 @@ async def create_text_meal(
             sodium = meal_data.sodium if meal_data.sodium is not None else ai_sodium
             meal_type = meal_data.meal_type or ai_meal_type
             consumed_at = meal_data.consumed_at or ai_consumed_at
-            if ai_notes:
-                notes = f"{meal_data.notes}\n\nAI Analysis: {ai_notes}" if meal_data.notes else f"AI Analysis: {ai_notes}"
-            else:
-                notes = meal_data.notes or f"Text description: {meal_data.food_description}"
+            notes = _build_text_meal_notes(
+                meal_data.food_description,
+                user_notes=meal_data.notes,
+                ai_notes=ai_notes,
+            )
         except Exception as exc:
             log_exception(logger, exc, "AI analysis failed for text description")
             calories = meal_data.calories if meal_data.calories is not None else 300
@@ -277,7 +296,7 @@ async def create_text_meal(
             sodium = meal_data.sodium if meal_data.sodium is not None else 0
             meal_type = meal_data.meal_type or "snack"
             consumed_at = meal_data.consumed_at or datetime.now(timezone.utc)
-            notes = meal_data.notes or f"Text description: {meal_data.food_description}"
+            notes = _build_text_meal_notes(meal_data.food_description, user_notes=meal_data.notes)
     else:
         calories = meal_data.calories
         protein = meal_data.protein
@@ -288,7 +307,7 @@ async def create_text_meal(
         sodium = meal_data.sodium
         meal_type = meal_data.meal_type
         consumed_at = meal_data.consumed_at
-        notes = meal_data.notes or f"Text description: {meal_data.food_description}"
+        notes = _build_text_meal_notes(meal_data.food_description, user_notes=meal_data.notes)
 
     meal = models.Meal(
         user_id=user.id,

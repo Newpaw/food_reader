@@ -1052,6 +1052,10 @@ export function getMealDisplayName(meal) {
     /^refinement context:\s*/i,
     /^text description:\s*/i,
     /^estimated from:\s*/i,
+    /^updated estimate based on user clarification:\s*/i,
+  ];
+  const metadataOnlyPatterns = [
+    /^approximate time based on (?:the )?user(?:'s|’s) description:/i,
   ];
   const genericNames = new Set([
     'unknown food',
@@ -1066,6 +1070,10 @@ export function getMealDisplayName(meal) {
     .filter(Boolean);
 
   for (const segment of segments) {
+    if (metadataOnlyPatterns.some((pattern) => pattern.test(segment))) {
+      continue;
+    }
+
     const cleanedSegment = prefixes.reduce(
       (value, pattern) => value.replace(pattern, ''),
       segment,
@@ -1086,7 +1094,7 @@ export function getMealDisplayName(meal) {
   return fallback;
 }
 
-export const FRONTEND_ASSET_VERSION = '20260809-5';
+export const FRONTEND_ASSET_VERSION = '20260908-meal-names-1';
 
 const INSTALL_PROMPT_DELAY_MS = 1800;
 const INSTALL_RESHOW_AFTER_SHOW_MS = 18 * 60 * 60 * 1000;

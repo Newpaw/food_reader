@@ -24,10 +24,7 @@ def _register_client(client, token_endpoint_auth_method="none"):
     }
     if token_endpoint_auth_method is not None:
         payload["token_endpoint_auth_method"] = token_endpoint_auth_method
-    response = client.post(
-        "/register",
-        json=payload,
-    )
+    response = client.post("/register", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
 
@@ -88,10 +85,7 @@ def _exchange(
     }
     if client_secret:
         payload["client_secret"] = client_secret
-    response = client.post(
-        "/token",
-        data=payload,
-    )
+    response = client.post("/token", data=payload)
     assert response.status_code == 200, response.text
     return response.json()
 
@@ -299,7 +293,7 @@ def test_oauth_rejects_wrong_resource_pkce_and_credentials(client):
         },
         follow_redirects=False,
     )
-    request_token = parse_qs(urlparse(start.headers["location"])["query"])["request"][0]
+    request_token = parse_qs(urlparse(start.headers["location"]).query)["request"][0]
     bad_login = client.post(
         "/oauth/consent",
         data={
@@ -336,7 +330,6 @@ def test_oauth_rejects_wrong_resource_pkce_and_credentials(client):
     assert wrong_pkce.status_code == 400
     assert wrong_pkce.json()["error"] == "invalid_grant"
 
-    # A failed verifier must not consume the authorization code.
     recovered = _exchange(client, registered["client_id"], verifier, code)
     assert recovered["access_token"]
 

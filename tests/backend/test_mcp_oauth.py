@@ -2,7 +2,7 @@ import base64
 import hashlib
 from urllib.parse import parse_qs, urlparse
 
-SCOPES = "profile:read meals:read health:read"
+SCOPES = "profile:read profile:write meals:read meals:write health:read health:write"
 RESOURCE = "http://localhost:8000/mcp"
 REDIRECT_URI = "https://chatgpt.com/connector/oauth/callback"
 
@@ -56,6 +56,7 @@ def _authorize(client, client_id: str, email: str, password: str):
     page = client.get(f"/oauth/consent?request={request_token}")
     assert page.status_code == 200
     assert "ChatGPT test" in page.text
+    assert "Plný přístup" in page.text
 
     approval = client.post(
         "/oauth/consent",
@@ -119,6 +120,7 @@ def test_oauth_metadata_and_bearer_challenge(client):
     assert metadata.json()["code_challenge_methods_supported"] == ["S256"]
     assert "none" in metadata.json()["token_endpoint_auth_methods_supported"]
     assert metadata.json()["registration_endpoint"].endswith("/register")
+    assert metadata.json()["scopes_supported"] == SCOPES.split()
 
     protected = client.get("/.well-known/oauth-protected-resource/mcp")
     assert protected.status_code == 200
@@ -183,19 +185,36 @@ def test_full_oauth_pkce_flow_and_mcp_tools(client):
 
     tools = _mcp_request(client, tokens["access_token"], "tools/list", request_id=2)
     assert tools.status_code == 200, tools.text
-    names = {tool["name"] for tool in tools.json()["result"]["tools"]}
+    tool_list = tools.json()["result"]["tools"]
+    names = {tool["name"] for tool in tool_list}
     assert names == {
         "get_data_inventory",
         "get_profile",
         "get_meals",
+        "create_text_meal",
+        "update_meal",
+        "reanalyze_meal",
+        "delete_meal",
+        "upsert_profile",
+        "delete_profile",
         "get_withings_measurements",
+        "get_withings_status",
+        "get_withings_connect_url",
+        "sync_withings",
+        "disconnect_withings",
         "get_oura_daily",
+        "get_oura_status",
+        "get_oura_connect_url",
+        "sync_oura",
+        "sync_all_wearables",
+        "disconnect_oura",
         "get_health_summary",
     }
-    assert all(
-        tool["annotations"]["readOnlyHint"] is True
-        for tool in tools.json()["result"]["tools"]
-    )
+    by_name = {tool["name"]: tool for tool in tool_list}
+    assert by_name["get_profile"]["annotations"]["readOnlyHint"] is True
+    assert by_name["create_text_meal"]["annotations"]["readOnlyHint"] is False
+    assert by_name["delete_meal"]["annotations"]["destructiveHint"] is True
+    assert by_name["disconnect_oura"]["annotations"]["destructiveHint"] is True
 
     profile = _mcp_request(
         client,
@@ -206,6 +225,35 @@ def test_full_oauth_pkce_flow_and_mcp_tools(client):
     )
     assert profile.status_code == 200, profile.text
     assert profile.json()["result"]["structuredContent"]["name"] == "MCP User"
+
+    created = _mcp_request(
+        client,
+        tokens["access_token"],
+        "tools/call",
+        {
+            "name": "create_text_meal",
+            "arguments": {
+                "meal": {
+                    "food_description": "Manual MCP test meal",
+                    "calories": 420,
+                    "protein": 30,
+                    "fat": 14,
+                    "carbs": 45,
+                    "fiber": 8,
+                    "sugar": 5,
+                    "sodium": 500,
+                    "meal_type": "lunch",
+                    "consumed_at": "2026-09-07T12:00:00+00:00",
+                    "notes": "Created through MCP test",
+                }
+            },
+        },
+        request_id=4,
+    )
+    assert created.status_code == 200, created.text
+    created_content = created.json()["result"]["structuredContent"]
+    assert created_content["calories"] == 420
+    assert created_content["meal_type"] == "lunch"
 
 
 def test_oauth_rejects_wrong_resource_pkce_and_credentials(client):
@@ -251,7 +299,7 @@ def test_oauth_rejects_wrong_resource_pkce_and_credentials(client):
         },
         follow_redirects=False,
     )
-    request_token = parse_qs(urlparse(start.headers["location"]).query)["request"][0]
+    request_token = parse_qs(urlparse(start.headers["location"])["query"])["request"][0]
     bad_login = client.post(
         "/oauth/consent",
         data={

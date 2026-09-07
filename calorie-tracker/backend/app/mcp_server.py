@@ -44,7 +44,7 @@ from .withings_service import (
 )
 
 # Keep the original list object because main.py imports it before this module.
-# Mutating in place upgrades OAuth discovery/provider configuration everywhere.
+# Mutating it upgrades OAuth discovery/provider configuration everywhere.
 MCP_SCOPES = mcp_oauth.MCP_SCOPES
 MCP_SCOPES[:] = [
     "profile:read",
@@ -103,7 +103,19 @@ DESTRUCTIVE = ToolAnnotations(
     idempotentHint=True,
     openWorldHint=False,
 )
-OAUTH_META = {"securitySchemes": [{"type": "oauth2", "scopes": MCP_SCOPES}]}
+
+
+def _oauth_meta(*scopes: str) -> dict[str, Any]:
+    return {"securitySchemes": [{"type": "oauth2", "scopes": list(scopes)}]}
+
+
+PROFILE_READ_META = _oauth_meta("profile:read")
+PROFILE_WRITE_META = _oauth_meta("profile:write")
+MEALS_READ_META = _oauth_meta("meals:read")
+MEALS_WRITE_META = _oauth_meta("meals:write")
+HEALTH_READ_META = _oauth_meta("health:read")
+HEALTH_WRITE_META = _oauth_meta("health:write")
+ALL_READ_META = _oauth_meta("profile:read", "meals:read", "health:read")
 
 
 def _full_access_consent_page(
@@ -191,7 +203,12 @@ mcp = FastMCP(
     auth=AuthSettings(
         issuer_url=settings.mcp_public_base_url,
         resource_server_url=settings.mcp_resource_url,
-        required_scopes=MCP_SCOPES,
+        # Authenticate every MCP request, but do not require the union of every
+        # possible tool scope at the transport layer. This keeps tools/list
+        # usable with an older read-only token so clients can discover new
+        # write tools and initiate a scope upgrade. Each tool enforces its own
+        # scopes below.
+        required_scopes=None,
         client_registration_options=ClientRegistrationOptions(
             enabled=True,
             valid_scopes=MCP_SCOPES,
@@ -206,10 +223,20 @@ mcp = FastMCP(
 )
 
 
-def _authenticated_user_id() -> int:
+def _authenticated_user_id(*required_scopes: str) -> int:
     token = get_access_token()
     if token is None or not token.subject:
         raise ValueError("Authenticated Food Reader user is missing")
+
+    granted = set(token.scopes or [])
+    missing = [scope for scope in required_scopes if scope not in granted]
+    if missing:
+        raise ValueError(
+            "OAuth token is missing required scope(s): "
+            + ", ".join(missing)
+            + ". Reconnect Food Reader in ChatGPT to grant the new permissions."
+        )
+
     try:
         return int(token.subject)
     except ValueError as exc:
@@ -217,8 +244,8 @@ def _authenticated_user_id() -> int:
 
 
 @contextmanager
-def _session_user() -> Iterator[tuple[Any, models.User]]:
-    user_id = _authenticated_user_id()
+def _session_user(*required_scopes: str) -> Iterator[tuple[Any, models.User]]:
+    user_id = _authenticated_user_id(*required_scopes)
     with database.SessionLocal() as db:
         user = db.query(models.User).filter(models.User.id == user_id).first()
         if user is None:
@@ -253,10 +280,11 @@ def _execute(
     tool_name: str,
     args: dict[str, Any],
     *,
+    required_scopes: tuple[str, ...],
     timezone_name: str = "UTC",
     locale: str = "cs",
 ) -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user(*required_scopes) as (db, user):
         result = execute_tool(
             db,
             user,
@@ -274,27 +302,36 @@ def _execute(
     title="Food Reader data inventory",
     description="List connected sources and date coverage for this user's Food Reader data.",
     annotations=READ_ONLY,
-    meta=OAUTH_META,
+    meta=ALL_READ_META,
 )
 def get_data_inventory() -> dict[str, Any]:
-    return _execute("get_data_inventory", {})
+    return _execute(
+        "get_data_inventory",
+        {},
+        required_scopes=("profile:read", "meals:read", "health:read"),
+    )
 
 
 @mcp.tool(
     title="Food Reader profile",
     description="Read the user's profile, body data and current nutrition targets.",
     annotations=READ_ONLY,
-    meta=OAUTH_META,
+    meta=PROFILE_READ_META,
 )
 def get_profile(timezone_name: str = "UTC") -> dict[str, Any]:
-    return _execute("get_profile", {}, timezone_name=timezone_name)
+    return _execute(
+        "get_profile",
+        {},
+        required_scopes=("profile:read",),
+        timezone_name=timezone_name,
+    )
 
 
 @mcp.tool(
     title="Food Reader meals",
     description="Read meals and nutrition history with optional local date filters and pagination.",
     annotations=READ_ONLY,
-    meta=OAUTH_META,
+    meta=MEALS_READ_META,
 )
 def get_meals(
     start_date: str | None = None,
@@ -313,6 +350,7 @@ def get_meals(
             "limit": limit,
             "offset": offset,
         },
+        required_scopes=("meals:read",),
         timezone_name=timezone_name,
     )
 
@@ -325,10 +363,10 @@ def get_meals(
         "to create a fully manual record without AI inference."
     ),
     annotations=CREATE,
-    meta=OAUTH_META,
+    meta=MEALS_WRITE_META,
 )
 async def create_text_meal(meal: schemas.TextMealCreate) -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("meals:write") as (db, user):
         try:
             result = await create_text_meal_route(meal, db=db, user=user)
             return _model_dump(result)
@@ -343,10 +381,10 @@ async def create_text_meal(meal: schemas.TextMealCreate) -> dict[str, Any]:
         "calories, protein, fat, carbs, fiber, sugar, sodium, meal_type, consumed_at and notes."
     ),
     annotations=UPDATE,
-    meta=OAUTH_META,
+    meta=MEALS_WRITE_META,
 )
 def update_meal(meal_id: int, changes: schemas.MealUpdate) -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("meals:write") as (db, user):
         try:
             result = update_meal_route(meal_id, changes, db=db, user=user)
             return _model_dump(result)
@@ -361,14 +399,14 @@ def update_meal(meal_id: int, changes: schemas.MealUpdate) -> dict[str, Any]:
         "This is only available for meals that still have their source image."
     ),
     annotations=UPDATE,
-    meta=OAUTH_META,
+    meta=MEALS_WRITE_META,
 )
 async def reanalyze_meal(
     meal_id: int,
     refinement_context: str,
 ) -> dict[str, Any]:
     payload = schemas.MealReanalysis(refinement_context=refinement_context)
-    with _session_user() as (db, user):
+    with _session_user("meals:write") as (db, user):
         try:
             result = await reanalyze_meal_route(meal_id, payload, db=db, user=user)
             return _model_dump(result)
@@ -380,10 +418,10 @@ async def reanalyze_meal(
     title="Delete Food Reader meal",
     description="Permanently delete one meal owned by the authenticated user, including its stored image when present.",
     annotations=DESTRUCTIVE,
-    meta=OAUTH_META,
+    meta=MEALS_WRITE_META,
 )
 def delete_meal(meal_id: int) -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("meals:write") as (db, user):
         try:
             delete_meal_route(meal_id, db=db, user=user)
             return {"deleted": True, "meal_id": meal_id}
@@ -399,13 +437,13 @@ def delete_meal(meal_id: int) -> dict[str, Any]:
         "and adaptive Oura-based calorie targets."
     ),
     annotations=UPDATE,
-    meta=OAUTH_META,
+    meta=PROFILE_WRITE_META,
 )
 def upsert_profile(
     profile: schemas.UserProfileUpdate,
     timezone_name: str = "UTC",
 ) -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("profile:write") as (db, user):
         try:
             existing = crud.get_user_profile(db, user.id)
             if existing is None:
@@ -439,10 +477,10 @@ def upsert_profile(
         "This does not delete the user account or meal history."
     ),
     annotations=DESTRUCTIVE,
-    meta=OAUTH_META,
+    meta=PROFILE_WRITE_META,
 )
 def delete_profile() -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("profile:write") as (db, user):
         if not crud.delete_user_profile(db, user.id):
             raise ValueError("Profile not found")
         return {"deleted": True}
@@ -452,7 +490,7 @@ def delete_profile() -> dict[str, Any]:
     title="Withings measurements",
     description="Read the user's weight and body-composition measurements from Withings.",
     annotations=READ_ONLY,
-    meta=OAUTH_META,
+    meta=HEALTH_READ_META,
 )
 def get_withings_measurements(
     start_date: str | None = None,
@@ -469,6 +507,7 @@ def get_withings_measurements(
             "limit": limit,
             "offset": offset,
         },
+        required_scopes=("health:read",),
         timezone_name=timezone_name,
     )
 
@@ -477,10 +516,10 @@ def get_withings_measurements(
     title="Withings connection status",
     description="Read Withings connection status, last synchronization and latest measured weight.",
     annotations=READ_ONLY,
-    meta=OAUTH_META,
+    meta=HEALTH_READ_META,
 )
 def get_withings_status() -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("health:read") as (db, user):
         connection = (
             db.query(models.WithingsConnection)
             .filter(models.WithingsConnection.user_id == user.id)
@@ -490,9 +529,13 @@ def get_withings_status() -> dict[str, Any]:
         return {
             "configured": withings_configured(),
             "connected": connection is not None,
-            "last_sync_at": connection.last_sync_at.isoformat() if connection and connection.last_sync_at else None,
+            "last_sync_at": connection.last_sync_at.isoformat()
+            if connection and connection.last_sync_at
+            else None,
             "latest_weight_kg": latest.weight_kg if latest else None,
-            "latest_measured_at": latest.measured_at.isoformat() if latest and latest.measured_at else None,
+            "latest_measured_at": latest.measured_at.isoformat()
+            if latest and latest.measured_at
+            else None,
             "scope": connection.scope if connection else None,
         }
 
@@ -501,10 +544,10 @@ def get_withings_status() -> dict[str, Any]:
     title="Connect Withings",
     description="Generate the user-specific Withings OAuth authorization URL. Open the returned URL in a browser to connect the account.",
     annotations=EXTERNAL_READ,
-    meta=OAUTH_META,
+    meta=HEALTH_WRITE_META,
 )
 def get_withings_connect_url() -> dict[str, Any]:
-    user_id = _authenticated_user_id()
+    user_id = _authenticated_user_id("health:write")
     try:
         return {"authorization_url": build_withings_authorization_url(user_id)}
     except (WithingsConfigError, WithingsAPIError) as exc:
@@ -515,10 +558,10 @@ def get_withings_connect_url() -> dict[str, Any]:
     title="Synchronize Withings",
     description="Fetch the latest Withings measurements into Food Reader and refresh profile weight when applicable.",
     annotations=SYNC,
-    meta=OAUTH_META,
+    meta=HEALTH_WRITE_META,
 )
 def sync_withings() -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("health:write") as (db, user):
         try:
             return _model_dump(sync_measurements(db, user.id))
         except (WithingsConfigError, WithingsAPIError) as exc:
@@ -529,10 +572,10 @@ def sync_withings() -> dict[str, Any]:
     title="Disconnect Withings",
     description="Disconnect Withings and permanently remove synchronized Withings measurements from Food Reader.",
     annotations=DESTRUCTIVE,
-    meta=OAUTH_META,
+    meta=HEALTH_WRITE_META,
 )
 def disconnect_withings() -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("health:write") as (db, user):
         deleted_measurements = (
             db.query(models.WithingsMeasurement)
             .filter(models.WithingsMeasurement.user_id == user.id)
@@ -559,7 +602,7 @@ def disconnect_withings() -> dict[str, Any]:
         "SpO2, cardiovascular, workout, session, tag and rest-mode data."
     ),
     annotations=READ_ONLY,
-    meta=OAUTH_META,
+    meta=HEALTH_READ_META,
 )
 def get_oura_daily(
     start_date: str | None = None,
@@ -575,6 +618,7 @@ def get_oura_daily(
             "limit": limit,
             "offset": offset,
         },
+        required_scopes=("health:read",),
     )
 
 
@@ -582,10 +626,10 @@ def get_oura_daily(
     title="Oura connection status",
     description="Read Oura connection, granted scopes, sync state and latest daily metrics.",
     annotations=READ_ONLY,
-    meta=OAUTH_META,
+    meta=HEALTH_READ_META,
 )
 def get_oura_status() -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("health:read") as (db, user):
         connection = (
             db.query(OuraConnection)
             .filter(OuraConnection.user_id == user.id)
@@ -607,7 +651,9 @@ def get_oura_status() -> dict[str, Any]:
             "connected": connection is not None,
             "scope": connection.scope if connection else None,
             "missing_scopes": missing_oura_scopes(connection) if connection else [],
-            "last_sync_at": connection.last_sync_at.isoformat() if connection and connection.last_sync_at else None,
+            "last_sync_at": connection.last_sync_at.isoformat()
+            if connection and connection.last_sync_at
+            else None,
             "synced_days": metric_count,
             "latest_day": latest.day if latest else None,
             "latest_readiness": latest.readiness_score if latest else None,
@@ -633,10 +679,10 @@ def get_oura_status() -> dict[str, Any]:
     title="Connect Oura",
     description="Generate the user-specific Oura OAuth authorization URL. Open the returned URL in a browser to connect or reauthorize Oura.",
     annotations=EXTERNAL_READ,
-    meta=OAUTH_META,
+    meta=HEALTH_WRITE_META,
 )
 def get_oura_connect_url() -> dict[str, Any]:
-    user_id = _authenticated_user_id()
+    user_id = _authenticated_user_id("health:write")
     try:
         return {"authorization_url": build_oura_authorization_url(user_id)}
     except (OuraConfigError, OuraAPIError) as exc:
@@ -650,7 +696,7 @@ def get_oura_connect_url() -> dict[str, Any]:
         "start_date/end_date can force a YYYY-MM-DD range."
     ),
     annotations=SYNC,
-    meta=OAUTH_META,
+    meta=HEALTH_WRITE_META,
 )
 def sync_oura(
     start_date: str | None = None,
@@ -660,7 +706,7 @@ def sync_oura(
     end = _parse_date(end_date, "end_date")
     if start and end and end < start:
         raise ValueError("end_date must be on or after start_date")
-    with _session_user() as (db, user):
+    with _session_user("health:write") as (db, user):
         try:
             return sync_oura_data(db, user.id, start_date=start, end_date=end)
         except (OuraConfigError, OuraAPIError) as exc:
@@ -671,7 +717,7 @@ def sync_oura(
     title="Synchronize all wearables",
     description="Synchronize both Oura and Withings. Returns a per-source result so one unavailable source does not hide the other result.",
     annotations=SYNC,
-    meta=OAUTH_META,
+    meta=HEALTH_WRITE_META,
 )
 def sync_all_wearables(
     oura_start_date: str | None = None,
@@ -683,7 +729,7 @@ def sync_all_wearables(
         raise ValueError("oura_end_date must be on or after oura_start_date")
 
     result: dict[str, Any] = {}
-    with _session_user() as (db, user):
+    with _session_user("health:write") as (db, user):
         try:
             result["oura"] = sync_oura_data(
                 db,
@@ -707,10 +753,10 @@ def sync_all_wearables(
         "and disable adaptive Oura-based calorie targets."
     ),
     annotations=DESTRUCTIVE,
-    meta=OAUTH_META,
+    meta=HEALTH_WRITE_META,
 )
 def disconnect_oura() -> dict[str, Any]:
-    with _session_user() as (db, user):
+    with _session_user("health:write") as (db, user):
         deleted_days = (
             db.query(OuraDailyMetric)
             .filter(OuraDailyMetric.user_id == user.id)
@@ -743,7 +789,7 @@ def disconnect_oura() -> dict[str, Any]:
         "daily energy balance, recovery, targets, latest weight and non-causal correlations."
     ),
     annotations=READ_ONLY,
-    meta=OAUTH_META,
+    meta=ALL_READ_META,
 )
 def get_health_summary(
     start_date: str,
@@ -754,6 +800,7 @@ def get_health_summary(
     return _execute(
         "get_health_summary",
         {"start_date": start_date, "end_date": end_date},
+        required_scopes=("profile:read", "meals:read", "health:read"),
         timezone_name=timezone_name,
         locale=locale,
     )

@@ -94,10 +94,7 @@ def oauth_authorization_server_metadata() -> dict[str, object]:
     }
 
 
-@app.get("/.well-known/oauth-protected-resource", include_in_schema=False)
-def oauth_protected_resource_metadata() -> dict[str, object]:
-    """Compatibility alias for clients that probe the origin-level RFC 9728 URL."""
-
+def _protected_resource_metadata() -> dict[str, object]:
     return {
         "resource": settings.mcp_resource_url,
         "authorization_servers": [settings.mcp_public_base_url],
@@ -105,6 +102,18 @@ def oauth_protected_resource_metadata() -> dict[str, object]:
         "bearer_methods_supported": ["header"],
         "resource_name": "Food Reader MCP",
     }
+
+
+@app.get("/.well-known/oauth-protected-resource", include_in_schema=False)
+def oauth_protected_resource_metadata() -> dict[str, object]:
+    """Compatibility alias for clients that probe the origin-level RFC 9728 URL."""
+    return _protected_resource_metadata()
+
+
+@app.get("/.well-known/oauth-protected-resource/mcp", include_in_schema=False)
+def oauth_protected_resource_metadata_mcp() -> dict[str, object]:
+    """RFC 9728 metadata for the /mcp protected resource."""
+    return _protected_resource_metadata()
 
 
 # Keep this catch-all mount last so existing FastAPI routes retain precedence.

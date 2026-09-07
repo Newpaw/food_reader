@@ -1,9 +1,11 @@
+import html
 from contextlib import contextmanager
 from datetime import date
 from typing import Any, Iterator, Literal
 from urllib.parse import urlparse
 
 from fastapi import HTTPException
+from fastapi.responses import HTMLResponse
 from mcp.server.auth.middleware.auth_context import get_access_token
 from mcp.server.auth.settings import (
     AuthSettings,
@@ -14,9 +16,8 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 
-from . import crud, database, models, schemas
+from . import crud, database, mcp_oauth, models, schemas
 from .assistant_service import execute_tool
-from .mcp_oauth import MCP_SCOPES, oauth_provider
 from .oura_models import OuraConnection, OuraDailyMetric
 from .oura_service import (
     OuraAPIError,
@@ -41,6 +42,30 @@ from .withings_service import (
     sync_measurements,
     withings_configured,
 )
+
+# Keep the original list object because main.py imports it before this module.
+# Mutating in place upgrades OAuth discovery/provider configuration everywhere.
+MCP_SCOPES = mcp_oauth.MCP_SCOPES
+MCP_SCOPES[:] = [
+    "profile:read",
+    "profile:write",
+    "meals:read",
+    "meals:write",
+    "health:read",
+    "health:write",
+]
+mcp_oauth.SCOPE_LABELS.clear()
+mcp_oauth.SCOPE_LABELS.update(
+    {
+        "profile:read": "Číst profil a nutriční cíle",
+        "profile:write": "Měnit profil a nutriční cíle",
+        "meals:read": "Číst jídla a nutriční historii",
+        "meals:write": "Přidávat, měnit a mazat jídla",
+        "health:read": "Číst Oura, Withings a zdravotní souhrny",
+        "health:write": "Synchronizovat a spravovat Oura a Withings",
+    }
+)
+oauth_provider = mcp_oauth.oauth_provider
 
 READ_ONLY = ToolAnnotations(
     readOnlyHint=True,
@@ -79,6 +104,57 @@ DESTRUCTIVE = ToolAnnotations(
     openWorldHint=False,
 )
 OAUTH_META = {"securitySchemes": [{"type": "oauth2", "scopes": MCP_SCOPES}]}
+
+
+def _full_access_consent_page(
+    request_token: str,
+    payload: dict[str, Any],
+    error: str | None = None,
+) -> HTMLResponse:
+    client_name = html.escape(str(payload.get("client_name") or "Externí agent"))
+    scope_items = "".join(
+        f"<li>{html.escape(mcp_oauth.SCOPE_LABELS.get(scope, scope))}</li>"
+        for scope in payload.get("scopes", [])
+    )
+    error_html = f'<p class="error">{html.escape(error)}</p>' if error else ""
+    escaped_request = html.escape(request_token, quote=True)
+    body = f"""<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Připojit Food Reader</title><style>
+body{{font-family:system-ui,sans-serif;background:#f5f7f6;color:#17201b;margin:0;padding:32px 16px}}
+main{{max-width:560px;margin:auto;background:white;padding:28px;border-radius:18px;box-shadow:0 12px 40px #0001}}
+h1{{font-size:1.55rem;margin-top:0}}label{{display:block;font-weight:600;margin-top:16px}}
+input{{box-sizing:border-box;width:100%;padding:12px;margin-top:6px;border:1px solid #aeb8b1;border-radius:9px;font:inherit}}
+.actions{{display:flex;gap:10px;margin-top:24px}}button{{padding:12px 18px;border:0;border-radius:9px;font:inherit;font-weight:700;cursor:pointer}}
+.approve{{background:#176b45;color:white}}.deny{{background:#e7ebe8;color:#26352c}}.error{{color:#a11b1b;font-weight:600}}
+.warning{{padding:12px;border-radius:9px;background:#fff4df;color:#704b00}}small{{color:#56645b}}li{{margin:7px 0}}
+</style></head><body><main><h1>Připojit {client_name} k Food Readeru</h1>
+<p>Po přihlášení bude agent moci podle udělených oprávnění:</p><ul>{scope_items}</ul>
+<p class="warning"><strong>Plný přístup:</strong> zapisovací oprávnění umožňují agentovi měnit a mazat data a spouštět synchronizace. Přístup je vždy svázán s tímto přihlášeným Food Reader účtem.</p>
+<p><small>Přístup lze kdykoli odvolat zrušením OAuth tokenu.</small></p>{error_html}
+<form method="post" action="/oauth/consent" autocomplete="on">
+<input type="hidden" name="request_token" value="{escaped_request}">
+<label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="username" required>
+<label for="password">Heslo</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+<div class="actions"><button class="approve" name="action" value="approve" type="submit">Povolit přístup</button>
+<button class="deny" name="action" value="deny" type="submit" formnovalidate>Zamítnout</button></div></form>
+</main></body></html>"""
+    # Deliberately omit CSP/form-action restrictions. OAuth clients may use any
+    # validated HTTPS redirect URI registered through DCR.
+    return HTMLResponse(
+        body,
+        headers={
+            "Cache-Control": "no-store",
+            "Pragma": "no-cache",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+        },
+    )
+
+
+# show_consent()/submit_consent() resolve this module global at request time,
+# so replacing it here also updates the functions already imported by main.py.
+mcp_oauth._consent_page = _full_access_consent_page
 
 
 def _transport_security() -> TransportSecuritySettings:

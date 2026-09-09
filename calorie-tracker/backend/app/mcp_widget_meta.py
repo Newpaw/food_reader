@@ -60,7 +60,7 @@ def install_widget_resource_metadata(mcp: Any, widget_domain: str) -> None:
     meta = widget_resource_meta(widget_domain)
 
     # Preserve all ordinary resources while adding metadata to the two UI
-    # resources in resources/list.
+    # resources in both the high-level API and protocol resources/list.
     original_list_resources = mcp.list_resources
 
     async def _list_resources_with_widget_meta():
@@ -70,6 +70,8 @@ def install_widget_resource_metadata(mcp: Any, widget_domain: str) -> None:
                 resource.meta = meta
         return resources
 
+    # Keep direct FastMCP callers and the wire protocol consistent.
+    setattr(mcp, "list_resources", _list_resources_with_widget_meta)
     lowlevel.list_resources()(_list_resources_with_widget_meta)
 
     # The v1 low-level read_resource adapter reconstructs TextResourceContents

@@ -11,6 +11,7 @@ from .logger import RequestLoggingMiddleware, get_logger
 from .mcp_dashboard import register_mcp_dashboard
 from .mcp_oauth import MCP_SCOPES, revoke_oauth_token, show_consent, submit_consent
 from .mcp_server import mcp, mcp_http_app
+from .mcp_widget_meta import install_widget_resource_metadata
 from .routers import (
     assistant_router,
     auth_router,
@@ -28,6 +29,9 @@ logger = get_logger(__name__)
 # read tools keep their schemas and data; MCP Apps-capable hosts also receive
 # the ui:// dashboard resource linked through tool metadata.
 register_mcp_dashboard(mcp)
+# ChatGPT validates CSP/domain metadata on the UI resource itself. FastMCP v1
+# drops resource `_meta`, so install a narrowly scoped compatibility handler.
+install_widget_resource_metadata(mcp, settings.mcp_public_base_url)
 
 # Starlette validates the static directory when StaticFiles is constructed,
 # before FastAPI's lifespan hook runs. Ensure it exists for clean installs and CI.

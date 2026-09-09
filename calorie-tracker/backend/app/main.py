@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .database import init_db
 from .logger import RequestLoggingMiddleware, get_logger
+from .mcp_dashboard import register_mcp_dashboard
 from .mcp_oauth import MCP_SCOPES, revoke_oauth_token, show_consent, submit_consent
 from .mcp_server import mcp, mcp_http_app
 from .routers import (
@@ -22,6 +23,11 @@ from .routers import (
 from .settings import settings
 
 logger = get_logger(__name__)
+
+# Attach the presentation layer before the ASGI application starts. Existing
+# read tools keep their schemas and data; MCP Apps-capable hosts also receive
+# the ui:// dashboard resource linked through tool metadata.
+register_mcp_dashboard(mcp)
 
 # Starlette validates the static directory when StaticFiles is constructed,
 # before FastAPI's lifespan hook runs. Ensure it exists for clean installs and CI.

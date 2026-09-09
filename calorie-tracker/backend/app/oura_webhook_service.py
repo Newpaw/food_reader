@@ -4,6 +4,8 @@ import asyncio
 import hashlib
 import hmac
 import json
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -21,6 +23,9 @@ logger = get_logger(__name__)
 
 OURA_WEBHOOK_API = "https://api.ouraring.com/v2/webhook/subscription"
 _ALLOWED_EVENT_TYPES = {"create", "update", "delete"}
+_WEBHOOK_SYNC_DEBOUNCE_SECONDS = 20.0
+_webhook_sync_guard = threading.Lock()
+_last_webhook_sync_by_user: dict[int, float] = {}
 
 
 class OuraWebhookError(RuntimeError):
@@ -154,7 +159,6 @@ def renew_webhook_subscription(subscription_id: str) -> dict[str, Any]:
     payload = _api_request(
         f"{OURA_WEBHOOK_API}/renew/{subscription_id}",
         method="PUT",
-        payload={},
     )
     return payload if isinstance(payload, dict) else {}
 
@@ -292,6 +296,18 @@ def _find_connection_for_oura_user(db: Session, oura_user_id: str) -> OuraConnec
     return None
 
 
+def _claim_webhook_sync(user_id: int) -> bool:
+    """Coalesce a burst of Oura notifications into one incremental refresh."""
+
+    now = time.monotonic()
+    with _webhook_sync_guard:
+        previous = _last_webhook_sync_by_user.get(user_id)
+        if previous is not None and now - previous < _WEBHOOK_SYNC_DEBOUNCE_SECONDS:
+            return False
+        _last_webhook_sync_by_user[user_id] = now
+        return True
+
+
 def process_oura_webhook_event(payload: dict[str, Any]) -> None:
     """Refresh the local Oura cache after a verified create/update notification."""
 
@@ -305,6 +321,15 @@ def process_oura_webhook_event(payload: dict[str, Any]) -> None:
         connection = _find_connection_for_oura_user(db, oura_user_id)
         if connection is None:
             logger.info("Ignoring Oura webhook for an unlinked user_id=%s", oura_user_id)
+            return
+        if not _claim_webhook_sync(connection.user_id):
+            logger.info(
+                "Coalesced Oura webhook user=%s event=%s/%s object=%s",
+                connection.user_id,
+                payload.get("data_type"),
+                payload.get("event_type"),
+                payload.get("object_id"),
+            )
             return
         try:
             result = sync_oura_data(db, connection.user_id)

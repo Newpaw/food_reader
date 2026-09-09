@@ -1,5 +1,6 @@
+import asyncio
 import os
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,11 +13,13 @@ from .mcp_dashboard import register_mcp_dashboard
 from .mcp_oauth import MCP_SCOPES, revoke_oauth_token, show_consent, submit_consent
 from .mcp_server import mcp, mcp_http_app
 from .mcp_widget_meta import install_widget_resource_metadata
+from .oura_webhook_service import run_oura_webhook_reconciler
 from .routers import (
     assistant_router,
     auth_router,
     meals_router,
     oura_router,
+    oura_webhook_router,
     profile_router,
     users_router,
     withings_router,
@@ -48,7 +51,16 @@ async def lifespan(_: FastAPI):
     init_db()
     logger.info("Application started")
     async with mcp.session_manager.run():
-        yield
+        # Oura recommends webhooks for ongoing updates after the initial history
+        # load. Reconcile subscriptions only after the app is accepting traffic,
+        # because Oura verifies callback URLs during subscription creation.
+        webhook_task = asyncio.create_task(run_oura_webhook_reconciler())
+        try:
+            yield
+        finally:
+            webhook_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await webhook_task
 
 
 app = FastAPI(title="Calorie Tracker", lifespan=lifespan)
@@ -70,6 +82,7 @@ app.include_router(meals_router.router)
 app.include_router(profile_router.router)
 app.include_router(withings_router.router)
 app.include_router(oura_router.router)
+app.include_router(oura_webhook_router.router)
 app.include_router(assistant_router.router)
 
 

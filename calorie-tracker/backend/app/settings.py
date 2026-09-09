@@ -49,6 +49,23 @@ class Settings(BaseSettings):
     APP_FRONTEND_URL: str = "/profile.html"
     OURA_FRONTEND_URL: str = "/health.html"
 
+    # Oura webhooks keep the local health store current after the initial sync.
+    # Subscription management uses the Oura application's client id/secret, not
+    # an additional user OAuth scope. The callback URL defaults to the public
+    # Food Reader origin once MCP_PUBLIC_BASE_URL is configured in production.
+    OURA_WEBHOOK_ENABLED: bool = True
+    OURA_WEBHOOK_CALLBACK_URL: str | None = None
+    OURA_WEBHOOK_VERIFICATION_TOKEN: str | None = None
+    OURA_WEBHOOK_DATA_TYPES: str = (
+        "daily_activity,daily_readiness,daily_sleep,sleep,daily_stress,workout,"
+        "daily_spo2,daily_resilience,daily_cardiovascular_age,vo2_max,sleep_time,"
+        "rest_mode_period,session,enhanced_tag,ring_configuration"
+    )
+    OURA_WEBHOOK_EVENT_TYPES: str = "create,update"
+    OURA_WEBHOOK_RENEW_DAYS: int = 7
+    OURA_WEBHOOK_RECONCILE_HOURS: int = 12
+    OURA_WEBHOOK_STARTUP_DELAY_SECONDS: int = 8
+
     # Public remote MCP server and its built-in OAuth 2.1 authorization server.
     # Production must override the localhost URL with the externally reachable
     # HTTPS origin (for example https://food.example.com).

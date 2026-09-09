@@ -135,3 +135,40 @@ def test_assistant_api_failure_returns_safe_response(client, register_and_login,
     payload = response.json()
     assert payload["available"] is False
     assert "dočasně nedostupný" in payload["message"]
+
+
+def test_oura_meal_question_returns_api_limitation_instead_of_health_advice(
+    client,
+    register_and_login,
+    monkeypatch,
+):
+    from backend.app.routers import assistant_router
+
+    headers = register_and_login(email="oura-meals@example.com", name="Oura Meals")
+
+    def should_not_call_llm(*args, **kwargs):
+        raise AssertionError("Oura meal questions must be handled before the LLM/tool router")
+
+    monkeypatch.setattr(assistant_router, "chat_with_food_reader", should_not_call_llm)
+
+    response = client.post(
+        "/assistant/chat",
+        headers=headers,
+        json={
+            "message": "Co víš o mém jídle z Oura ringu?",
+            "history": [],
+            "timezone": "Europe/Prague",
+            "locale": "cs",
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["available"] is True
+    assert payload["sources"] == []
+    assert payload["model"] is None
+    assert "Oura Public API" in payload["message"]
+    assert "Oura Meals" in payload["message"]
+    assert "FoodReader" in payload["message"]
+    assert "Připravenost" not in payload["message"]
+    assert "spánek" not in payload["message"].lower()

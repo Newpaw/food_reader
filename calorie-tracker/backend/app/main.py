@@ -17,6 +17,7 @@ from .oura_webhook_service import run_oura_webhook_reconciler
 from .routers import (
     assistant_router,
     auth_router,
+    google_health_router,
     meals_router,
     oura_router,
     oura_webhook_router,
@@ -82,6 +83,7 @@ app.include_router(meals_router.router)
 app.include_router(profile_router.router)
 app.include_router(withings_router.router)
 app.include_router(oura_router.router)
+app.include_router(google_health_router.router)
 app.include_router(oura_webhook_router.router)
 app.include_router(assistant_router.router)
 

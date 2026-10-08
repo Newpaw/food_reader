@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Food Reader | Google Health</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="google-health.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/favicon/favicon.svg">
+</head>
+<body data-page="health">
+<div class="app-shell">
+  <header class="topbar"><div class="topbar-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">FR</span><span class="brand-copy"><strong>Food Reader</strong><small>Google Health</small></span></a>
+    <nav class="desktop-nav" aria-label="Primary"><a href="health.html">Health</a><a href="profile.html" data-i18n="nav.profile">Profile</a></nav>
+    <div class="topbar-actions"><label class="language-picker"><span class="sr-only">Language</span><select data-language-select aria-label="Language"><option value="en">EN</option><option value="cs">CZ</option></select></label><button class="btn btn-ghost btn-small" data-logout data-i18n="button.logout">Log out</button></div>
+  </div></header>
+  <main class="page">
+    <section class="panel stack">
+      <p class="eyebrow">Google Health</p>
+      <h1 id="ghTitle">Your activity, sleep and body measurements</h1>
+      <p id="ghDisclosure" class="panel-note"></p>
+      <p id="ghConnection" class="panel-note" aria-live="polite"></p>
+      <div class="button-row">
+        <button id="ghConnect" class="btn btn-primary" type="button" disabled>Connect Google Health</button>
+        <button id="ghDisconnect" class="btn btn-ghost" type="button" hidden>Disconnect and delete data</button>
+        <a href="health.html" id="ghBack" class="btn btn-secondary">Back to Health</a>
+      </div>
+      <p id="ghStatus" class="status" role="status" aria-live="polite" hidden></p>
+      <p id="ghPermissions" class="panel-note" hidden></p>
+      <a id="ghLinkAccount" href="https://fitbit.google.com/auth/signup" class="btn btn-secondary" hidden>Set up Google Health</a>
+    </section>
+    <section class="panel stack">
+      <h2 id="ghRangeTitle">Choose a period</h2>
+      <form id="ghRange" class="button-row">
+        <label><span id="ghFromLabel">From</span><input id="ghFrom" type="date" required></label>
+        <label><span id="ghToLabel">To</span><input id="ghTo" type="date" required></label>
+        <button id="ghView" class="btn btn-secondary" type="submit">View saved data</button>
+        <button id="ghSync" class="btn btn-primary" type="button" disabled>Download from Google</button>
+        <button id="ghExport" class="btn btn-secondary" type="button" disabled>Export JSON</button>
+      </form>
+      <p id="ghRangeHint" class="panel-note"></p>
+      <div id="ghCards" class="gh-cards"></div>
+      <div class="gh-table-wrap"><table class="gh-table"><caption id="ghCaption">Daily overview</caption><thead id="ghTableHead"></thead><tbody id="ghTableBody"></tbody></table></div>
+      <p id="ghEmpty" class="panel-note"></p>
+    </section>
+    <section class="panel stack">
+      <h2 id="ghDetailsTitle">Record details</h2>
+      <label><span id="ghTypeLabel">Data type</span><select id="ghType"></select></label>
+      <div id="ghRecords" class="stack"></div>
+      <button id="ghMore" class="btn btn-secondary" type="button" hidden>Show more</button>
+    </section>
+  </main>
+</div>
+<script type="module" src="google-health.js?v=20261008-1"></script>
+</body>
+</html>

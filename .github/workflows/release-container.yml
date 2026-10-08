@@ -48,10 +48,16 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Run frontend unit tests
+        run: |
+          npm ci --prefix calorie-tracker/frontend
+          npm test --prefix calorie-tracker/frontend
+
       - name: Check frontend JavaScript
         run: |
           node --check calorie-tracker/frontend/navigation.js
           node --check calorie-tracker/frontend/mobile-ux.js
+          node --check calorie-tracker/frontend/google-health.js
           node --check calorie-tracker/frontend/health.js
           node --check calorie-tracker/frontend/health-recipe.js
           node --check calorie-tracker/frontend/assistant.js

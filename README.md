@@ -531,3 +531,7 @@ Verify the GHCR pull, container image digest and host-side update scheduler.
 ## License
 
 MIT License – see `LICENSE`.
+
+## Google Health / Fitbit
+
+Read-only Google Health v4 connection, manual history downloads, daily overview and JSON export are available from Health and Profile. Live use requires an approved Google Health project. See [setup and availability](GOOGLE_HEALTH_INTEGRATION.md).

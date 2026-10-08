@@ -1,4 +1,4 @@
-const CACHE_NAME = 'food-reader-v27';
+const CACHE_NAME = 'food-reader-v28';
 const ASSET_VERSION = '20260908-meal-names-1';
 const withVersion = (path) => `${path}?v=${ASSET_VERSION}`;
 const APP_SHELL = [
@@ -41,7 +41,7 @@ const APP_SHELL = [
   '/assets/images/text-meal-placeholder.svg',
 ];
 
-const API_PREFIXES = ['/auth', '/users', '/me', '/profile', '/uploads', '/withings', '/oura', '/assistant'];
+const API_PREFIXES = ['/auth', '/users', '/me', '/profile', '/uploads', '/withings', '/oura', '/google-health', '/assistant'];
 const NETWORK_FIRST_EXTENSIONS = /\.(?:html|css|js|webmanifest)$/;
 
 function shouldUseNetworkFirst(request, url) {

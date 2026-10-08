@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     WITHINGS_CLIENT_ID: str | None = None
     WITHINGS_CLIENT_SECRET: str | None = None
     WITHINGS_REDIRECT_URI: str | None = None
+    GOOGLE_HEALTH_CLIENT_ID: str | None = None
+    GOOGLE_HEALTH_CLIENT_SECRET: str | None = None
+    GOOGLE_HEALTH_REDIRECT_URI: str | None = None
     OURA_CLIENT_ID: str | None = None
     OURA_CLIENT_SECRET: str | None = None
     OURA_REDIRECT_URI: str | None = None

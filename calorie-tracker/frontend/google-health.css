@@ -1,0 +1,11 @@
+.gh-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.gh-card { padding: 18px; border-radius: 16px; background: var(--surface-soft, #f7f4ef); }
+.gh-card strong { display: block; font-size: 1.7rem; }
+.gh-table-wrap { overflow-x: auto; }
+.gh-table { width: 100%; border-collapse: collapse; text-align: left; }
+.gh-table caption { text-align: left; font-weight: 600; margin-bottom: 12px; }
+.gh-table th, .gh-table td { padding: 12px; border-bottom: 1px solid #ddd; white-space: nowrap; }
+#ghRange label { display: grid; gap: 6px; }
+#ghRecords pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8rem; }
+#ghRecords details { border-bottom: 1px solid #ddd; padding: 12px; }
+#ghRecords summary { cursor: pointer; }
